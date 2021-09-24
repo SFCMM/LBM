@@ -1,0 +1,52 @@
+#ifndef GRIDGENERATOR_CONFIG_H_IN
+#define GRIDGENERATOR_CONFIG_H_IN
+
+#include <sfcmm_common.h>
+
+/// Write error from root
+inline std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+
+
+/// The default max number of offsprings allowed for a partitioning cell.
+static constexpr GInt    DEFAULT_MAXNOOFFSPRINGS = 100000;
+
+/// arbitrary maximum cell level
+static constexpr GInt MAX_LVL = 100;
+
+/// Maximum number of dimensions supported (might need some changes if changed)
+static constexpr GInt MAX_DIM = 4;
+
+// just write a single file as a logfile
+#define GRIDGEN_SINGLE_FILE_LOG
+
+/// Print global MPI information at startup
+// #define MPI_IO_PRINT_INFO
+
+
+/*
+ * If you set this to zero, each message, i.e. after each "endl", is written to the file.
+ * Value is in bytes/chars!
+ */
+#define LOG_MIN_FLUSH_SIZE 0
+
+// activate asserts (will reduce performance)
+//#define USE_ASSERTS
+
+// average timer results over all ranks
+#define TIMER_RANK_AVG
+
+// synchronize timers
+//#define TIMER_SYNC
+
+// enable backtracing using LLVMSupport library
+//#define ENABLE_BACKTRACE
+
+// clang-format off
+#define PROJECT_VER @PROJECT_VERSION@
+#define BUILD_NUM 435
+#define COMPILER_VER @CMAKE_CXX_COMPILER_VERSION@
+#define COMPILER_NAME @CMAKE_CXX_COMPILER_ID@
+#define BUILD_TYPE @CMAKE_BUILD_TYPE@
+// clang-format on
+
+#endif // GRIDGENERATOR_CONFIG_H_IN

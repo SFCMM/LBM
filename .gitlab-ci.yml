@@ -1,0 +1,63 @@
+#todo: get docker stuff working...
+#image: gcc:10.3.0
+
+stages:
+  - build
+  - test
+
+.buildTemplate:
+  stage: build
+  script:
+    - mkdir build-$ccompiler
+    - cd build-$ccompiler
+    - cmake -DCMAKE_C_COMPILER="$ccompiler" -DCMAKE_CXX_COMPILER="$cxxcompiler" --preset $buildtype ..
+    - make gridgenerator -j 2
+
+UnitTest:
+  stage: test
+  script:
+    - mkdir build-$ccompiler
+    - cd build-$ccompiler
+    - cmake -DCMAKE_C_COMPILER="gcc-10" -DCMAKE_CXX_COMPILER="g++-10" --preset relwdb-gnu ..
+    - make UnitTest -j 2
+    - cd UnitTest
+    - ./UnitTest --gtest_output="xml:report.xml"
+    - mv report.xml ${CI_PROJECT_DIR}
+    - ls -larth
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/report.xml
+    reports:
+      junit: ${CI_PROJECT_DIR}/report.xml
+    expire_in: 4 week
+
+
+GNU:
+  extends: .buildTemplate
+  variables:
+    ccompiler: "gcc-10"
+    cxxcompiler: "g++-10"
+    buildtype: "debug-gnu"
+
+CLANG:
+  extends: .buildTemplate
+  variables:
+    ccompiler: "clang-10"
+    cxxcompiler: "clang++-10"
+    buildtype: "debug-clang"
+
+GNU-Release:
+  extends: .buildTemplate
+  variables:
+    ccompiler: "gcc-10"
+    cxxcompiler: "g++-10"
+    buildtype: "release-gnu"
+
+CLANG-Release:
+  extends: .buildTemplate
+  variables:
+    ccompiler: "clang-10"
+    cxxcompiler: "clang++-10"
+    buildtype: "release-clang"
+

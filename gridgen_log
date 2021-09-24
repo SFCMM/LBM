@@ -1,0 +1,13 @@
+<?xml version="1.0" standalone="yes" ?>\n<root>\n<meta name="noDomains" content="1" />
+<meta name="dateCreation" content="2021-07-19 11:59:09" />
+<meta name="fileFormatVersion" content="1" />
+<meta name="user" content="svenb" />
+<meta name="host" content="Workstation" />
+<meta name="dir" content="/media/svenb/Extreme SSD/GIT/gridgenerator" />
+<meta name="executionCommand" content="./cmake-build-debug/gridgenerator test.json" />
+<meta name="revision" content="0.0.0" />
+<meta name="build" content="GNU Debug (10.3.0)" />
+<m d="0" >Grid generator started ||&gt;
+</m>
+<m d="0" >Loading configuration file...
+</m>
