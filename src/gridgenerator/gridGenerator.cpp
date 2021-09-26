@@ -249,7 +249,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   logger.addAttribute({"level", strHighestLvl});
 
   // create partitioning grid first, which is done without MPI parallelization
-  m_grid->createPartitioningGrid(m_partitionLvl);
+  gridGen<NDIM>().createPartitioningGrid(m_partitionLvl);
 
   if(!MPI::isSerial()) {
     // todo:implement
@@ -257,12 +257,12 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
     // m_grid->setupMPIComm();
   }
 
-  m_grid->uniformRefineGrid(m_uniformLvl);
+  gridGen<NDIM>().uniformRefineGrid(m_uniformLvl);
 
   RECORD_TIMER_START(TimeKeeper[Timers::GridRefinement]);
   for(GInt refinedLvl = m_uniformLvl; refinedLvl < m_maxRefinementLvl; ++refinedLvl) {
-    GInt noCellsToRefine = m_grid->markBndryCells();
-    m_grid->refineMarkedCells(noCellsToRefine);
+    GInt noCellsToRefine = gridGen<NDIM>().markBndryCells();
+    gridGen<NDIM>().refineMarkedCells(noCellsToRefine);
     logger.updateAttributes();
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridRefinement]);

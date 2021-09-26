@@ -7,7 +7,7 @@
 #include "celltree.h"
 #include "geometry.h"
 #include "globaltimers.h"
-#include "interface/gridInterface.h"
+#include "interface/grid_interface.h"
 #include "IO.h"
 
 struct LevelOffsetType {

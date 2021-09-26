@@ -33,25 +33,24 @@ class AppConfiguration {
   /// \return The status of the application main run loop. (0 = ok -1 = Error...)
   template <Debug_Level DEBUG>
   auto run() -> int {
-    std::unique_ptr<AppInterface> App;
     switch(Solver) {
 #ifdef SOLVER_AVAILABLE
       case SolverType::LBM:
-        App = std::make_unique<LBMSolver<DEBUG>>();
+        m_app = std::make_unique<LBMSolver<DEBUG>>();
 #endif
         break;
       case SolverType::NONE:
         [[fallthrough]];
       default:
-        App = std::make_unique<GridGenerator<DEBUG>>();
+        m_app = std::make_unique<GridGenerator<DEBUG>>();
     }
 
     if(!m_benchmark) {
-      App->init(m_argc, m_argv, m_configurationFile);
+      m_app->init(m_argc, m_argv, m_configurationFile);
     } else {
-      App->initBenchmark(m_argc, m_argv);
+      m_app->initBenchmark(m_argc, m_argv);
     }
-    return static_cast<int>(App->run());
+    return static_cast<int>(m_app->run());
   }
 
   /// Set the commandline arguments for later processing.
@@ -65,14 +64,23 @@ class AppConfiguration {
   void setConfigurationFile(GString& configFile) { m_configurationFile = configFile; }
   void setBenchmark() { m_benchmark = true; }
 
-  auto toRun(SolverType solver) const -> GBool {
+  [[nodiscard]] auto toRun(SolverType solver) const -> GBool {
     return true; // todo: implement
+  }
+
+  [[nodiscard]] auto grid() const -> const GridInterface& {
+    return m_app->grid();
+  }
+
+  void transferGrid(const GridInterface& grid) const {
+    m_app->transferGrid(grid);
   }
 
  private:
   GChar** m_argv{};
   int     m_argc{};
 
+  std::unique_ptr<AppInterface> m_app;
   GString m_configurationFile = "grid.json";
   GBool   m_benchmark         = false;
 };
@@ -87,6 +95,7 @@ auto main(int argc, GChar** argv) -> int {
   std::ostringstream tmpBuffer;
 #ifdef SOLVER_AVAILABLE
   tmpBuffer << "LBM Solver v" << XSTRINGIFY(PROJECT_VER);
+  //todo: also give information about the version of the gridgenerator
 #else
   tmpBuffer << "GridGenerator v" << XSTRINGIFY(PROJECT_VER);
 #endif
@@ -97,6 +106,9 @@ auto main(int argc, GChar** argv) -> int {
   options.add_options()("v,version", "Get version information");
   options.add_options()("c,config", "Configuration file (default=grid.json)", cxxopts::value<std::string>()->default_value("grid.json"));
   options.add_options()("b,bench", "Run benchmark");
+#ifdef SOLVER_AVAILABLE
+  options.add_options()("s,solver", "Run solver");
+#endif
 
   options.parse_positional({"config"});
   auto result = options.parse(argc, argv);
@@ -148,7 +160,7 @@ auto main(int argc, GChar** argv) -> int {
 #ifdef SOLVER_AVAILABLE
   if(ret == 0 && (result.count("solver") > 0 || solverRunner.toRun(SolverType::LBM))) {
     logger.close();
-    //    solverRunner.transferGrid(gridGenRunner.grid());
+    solverRunner.transferGrid(gridGenRunner.grid());
     //    gridGenRunner.releaseMemory();
     ret = solverRunner.run(debug);
   }

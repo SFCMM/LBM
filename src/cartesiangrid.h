@@ -9,7 +9,7 @@
 #include "geometry.h"
 #include "globaltimers.h"
 #include "gridgenerator/cartesiangrid_generation.h"
-#include "interface/gridInterface.h"
+#include "interface/grid_interface.h"
 #include "IO.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
@@ -27,6 +27,14 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       TERMM(-1, "Invalid operation tree already allocated.");
     }
     m_tree.reset(capacity);
+  }
+
+  void reset() override {
+    m_tree.reset();
+  }
+
+  void save(const GString& fileName, const json& gridOutConfig) override {
+    TERMM(-1, "Not implemented!");
   }
 
   /// Load the generated grid in-memory and set additional properties

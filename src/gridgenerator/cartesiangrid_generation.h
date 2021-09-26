@@ -61,7 +61,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMaxLvl(_maxLvl);
   }
 
-  void createPartitioningGrid(const GInt partitioningLvl) override {
+  /// Create the grid that is used for partitioning. This grid has the level of the option provided in the grid
+  /// configuration file. The grid up to this level is always produced on a single MPI rank.
+  /// \param partioningLvl Level of the partitioing grid.
+  void createPartitioningGrid(const GInt partitioningLvl) {
     RECORD_TIMER_START(TimeKeeper[Timers::GridPart]);
     if(m_capacity < 1) {
       TERMM(-1, "Invalid grid capacity.");
@@ -139,7 +142,9 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     RECORD_TIMER_STOP(TimeKeeper[Timers::GridPart]);
   }
 
-  void uniformRefineGrid(const GInt uniformLevel) override {
+  /// Uniformly refine the grid up to the provided level.
+  /// \param uniformLvl Level of uniform refinement.
+  void uniformRefineGrid(const GInt uniformLevel) {
     RECORD_TIMER_START(TimeKeeper[Timers::GridUniform]);
     logger << SP1 << "Uniformly refine grid to level " << uniformLevel << std::endl;
     std::cout << SP1 << "Uniformly refine grid to level " << uniformLevel << std::endl;
@@ -159,7 +164,9 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     RECORD_TIMER_STOP(TimeKeeper[Timers::GridUniform]);
   }
 
-  void refineMarkedCells(const GInt noCellsToRefine) override {
+  /// Refine the cells that have been marked for refinement.
+  /// \param noCellsToRefine The number of cells that have been marked.
+  void refineMarkedCells(const GInt noCellsToRefine) {
     if(noCellsToRefine == 0) {
       logger << "WARNING: refineMarkedCells called but nothing to do" << std::endl;
       return;
@@ -179,7 +186,9 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     refineGrid<true, false>(currentHighestLvl());
   }
 
-  auto markBndryCells() -> GInt override {
+  /// Mark all boundary cells for refinement
+  /// \return Number of cells marked for refinement
+  auto markBndryCells() -> GInt {
     logger << SP2 << "* marking bndry cells " << std::endl;
     std::cout << SP2 << "* marking bndry cells " << std::endl;
     GInt markedCells = 0;
