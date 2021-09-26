@@ -1,12 +1,14 @@
 #include <cxxopts.hpp>
 
 #include <sfcmm_common.h>
+#include "app_interface.h"
 #include "config.h"
 #include "gridGenerator.h"
-
+#include "lbm_solver.h"
 
 namespace internal_ {
 /// Helper object to store some general application configuration options
+template <SolverType Solver = SolverType::NONE>
 class AppConfiguration {
  public:
   auto run(GInt debug) -> int {
@@ -31,13 +33,25 @@ class AppConfiguration {
   /// \return The status of the application main run loop. (0 = ok -1 = Error...)
   template <Debug_Level DEBUG>
   auto run() -> int {
-    GridGenerator<DEBUG> gridGen{};
-    if(!m_benchmark) {
-      gridGen.init(m_argc, m_argv, m_configurationFile);
-    } else {
-      gridGen.initBenchmark(m_argc, m_argv);
+    std::unique_ptr<AppInterface> App;
+    switch(Solver) {
+#ifdef SOLVER_AVAILABLE
+      case SolverType::LBM:
+        App = std::make_unique<LBMSolver<DEBUG>>();
+#endif
+        break;
+      case SolverType::NONE:
+        [[fallthrough]];
+      default:
+        App = std::make_unique<GridGenerator<DEBUG>>();
     }
-    return gridGen.run();
+
+    if(!m_benchmark) {
+      App->init(m_argc, m_argv, m_configurationFile);
+    } else {
+      App->initBenchmark(m_argc, m_argv);
+    }
+    return static_cast<int>(App->run());
   }
 
   /// Set the commandline arguments for later processing.
@@ -50,6 +64,10 @@ class AppConfiguration {
 
   void setConfigurationFile(GString& configFile) { m_configurationFile = configFile; }
   void setBenchmark() { m_benchmark = true; }
+
+  auto toRun(SolverType solver) const -> GBool {
+    return true; // todo: implement
+  }
 
  private:
   GChar** m_argv{};
@@ -67,7 +85,11 @@ class AppConfiguration {
 /// \return The status of the application main run loop. (0 = ok -1 = Error...)
 auto main(int argc, GChar** argv) -> int {
   std::ostringstream tmpBuffer;
+#ifdef SOLVER_AVAILABLE
+  tmpBuffer << "LBM Solver v" << XSTRINGIFY(PROJECT_VER);
+#else
   tmpBuffer << "GridGenerator v" << XSTRINGIFY(PROJECT_VER);
+#endif
   cxxopts::Options options(tmpBuffer.str(), "A highly parallel grid generator.");
 
   options.add_options()("d,debug", "Enable debugging with given level.", cxxopts::value<GInt>()->default_value("0"));
@@ -90,6 +112,10 @@ auto main(int argc, GChar** argv) -> int {
 
   internal_::AppConfiguration gridGenRunner{};
   gridGenRunner.setCMD(argc, argv);
+#ifdef SOLVER_AVAILABLE
+  internal_::AppConfiguration<SolverType::LBM> solverRunner{};
+  solverRunner.setCMD(argc, argv);
+#endif
 
   GInt debug = result["debug"].as<GInt>();
   if(debug > 0) {
@@ -101,6 +127,9 @@ auto main(int argc, GChar** argv) -> int {
 
   if(result.count("bench") > 0) {
     gridGenRunner.setBenchmark();
+#ifdef SOLVER_AVAILABLE
+    solverRunner.setBenchmark();
+#endif
   } else {
     // first positional argument should be the configuration file
     GString config_file = result["config"].as<GString>();
@@ -109,9 +138,21 @@ auto main(int argc, GChar** argv) -> int {
       TERMM(-1, "Configuration file not found: " + config_file);
     }
     gridGenRunner.setConfigurationFile(config_file);
+#ifdef SOLVER_AVAILABLE
+    solverRunner.setConfigurationFile(config_file);
+#endif
   }
 
-  const GInt ret = gridGenRunner.run(debug);
+  GInt ret = gridGenRunner.run(debug);
+
+#ifdef SOLVER_AVAILABLE
+  if(ret == 0 && (result.count("solver") > 0 || solverRunner.toRun(SolverType::LBM))) {
+    logger.close();
+    //    solverRunner.transferGrid(gridGenRunner.grid());
+    //    gridGenRunner.releaseMemory();
+    ret = solverRunner.run(debug);
+  }
+#endif
 
   logger.close();
   return static_cast<int>(ret);

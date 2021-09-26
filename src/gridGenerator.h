@@ -5,6 +5,7 @@
 #include <ostream>
 
 #include <sfcmm_common.h>
+#include "app_interface.h"
 #include "cartesiangrid.h"
 #include "geometry.h"
 #include "globaltimers.h"
@@ -14,7 +15,7 @@
 using json = nlohmann::json;
 
 template <Debug_Level DEBUG_LEVEL>
-class GridGenerator {
+class GridGenerator : public AppInterface {
  public:
   GridGenerator()                     = default;
   ~GridGenerator()                    = default;
@@ -25,9 +26,9 @@ class GridGenerator {
 
 
   void init(int argc, GChar** argv);
-  void init(int argc, GChar** argv, GString config_file);
-  void initBenchmark(int argc, GChar** argv);
-  auto run() -> int;
+  void init(int argc, GChar** argv, GString config_file) override;
+  void initBenchmark(int argc, GChar** argv) override;
+  auto run() -> GInt override;
 
  private:
   int m_domainId  = -1;

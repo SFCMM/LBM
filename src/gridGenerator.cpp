@@ -91,7 +91,7 @@ void GridGenerator<DEBUG_LEVEL>::initTimers() {
 }
 
 template <Debug_Level DEBUG_LEVEL>
-auto GridGenerator<DEBUG_LEVEL>::run() -> int {
+auto GridGenerator<DEBUG_LEVEL>::run() -> GInt {
   TimerProfiling runProfile("GridGenerator::run");
   PROFILE();
   RECORD_TIMER_START(TimeKeeper[Timers::Init]);
