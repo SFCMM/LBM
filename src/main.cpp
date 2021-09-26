@@ -1,9 +1,9 @@
 #include <cxxopts.hpp>
 
 #include <sfcmm_common.h>
-#include "app_interface.h"
 #include "config.h"
-#include "gridGenerator.h"
+#include "gridgenerator/gridGenerator.h"
+#include "interface/app_interface.h"
 #include "lbm_solver.h"
 
 namespace internal_ {

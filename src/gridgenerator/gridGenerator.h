@@ -5,11 +5,11 @@
 #include <ostream>
 
 #include <sfcmm_common.h>
-#include "app_interface.h"
 #include "cartesiangrid.h"
 #include "geometry.h"
 #include "globaltimers.h"
 #include "gridcell_properties.h"
+#include "interface/app_interface.h"
 #include "WeightMethod.h"
 
 using json = nlohmann::json;

@@ -4,10 +4,10 @@
 
 #include <sfcmm_common.h>
 
-#include "cartesiangrid_generation.h"
 #include "config.h"
 #include "geometry.h"
-#include "gridGenerator.h"
+#include "gridgenerator/cartesiangrid_generation.h"
+#include "gridgenerator/gridGenerator.h"
 
 #ifdef _OPENMP
 #include <omp.h>

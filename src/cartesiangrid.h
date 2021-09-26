@@ -5,11 +5,11 @@
 
 #include <sfcmm_common.h>
 #include "base_cartesiangrid.h"
-#include "cartesiangrid_generation.h"
 #include "celltree.h"
 #include "geometry.h"
 #include "globaltimers.h"
-#include "gridInterface.h"
+#include "gridgenerator/cartesiangrid_generation.h"
+#include "interface/gridInterface.h"
 #include "IO.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
