@@ -85,8 +85,8 @@ class KDTree {
       m_nodes[m_root].m_element      = 0;
 
       // set some reasonable values
-      m_nodes[m_root].m_max = m_boundingBox.max[0];
-      m_nodes[m_root].m_min = m_boundingBox.min[0];
+      m_nodes[m_root].m_max = m_boundingBox.max(0);
+      m_nodes[m_root].m_min = m_boundingBox.min(0);
       return;
     }
 
@@ -209,8 +209,8 @@ class KDTree {
       m_nodes[m_root].m_element      = 0;
 
       // set some reasonable values
-      m_nodes[m_root].m_max = m_boundingBox.max[0];
-      m_nodes[m_root].m_min = m_boundingBox.min[0];
+      m_nodes[m_root].m_max = m_boundingBox.max(0);
+      m_nodes[m_root].m_min = m_boundingBox.min(0);
       return;
     }
 
@@ -322,10 +322,10 @@ class KDTree {
     std::array<GDouble, 2 * NDIM> min;
     std::array<GDouble, 2 * NDIM> max;
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      min[dir]        = m_boundingBox.min[dir] - GDoubleEps;
+      min[dir]        = m_boundingBox.min(dir) - GDoubleEps;
       min[dir + NDIM] = targetRegion[2 * dir] - GDoubleEps;
       max[dir]        = targetRegion[2 * dir + 1] + GDoubleEps;
-      max[dir + NDIM] = m_boundingBox.max[dir] + GDoubleEps;
+      max[dir + NDIM] = m_boundingBox.max(dir) + GDoubleEps;
     }
 
     // Init empty stack and start at first node

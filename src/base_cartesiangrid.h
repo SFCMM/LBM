@@ -47,12 +47,12 @@ class BaseCartesianGrid : public GridInterface {
     }
 
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      m_boundingBox.min[dir] = bbox.min(dir);
-      m_boundingBox.max[dir] = bbox.max(dir);
-      m_geometryExtents[dir] = gcem::abs(m_boundingBox.max[dir] - m_boundingBox.min[dir]);
+      m_boundingBox.min(dir) = bbox.min(dir);
+      m_boundingBox.max(dir) = bbox.max(dir);
+      m_geometryExtents[dir] = gcem::abs(m_boundingBox.max(dir) - m_boundingBox.min(dir));
       // direction of largest extent will be = 0 if all extents are equal
       m_decisiveDirection    = m_geometryExtents[dir] > m_geometryExtents[m_decisiveDirection] ? dir : m_decisiveDirection;
-      m_centerOfGravity[dir] = m_boundingBox.min[dir] + HALF * (m_boundingBox.max[dir] - m_boundingBox.min[dir]);
+      m_centerOfGravity[dir] = m_boundingBox.min(dir) + HALF * (m_boundingBox.max(dir) - m_boundingBox.min(dir));
     }
     m_lengthOnLevel[0] =
         (1.0 + 1.0 / gcem::pow(static_cast<GDouble>(BASE2), static_cast<GDouble>(MAX_LVL))) * m_geometryExtents[m_decisiveDirection];

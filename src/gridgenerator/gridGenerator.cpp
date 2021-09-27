@@ -4,10 +4,10 @@
 
 #include <sfcmm_common.h>
 
+#include "cartesiangrid_generation.h"
 #include "config.h"
 #include "geometry.h"
-#include "gridgenerator/cartesiangrid_generation.h"
-#include "gridgenerator/gridGenerator.h"
+#include "gridGenerator.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -315,8 +315,8 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
     BoundingBoxDynamic tmpBB;
     tmpBB.init(m_dim);
     for(GInt dir = 0; dir < m_dim; ++dir) {
-      tmpBB.min[dir] = tmp[2 * dir];
-      tmpBB.max[dir] = tmp[2 * dir + 1];
+      tmpBB.min(dir) = tmp[2 * dir];
+      tmpBB.max(dir) = tmp[2 * dir + 1];
     }
 
     m_grid->setBoundingBox(*static_cast<BoundingBoxInterface*>(static_cast<void*>(&tmpBB)));

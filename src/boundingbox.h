@@ -1,30 +1,55 @@
 #ifndef GRIDGENERATOR_BOUNDINGBOX_H
 #define GRIDGENERATOR_BOUNDINGBOX_H
 
+/// Interface for accessing bounding boxes.
 class BoundingBoxInterface {
  public:
+  /// Return the minimum values of the bounding box (const)
+  /// \param dir Direction of the value
+  /// \return min[dir]
   [[nodiscard]] virtual auto min(const GInt dir) const -> GDouble = 0;
-  virtual auto               min(const GInt dir) -> GDouble&      = 0;
 
+  /// Return the minimum values of the bounding box
+  /// \param dir Direction of the value
+  /// \return min[dir]
+  virtual auto min(const GInt dir) -> GDouble& = 0;
+
+  /// Return the maximum values of the bounding box (const)
+  /// \param dir Direction of the value
+  /// \return max[dir]
   [[nodiscard]] virtual inline auto max(const GInt dir) const -> GDouble = 0;
-  virtual inline auto               max(const GInt dir) -> GDouble&      = 0;
 
+  /// Return the maximum values of the bounding box
+  /// \param dir Direction of the value
+  /// \return max[dir]
+  virtual inline auto max(const GInt dir) -> GDouble& = 0;
+
+  /// Number of values in the bounding box (most of the time size = NDIM)
+  /// \return Number of directions.
   [[nodiscard]] virtual inline auto size() const -> GInt = 0;
 
+  /// Stringify the bounding box.
+  /// \return String version of all the values.
   [[nodiscard]] virtual inline auto str() const -> GString = 0;
 };
 
 
+/// CRTP Base-Class for the bounding box memory classes below.
+/// \tparam BoundingBoxType CRTP for the container classes below.
 template <typename BoundingBoxType>
 class BoundingBox : public BoundingBoxInterface {
  public:
-  [[nodiscard]] inline auto min(const GInt dir) const -> GDouble override { return (*static_cast<const BoundingBoxType*>(this)).min[dir]; }
+  [[nodiscard]] inline auto min(const GInt dir) const -> GDouble override {
+    return (*static_cast<const BoundingBoxType*>(this)).m_min[dir];
+  }
 
-  inline auto min(const GInt dir) -> GDouble& override { return (*static_cast<BoundingBoxType*>(this)).min[dir]; }
+  inline auto min(const GInt dir) -> GDouble& override { return (*static_cast<BoundingBoxType*>(this)).m_min[dir]; }
 
-  [[nodiscard]] inline auto max(const GInt dir) const -> GDouble override { return (*static_cast<const BoundingBoxType*>(this)).max[dir]; }
+  [[nodiscard]] inline auto max(const GInt dir) const -> GDouble override {
+    return (*static_cast<const BoundingBoxType*>(this)).m_max[dir];
+  }
 
-  inline auto max(const GInt dir) -> GDouble& override { return (*static_cast<BoundingBoxType*>(this)).max[dir]; }
+  inline auto max(const GInt dir) -> GDouble& override { return (*static_cast<BoundingBoxType*>(this)).m_max[dir]; }
 
   [[nodiscard]] inline auto size() const -> GInt override { return static_cast<const BoundingBoxType*>(this)->size(); }
 
@@ -40,28 +65,42 @@ class BoundingBox : public BoundingBoxInterface {
 
 class BoundingBoxDynamic;
 
+/// Compile time constant version of the bounding box class.
+/// \tparam NDIM Number of directions of the bounding box.
 template <GInt NDIM>
 class BoundingBoxCT : public BoundingBox<BoundingBoxCT<NDIM>> {
+  friend BoundingBox<BoundingBoxCT<NDIM>>;
+
  public:
   BoundingBoxCT() = default;
   BoundingBoxCT(const BoundingBoxDynamic& rhs);
   BoundingBoxCT(const BoundingBoxInterface& rhs);
 
-  std::array<GDouble, NDIM> min{NAN_LIST<NDIM>()};
-  std::array<GDouble, NDIM> max{NAN_LIST<NDIM>()};
   [[nodiscard]] inline auto size() const -> GInt override { return NDIM; }
+
+ private:
+  std::array<GDouble, NDIM> m_min{NAN_LIST<NDIM>()};
+  std::array<GDouble, NDIM> m_max{NAN_LIST<NDIM>()};
 };
 
+/// Reference type for bounding boxes.
 class BoundingBoxReference : public BoundingBox<BoundingBoxReference> {
+  friend BoundingBox<BoundingBoxReference>;
+
  public:
-  GDouble*                  min = nullptr;
-  GDouble*                  max = nullptr;
   [[nodiscard]] inline auto size() const -> GInt override { return ndim; }
 
+ private:
   GInt ndim = 0;
+
+  GDouble* min = nullptr;
+  GDouble* max = nullptr;
 };
 
+/// Dynamic memory version of the bounding box type.
 class BoundingBoxDynamic : public BoundingBox<BoundingBoxDynamic> {
+  friend BoundingBox<BoundingBoxDynamic>;
+
  public:
   BoundingBoxDynamic() = default;
 
@@ -69,33 +108,33 @@ class BoundingBoxDynamic : public BoundingBox<BoundingBoxDynamic> {
   BoundingBoxDynamic(const BoundingBoxCT<NDIM>& rhs);
 
   void init(const GInt dim) {
-    min.resize(dim);
-    max.resize(dim);
-    std::fill_n(min.begin(), dim, NAN);
-    std::fill_n(max.begin(), dim, NAN);
+    m_min.resize(dim);
+    m_max.resize(dim);
+    std::fill_n(m_min.begin(), dim, NAN);
+    std::fill_n(m_max.begin(), dim, NAN);
   }
 
-  [[nodiscard]] inline auto size() const -> GInt override { return min.size(); }
+  [[nodiscard]] inline auto size() const -> GInt override { return static_cast<GInt>(m_min.size()); }
 
-
-  std::vector<GDouble> min;
-  std::vector<GDouble> max;
+ private:
+  std::vector<GDouble> m_min;
+  std::vector<GDouble> m_max;
 };
 
 
 template <GInt NDIM>
 BoundingBoxCT<NDIM>::BoundingBoxCT(const BoundingBoxDynamic& rhs) {
   for(GInt dir = 0; dir < NDIM; ++dir) {
-    min[dir] = rhs.min[dir];
-    max[dir] = rhs.max[dir];
+    m_min[dir] = rhs.min(dir);
+    m_max[dir] = rhs.max(dir);
   }
 }
 
 template <GInt NDIM>
 BoundingBoxCT<NDIM>::BoundingBoxCT(const BoundingBoxInterface& rhs) {
   for(GInt dir = 0; dir < NDIM; ++dir) {
-    min[dir] = rhs.min(dir);
-    max[dir] = rhs.max(dir);
+    m_min[dir] = rhs.min(dir);
+    m_max[dir] = rhs.max(dir);
   }
 }
 
@@ -103,20 +142,10 @@ template <GInt NDIM>
 BoundingBoxDynamic::BoundingBoxDynamic(const BoundingBoxCT<NDIM>& rhs) {
   init(NDIM);
   for(GInt dir = 0; dir < NDIM; ++dir) {
-    min[dir] = rhs.min[dir];
-    max[dir] = rhs.max[dir];
+    m_min[dir] = rhs.min(dir);
+    m_max[dir] = rhs.max(dir);
   }
 }
-
-// template <GInt NDIM>
-// inline auto VectorBBox(const BoundingBox<NDIM>& bbox) -> std::vector<GDouble> {
-//   std::vector<GDouble> tmp;
-//   for(GInt dir = 0; dir < NDIM; ++dir) {
-//     tmp.emplace_back(bbox.min[dir]);
-//     tmp.emplace_back(bbox.max[dir]);
-//   }
-//   return tmp;
-// }
 
 
 #endif // GRIDGENERATOR_BOUNDINGBOX_H

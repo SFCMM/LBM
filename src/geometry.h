@@ -338,7 +338,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
   [[nodiscard]] inline auto pointInsideObjBB(const Point<NDIM>& x) const -> GBool {
     for(GInt dir = 0; dir < NDIM; ++dir) {
       const GDouble p = x[dir];
-      if(p < m_bbox.min[dir] || p > m_bbox.max[dir]) {
+      if(p < m_bbox.min(dir) || p > m_bbox.max(dir)) {
         return false;
       }
     }
@@ -347,8 +347,8 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
 
   [[nodiscard]] inline auto cellCutWithObjBB(const Point<NDIM>& cellCenter, const GDouble cellLength) const -> GBool {
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      const GDouble diffMin = abs(cellCenter[dir] - m_bbox.min[dir]);
-      const GDouble diffMax = abs(cellCenter[dir] - m_bbox.max[dir]);
+      const GDouble diffMin = abs(cellCenter[dir] - m_bbox.min(dir));
+      const GDouble diffMax = abs(cellCenter[dir] - m_bbox.max(dir));
       //      cerr0 << "diffMin " << diffMin << " diffMax " << diffMax << std::endl;
       if(diffMin <= cellLength || diffMax <= cellLength) {
         // is closer than cellLength a cut might exist
@@ -375,8 +375,8 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     return ss.str();
   }
 
-  [[nodiscard]] inline auto min(const GInt dir) const -> GDouble override { return m_bbox.min[dir]; }
-  [[nodiscard]] inline auto max(const GInt dir) const -> GDouble override { return m_bbox.max[dir]; }
+  [[nodiscard]] inline auto min(const GInt dir) const -> GDouble override { return m_bbox.min(dir); }
+  [[nodiscard]] inline auto max(const GInt dir) const -> GDouble override { return m_bbox.max(dir); }
 
   void printElements() const {
     GInt elementId = 0;
@@ -580,21 +580,21 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
   void determineBoundaryBox() {
     // initialize
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      m_bbox.min[dir] = m_triangles[0].m_min[dir];
-      m_bbox.max[dir] = m_triangles[0].m_max[dir];
+      m_bbox.min(dir) = m_triangles[0].m_min[dir];
+      m_bbox.max(dir) = m_triangles[0].m_max[dir];
     }
 
     for(const auto& tri : m_triangles) {
       for(GInt dir = 0; dir < NDIM; dir++) {
         // Find minimum
-        m_bbox.min[dir] = (m_bbox.min[dir] > tri.m_min[dir]) ? tri.m_min[dir] : m_bbox.min[dir];
+        m_bbox.min(dir) = (m_bbox.min(dir) > tri.m_min[dir]) ? tri.m_min[dir] : m_bbox.min(dir);
         // Find maximum
-        m_bbox.max[dir] = (m_bbox.max[dir] < tri.m_max[dir]) ? tri.m_max[dir] : m_bbox.max[dir];
+        m_bbox.max(dir) = (m_bbox.max(dir) < tri.m_max[dir]) ? tri.m_max[dir] : m_bbox.max(dir);
       }
     }
 
     for(GInt dir = 0; dir < NDIM; dir++) {
-      m_extend[dir] = m_bbox.max[dir] - m_bbox.min[dir];
+      m_extend[dir] = m_bbox.max(dir) - m_bbox.min(dir);
     }
   }
 
@@ -636,8 +636,8 @@ class GeometryAnalytical : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
   GeometryAnalytical(const json& geom) : GeometryRepresentation<DEBUG_LEVEL, NDIM>(geom){};
 
   [[nodiscard]] inline auto noElements() const -> GInt override { return 1; }
-  [[nodiscard]] inline auto min(const GInt dir) const -> GDouble override { return this->getBoundingBox().min[dir]; }
-  [[nodiscard]] inline auto max(const GInt dir) const -> GDouble override { return this->getBoundingBox().max[dir]; }
+  [[nodiscard]] inline auto min(const GInt dir) const -> GDouble override { return this->getBoundingBox().min(dir); }
+  [[nodiscard]] inline auto max(const GInt dir) const -> GDouble override { return this->getBoundingBox().max(dir); }
 
  private:
 };
@@ -670,8 +670,8 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     bbox.init(NDIM);
 
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      bbox.min[dir] = m_center[dir] - m_radius;
-      bbox.max[dir] = m_center[dir] + m_radius;
+      bbox.min(dir) = m_center[dir] - m_radius;
+      bbox.max(dir) = m_center[dir] + m_radius;
     }
     return bbox;
   }
@@ -738,8 +738,8 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     bbox.init(NDIM);
 
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      bbox.min[dir] = m_A[dir];
-      bbox.max[dir] = m_B[dir];
+      bbox.min(dir) = m_A[dir];
+      bbox.max(dir) = m_B[dir];
     }
     return bbox;
   }
@@ -812,8 +812,8 @@ class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
 
     GDouble cicumference_radius = gcem::sqrt(NDIM) * m_length;
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      bbox.min[dir] = m_center[dir] - cicumference_radius;
-      bbox.max[dir] = m_center[dir] + cicumference_radius;
+      bbox.min(dir) = m_center[dir] - cicumference_radius;
+      bbox.max(dir) = m_center[dir] + cicumference_radius;
     }
     return bbox;
   }
@@ -978,11 +978,11 @@ class GeometryManager : public GeometryInterface {
       const auto  temp_bbox = obj->getBoundingBox();
       for(GInt dir = 0; dir < NDIM; ++dir) {
         // set the bounding box to the values of the first object for initialization
-        if(bbox.min[dir] > temp_bbox.min[dir] || objId == 0) {
-          bbox.min[dir] = temp_bbox.min[dir];
+        if(bbox.min(dir) > temp_bbox.min(dir) || objId == 0) {
+          bbox.min(dir) = temp_bbox.min(dir);
         }
-        if(bbox.max[dir] < temp_bbox.max[dir] || objId == 0) {
-          bbox.max[dir] = temp_bbox.max[dir];
+        if(bbox.max(dir) < temp_bbox.max(dir) || objId == 0) {
+          bbox.max(dir) = temp_bbox.max(dir);
         }
       }
     }
