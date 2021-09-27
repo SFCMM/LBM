@@ -5,10 +5,10 @@
 
 #include <sfcmm_common.h>
 #include "celltree.h"
+#include "common/IO.h"
 #include "geometry.h"
 #include "globaltimers.h"
 #include "interface/grid_interface.h"
-#include "IO.h"
 
 struct LevelOffsetType {
  public:

@@ -1,7 +1,7 @@
 #ifndef GRIDGENERATOR_GRIDINTERFACE_H
 #define GRIDGENERATOR_GRIDINTERFACE_H
 
-#include "boundingbox.h"
+#include "common/boundingbox.h"
 #include "geometry.h"
 
 class GridInterface {

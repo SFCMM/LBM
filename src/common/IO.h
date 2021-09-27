@@ -1,5 +1,6 @@
 #ifndef GRIDGENERATOR_IO_H
 #define GRIDGENERATOR_IO_H
+#include <config.h>
 #include <fstream>
 #include <iostream>
 #include <sfcmm_common.h>

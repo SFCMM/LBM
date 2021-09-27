@@ -7,10 +7,10 @@
 #include <utility>
 #include <vector>
 #include <sfcmm_common.h>
-#include "boundingbox.h"
+#include "common/boundingbox.h"
+#include "common/kdtree.h"
+#include "common/triangle.h"
 #include "functions.h"
-#include "kdtree.h"
-#include "triangle.h"
 
 
 template <GInt NDIM>

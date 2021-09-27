@@ -23,8 +23,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_executable(lbm
         src/main.cpp src/gridgenerator/gridGenerator.cpp src/gridgenerator/gridGenerator.h src/config.h.in
         src/globaltimers.h src/cartesiangrid.h
-        src/gridcell_properties.h src/WeightMethod.h src/geometry.h src/functions.h src/IO.h src/term.h
-        src/interface/grid_interface.h src/gridgenerator/cartesiangrid_generation.h src/boundingbox.h src/lbm_solver.h)
+        src/gridcell_properties.h src/WeightMethod.h src/geometry.h src/functions.h src/common/IO.h src/term.h
+        src/interface/grid_interface.h src/gridgenerator/cartesiangrid_generation.h src/common/boundingbox.h src/lbm_solver.h)
 
 #TARGET_LINK_LIBRARIES(lbm PUBLIC mpi)
 target_link_libraries(lbm PUBLIC MPI::MPI_CXX)
