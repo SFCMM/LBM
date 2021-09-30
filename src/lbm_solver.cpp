@@ -17,13 +17,19 @@ void LBMSolver<DEBUG_LEVEL>::init(int argc, GChar** argv) {
 #endif
   logger.setMinFlushSize(LOG_MIN_FLUSH_SIZE);
 
-  //  initTimers();//todo: implement
+    initTimers();
 }
 
 template <Debug_Level DEBUG_LEVEL>
 void LBMSolver<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_file) {
   m_configurationFileName = std::move(config_file);
   init(argc, argv);
+}
+
+template <Debug_Level DEBUG_LEVEL>
+void LBMSolver<DEBUG_LEVEL>::initTimers() {
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMSolverTotal], "Total run time of the LBM Solver.", TimeKeeper[Timers::timertotal]);
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMSolverTotal]);
 }
 
 template class LBMSolver<Debug_Level::no_debug>;

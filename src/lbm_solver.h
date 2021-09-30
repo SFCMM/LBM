@@ -45,6 +45,8 @@ class LBMSolver : public AppInterface {
   };
 
  private:
+  void initTimers();
+
   std::unique_ptr<GridInterface> m_grid;
 
   GString m_exe;

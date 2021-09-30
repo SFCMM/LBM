@@ -14,11 +14,15 @@ struct Timers_ {
     IO,
     Init,
 
+    GridGeneratorTotal,
     GridGeneration,
     GridInit,
     GridPart,
     GridUniform,
     GridRefinement,
+    GridIo,
+
+    LBMSolverTotal,
 
     // counter
     _count

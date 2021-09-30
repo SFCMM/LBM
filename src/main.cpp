@@ -162,6 +162,12 @@ auto main(int argc, GChar** argv) -> int {
     cerr0.rdbuf(&nullBuffer);
   }
 
+  RESET_TIMERS();
+
+  NEW_TIMER_GROUP_NOCREATE(TimeKeeper[Timers::AppGroup], "Application");
+  NEW_TIMER_NOCREATE(TimeKeeper[Timers::timertotal], "Total", TimeKeeper[Timers::AppGroup]);
+  RECORD_TIMER_START(TimeKeeper[Timers::timertotal]);
+
   internal_::AppConfiguration gridGenRunner(argc, argv, domainId, noDomains);
 #ifdef SOLVER_AVAILABLE
   internal_::AppConfiguration<SolverType::LBM> solverRunner(argc, argv, domainId, noDomains);
@@ -195,6 +201,10 @@ auto main(int argc, GChar** argv) -> int {
   }
 
   GInt ret = gridGenRunner.run(debug);
+  STOP_ALL_RECORD_TIMERS();
+  DISPLAY_ALL_TIMERS();
+  RECORD_TIMER_START(TimeKeeper[Timers::timertotal]);
+
 
 #ifdef SOLVER_AVAILABLE
   if(ret == 0 && (result.count("solver") > 0 || solverRunner.toRun(SolverType::LBM))) {
@@ -204,6 +214,10 @@ auto main(int argc, GChar** argv) -> int {
     ret = solverRunner.run(debug);
   }
 #endif
+
+//  RECORD_TIMER_STOP(TimeKeeper[Timers::timertotal]);
+  STOP_ALL_RECORD_TIMERS();
+  DISPLAY_ALL_TIMERS();
 
   logger.close();
   MPI_Finalize();

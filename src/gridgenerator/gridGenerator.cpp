@@ -55,18 +55,17 @@ void GridGenerator<DEBUG_LEVEL>::initBenchmark(int argc, GChar** argv) {
 
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::initTimers() {
-  RESET_TIMERS();
 
-  NEW_TIMER_GROUP_NOCREATE(TimeKeeper[Timers::AppGroup], "Application");
-  NEW_TIMER_NOCREATE(TimeKeeper[Timers::timertotal], "Total", TimeKeeper[Timers::AppGroup]);
-  RECORD_TIMER_START(TimeKeeper[Timers::timertotal]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridGeneratorTotal], "Total run time of the grid generator", TimeKeeper[Timers::timertotal]);
+  RECORD_TIMER_START(TimeKeeper[Timers::GridGeneratorTotal]);
 
-  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::Init], "Init", TimeKeeper[Timers::timertotal]);
-  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridGeneration], "Create the grid.", TimeKeeper[Timers::timertotal]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::Init], "Init", TimeKeeper[Timers::GridGeneratorTotal]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridGeneration], "Create the grid.", TimeKeeper[Timers::GridGeneratorTotal]);
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridInit], "Init grid.", TimeKeeper[Timers::GridGeneration]);
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridPart], "Partitioning grid generation.", TimeKeeper[Timers::GridGeneration]);
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridUniform], "Uniform grid generation.", TimeKeeper[Timers::GridGeneration]);
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridRefinement], "Grid refinement.", TimeKeeper[Timers::GridGeneration]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::GridIo], "Grid IO.", TimeKeeper[Timers::GridGeneratorTotal]);
   NEW_TIMER_NOCREATE(TimeKeeper[Timers::IO], "IO", TimeKeeper[Timers::timertotal]);
 }
 
@@ -102,10 +101,6 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> GInt {
   cout << "Grid generator finished <||" << endl;
 
   unusedConfigValues();
-
-  RECORD_TIMER_STOP(TimeKeeper[Timers::timertotal]);
-  STOP_ALL_RECORD_TIMERS();
-  DISPLAY_ALL_TIMERS();
 
   return 0;
 }
