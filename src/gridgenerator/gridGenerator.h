@@ -17,8 +17,8 @@ using json = nlohmann::json;
 template <Debug_Level DEBUG_LEVEL>
 class GridGenerator : public AppInterface {
  public:
-  GridGenerator()                     = default;
-  ~GridGenerator()                    = default;
+  GridGenerator(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
+  ~GridGenerator() override           = default;
   GridGenerator(const GridGenerator&) = delete;
   GridGenerator(GridGenerator&&)      = delete;
   auto operator=(const GridGenerator&) -> GridGenerator& = delete;
@@ -30,7 +30,7 @@ class GridGenerator : public AppInterface {
   void initBenchmark(int argc, GChar** argv) override;
   auto run() -> GInt override;
   auto grid() const -> const GridInterface& override { return *m_grid; };
-  void transferGrid(const GridInterface& /*grid*/) const override { TERMM(-1, "Not implemented!"); };
+  void transferGrid(const GridInterface& /*grid*/) override { TERMM(-1, "Not implemented!"); };
 
  private:
   int m_domainId  = -1;
@@ -53,8 +53,8 @@ class GridGenerator : public AppInterface {
   void benchmarkSetup();
   template <GInt nDim>
   void generateGrid();
-  template<GInt NDIM>
-  [[nodiscard]] auto inline  gridGen() -> CartesianGridGen<DEBUG_LEVEL, NDIM>&{
+  template <GInt NDIM>
+  [[nodiscard]] auto inline gridGen() -> CartesianGridGen<DEBUG_LEVEL, NDIM>& {
     return *static_cast<CartesianGridGen<DEBUG_LEVEL, NDIM>*>(m_grid.get());
   }
 

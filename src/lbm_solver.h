@@ -1,15 +1,31 @@
 #ifndef LBM_LBM_SOLVER_H
 #define LBM_LBM_SOLVER_H
+#include <sfcmm_common.h>
+#include "cartesiangrid.h"
 #include "interface/app_interface.h"
+//#include "interface/grid_interface.h"
 
 template <Debug_Level DEBUG_LEVEL>
 class LBMSolver : public AppInterface {
  public:
-  void               init(int argc, GChar** argv, GString config_file) override{};
-  void               initBenchmark(int argc, GChar** argv) override{};
-  auto               run() -> GInt override{};
+  LBMSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
+  ~LBMSolver() override = default;
+
+  void init(int argc, GChar** argv);
+  void init(int argc, GChar** argv, GString config_file) override;
+
+
+  void initBenchmark(int argc, GChar** argv) override { TERMM(-1, "Not implemented!"); };
+
+  auto               run() -> GInt override { return 0; };
   [[nodiscard]] auto grid() const -> const GridInterface& override { return *m_grid; };
-  void               transferGrid(const GridInterface& grid) const override {
+
+  void transferGrid(const GridInterface& grid) override {
+    cerr0 << "Transferring Grid to LBM solver" << std::endl;
+    logger << "Transferring Grid to LBM solver" << std::endl;
+
+    m_dim = grid.dim();
+
     switch(m_dim) {
       case 1:
         static_cast<CartesianGrid<DEBUG_LEVEL, 1>*>(m_grid.get())
@@ -31,7 +47,12 @@ class LBMSolver : public AppInterface {
  private:
   std::unique_ptr<GridInterface> m_grid;
 
-  GInt m_dim = 0;
+  GString m_exe;
+  GString m_configurationFileName;
+
+  GInt   m_dim       = 0;
+  GInt32 m_domainId  = -1;
+  GInt32 m_noDomains = -1;
 };
 
 #endif // LBM_LBM_SOLVER_H

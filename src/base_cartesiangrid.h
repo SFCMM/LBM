@@ -89,6 +89,7 @@ class BaseCartesianGrid : public GridInterface {
     return m_lengthOnLevel[lvl]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
   };
   [[nodiscard]] inline auto currentHighestLvl() const -> GInt override { return m_currentHighestLvl; }
+  [[nodiscard]] inline auto dim() const -> GInt override { return NDIM; }
 
  protected:
   /// Increase the current highest level by 1

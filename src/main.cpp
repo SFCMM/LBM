@@ -1,48 +1,86 @@
 #include <cxxopts.hpp>
+#include <mpi.h>
 
 #include <sfcmm_common.h>
 #include "config.h"
-#include "gridgenerator/gridGenerator.h"
 #include "interface/app_interface.h"
+#ifdef SOLVER_AVAILABLE
 #include "lbm_solver.h"
+#include "gridgenerator/gridGenerator.h"
+#else
+#include "gridGenerator.h"
+#endif
+
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 namespace internal_ {
 /// Helper object to store some general application configuration options
 template <SolverType Solver = SolverType::NONE>
 class AppConfiguration {
  public:
-  auto run(GInt debug) -> int {
+  AppConfiguration(const int argc, GChar** argv, const GInt32 domainId, const GInt32 noDomains)
+    : m_argc(argc), m_argv(argv), m_domainId(domainId), m_noDomains(noDomains) {}
+
+  void init(const GInt debug) {
     switch(debug) {
       case static_cast<GInt>(Debug_Level::no_debug):
-        return run<Debug_Level::no_debug>();
+        init<Debug_Level::no_debug>();
+        return;
       case static_cast<GInt>(Debug_Level::min_debug):
-        return run<Debug_Level::min_debug>();
+        init<Debug_Level::min_debug>();
+        return;
       case static_cast<GInt>(Debug_Level::debug):
-        return run<Debug_Level::debug>();
+        init<Debug_Level::debug>();
+        return;
       case static_cast<GInt>(Debug_Level::more_debug):
-        return run<Debug_Level::more_debug>();
+        init<Debug_Level::more_debug>();
+        return;
       case static_cast<GInt>(Debug_Level::max_debug):
         [[fallthrough]];
       default:
-        return run<Debug_Level::max_debug>();
+        init<Debug_Level::max_debug>();
     }
   }
 
-  /// Start point of the main application.
-  /// \tparam DEBUG The debug level that is activated.
-  /// \return The status of the application main run loop. (0 = ok -1 = Error...)
+  auto run(const GInt debug) -> int {
+    init(debug);
+    return static_cast<int>(m_app->run());
+  }
+
+  void setConfigurationFile(const GString& configFile) { m_configurationFile = configFile; }
+  void setBenchmark() { m_benchmark = true; }
+
+  [[nodiscard]] auto toRun(const SolverType solver) const -> GBool {
+    return true; // todo: implement
+  }
+
+  [[nodiscard]] auto grid() const -> const GridInterface& { return m_app->grid(); }
+
+  void transferGrid(const GridInterface& grid, const GInt debug) {
+    init(debug);
+    m_app->transferGrid(grid);
+  }
+
+ private:
   template <Debug_Level DEBUG>
-  auto run() -> int {
+  void init() {
+    if(m_init) {
+      return;
+    }
+
     switch(Solver) {
 #ifdef SOLVER_AVAILABLE
       case SolverType::LBM:
-        m_app = std::make_unique<LBMSolver<DEBUG>>();
+        m_app = std::make_unique<LBMSolver<DEBUG>>(m_domainId, m_noDomains);
 #endif
         break;
       case SolverType::NONE:
         [[fallthrough]];
       default:
-        m_app = std::make_unique<GridGenerator<DEBUG>>();
+        m_app = std::make_unique<GridGenerator<DEBUG>>(m_domainId, m_noDomains);
     }
 
     if(!m_benchmark) {
@@ -50,39 +88,18 @@ class AppConfiguration {
     } else {
       m_app->initBenchmark(m_argc, m_argv);
     }
-    return static_cast<int>(m_app->run());
+    m_init = true;
   }
 
-  /// Set the commandline arguments for later processing.
-  /// \param argc number of commandline arguments
-  /// \param argv string of arguments
-  void setCMD(int argc, GChar** argv) {
-    m_argc = argc;
-    m_argv = argv;
-  }
-
-  void setConfigurationFile(GString& configFile) { m_configurationFile = configFile; }
-  void setBenchmark() { m_benchmark = true; }
-
-  [[nodiscard]] auto toRun(SolverType solver) const -> GBool {
-    return true; // todo: implement
-  }
-
-  [[nodiscard]] auto grid() const -> const GridInterface& {
-    return m_app->grid();
-  }
-
-  void transferGrid(const GridInterface& grid) const {
-    m_app->transferGrid(grid);
-  }
-
- private:
-  GChar** m_argv{};
   int     m_argc{};
+  GChar** m_argv{};
 
   std::unique_ptr<AppInterface> m_app;
-  GString m_configurationFile = "grid.json";
-  GBool   m_benchmark         = false;
+  GString                       m_configurationFile = "grid.json";
+  GBool                         m_benchmark         = false;
+  GBool                         m_init              = false;
+  GInt32                        m_domainId          = -1;
+  GInt32                        m_noDomains         = -1;
 };
 } // namespace internal_
 
@@ -95,7 +112,7 @@ auto main(int argc, GChar** argv) -> int {
   std::ostringstream tmpBuffer;
 #ifdef SOLVER_AVAILABLE
   tmpBuffer << "LBM Solver v" << XSTRINGIFY(PROJECT_VER);
-  //todo: also give information about the version of the gridgenerator
+  // todo: also give information about the version of the gridgenerator
 #else
   tmpBuffer << "GridGenerator v" << XSTRINGIFY(PROJECT_VER);
 #endif
@@ -122,12 +139,34 @@ auto main(int argc, GChar** argv) -> int {
     exit(0);
   }
 
-  internal_::AppConfiguration gridGenRunner{};
-  gridGenRunner.setCMD(argc, argv);
-#ifdef SOLVER_AVAILABLE
-  internal_::AppConfiguration<SolverType::LBM> solverRunner{};
-  solverRunner.setCMD(argc, argv);
+#ifdef _OPENMP
+  int provided = 0;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
+#else
+  MPI_Init(&argc, &argv);
 #endif
+
+  GInt32 domainId = -1;
+  MPI_Comm_rank(MPI_COMM_WORLD, &domainId);
+
+  GInt32 noDomains = -1;
+  MPI_Comm_size(MPI_COMM_WORLD, &noDomains);
+  MPI::g_mpiInformation.init(domainId, noDomains);
+
+  MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+
+  // Open cerr0 on MPI root
+  if(MPI::isRoot()) {
+    cerr0.rdbuf(std::cerr.rdbuf());
+  } else {
+    cerr0.rdbuf(&nullBuffer);
+  }
+
+  internal_::AppConfiguration gridGenRunner(argc, argv, domainId, noDomains);
+#ifdef SOLVER_AVAILABLE
+  internal_::AppConfiguration<SolverType::LBM> solverRunner(argc, argv, domainId, noDomains);
+#endif
+
 
   GInt debug = result["debug"].as<GInt>();
   if(debug > 0) {
@@ -160,12 +199,13 @@ auto main(int argc, GChar** argv) -> int {
 #ifdef SOLVER_AVAILABLE
   if(ret == 0 && (result.count("solver") > 0 || solverRunner.toRun(SolverType::LBM))) {
     logger.close();
-    solverRunner.transferGrid(gridGenRunner.grid());
+    solverRunner.transferGrid(gridGenRunner.grid(), debug);
     //    gridGenRunner.releaseMemory();
     ret = solverRunner.run(debug);
   }
 #endif
 
   logger.close();
+  MPI_Finalize();
   return static_cast<int>(ret);
 }

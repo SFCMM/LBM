@@ -21,7 +21,8 @@ include_directories(external src include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(lbm
-        src/main.cpp src/gridgenerator/gridGenerator.cpp src/gridgenerator/gridGenerator.h src/config.h.in
+        src/main.cpp src/gridgenerator/gridGenerator.cpp src/lbm_solver.cpp
+        src/gridgenerator/gridGenerator.h config.h
         src/globaltimers.h src/cartesiangrid.h
         src/gridcell_properties.h src/WeightMethod.h src/geometry.h src/functions.h src/common/IO.h src/term.h
         src/interface/grid_interface.h src/gridgenerator/cartesiangrid_generation.h src/common/boundingbox.h src/lbm_solver.h)

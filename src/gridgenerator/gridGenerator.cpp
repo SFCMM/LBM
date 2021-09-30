@@ -19,26 +19,6 @@ template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv) {
   m_exe = argv[0]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
-#ifdef _OPENMP
-  int provided = 0;
-  MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
-#else
-  MPI_Init(&argc, &argv);
-#endif
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &m_domainId);
-  MPI_Comm_size(MPI_COMM_WORLD, &m_noDomains);
-  MPI::g_mpiInformation.init(m_domainId, m_noDomains);
-
-  MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
-
-  // Open cerr0 on MPI root
-  if(MPI::isRoot()) {
-    cerr0.rdbuf(std::cerr.rdbuf());
-  } else {
-    cerr0.rdbuf(&nullBuffer);
-  }
-
 #ifndef GRIDGEN_SINGLE_FILE_LOG
   logger.open("gridgen_log" + std::to_string(m_domainId), false, argc, argv, MPI_COMM_WORLD);
 #else
@@ -126,8 +106,6 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> GInt {
   RECORD_TIMER_STOP(TimeKeeper[Timers::timertotal]);
   STOP_ALL_RECORD_TIMERS();
   DISPLAY_ALL_TIMERS();
-
-  MPI_Finalize();
 
   return 0;
 }
