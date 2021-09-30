@@ -64,6 +64,10 @@ class AppConfiguration {
     m_app->transferGrid(grid);
   }
 
+  void releaseMemory(){
+    m_app.reset(nullptr);
+  }
+
  private:
   template <Debug_Level DEBUG>
   void init() {
@@ -241,7 +245,7 @@ auto main(int argc, GChar** argv) -> int {
   if(ret == 0 && (result.count("solver") > 0 || solverRunner.toRun(SolverType::LBM))) {
     logger.close();
     solverRunner.transferGrid(gridGenRunner.grid(), debug);
-    //    gridGenRunner.releaseMemory();
+    gridGenRunner.releaseMemory();
     ret = solverRunner.run(debug);
   }
 #endif
