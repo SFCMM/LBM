@@ -74,7 +74,6 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> GInt {
   TimerProfiling runProfile("GridGenerator::run");
   PROFILE();
   RECORD_TIMER_START(TimeKeeper[Timers::Init]);
-  startupInfo();
   logger << "Grid generator started ||>" << endl;
   cout << "Grid generator started ||>" << endl;
   loadConfiguration();
@@ -103,26 +102,6 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> GInt {
   unusedConfigValues();
 
   return 0;
-}
-template <Debug_Level DEBUG_LEVEL>
-void GridGenerator<DEBUG_LEVEL>::startupInfo() {
-  if(MPI::isRoot()) {
-    cout << R"(    __  _______  __  _________     _     __)" << endl;
-    cout << R"(   /  |/  / __ \/  |/  / ____/____(_)___/ /)" << endl;
-    cout << R"(  / /|_/ / / / / /|_/ / / __/ ___/ / __  / )" << endl;
-    cout << R"( / /  / / /_/ / /  / / /_/ / /  / / /_/ /  )" << endl;
-    cout << R"(/_/  /_/\____/_/  /_/\____/_/  /_/\__,_/   )" << endl;
-    cout << R"(                                           )" << endl;
-    cout << "Start time:            " << dateString() << "\n"
-         << "Number of ranks:       " << MPI::globalNoDomains() << "\n"
-#ifdef _OPENMP
-         << "Number of OMP threads: " << omp_get_max_threads() << "\n"
-#endif
-         << "Host (of rank 0):      " << hostString() << "\n"
-         << "Working directory:     " << getCWD() << "\n"
-         << "Executable:            " << m_exe << "\n"
-         << endl;
-  }
 }
 
 template <Debug_Level DEBUG_LEVEL>

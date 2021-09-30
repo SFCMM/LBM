@@ -45,7 +45,6 @@ class GridGenerator : public AppInterface {
   std::unordered_map<GString, GBool> m_configKeys{};
 
   void initTimers();
-  void startupInfo();
   void loadConfiguration();
   template <GInt nDim>
   void loadGridDefinition();

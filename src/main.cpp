@@ -104,6 +104,28 @@ class AppConfiguration {
 } // namespace internal_
 
 
+void startupInfo(GChar** argv) {
+  using namespace std;
+
+  if(MPI::isRoot()) {
+    cout << R"(    __  _______  __  _________     _     __)" << endl;
+    cout << R"(   /  |/  / __ \/  |/  / ____/____(_)___/ /)" << endl;
+    cout << R"(  / /|_/ / / / / /|_/ / / __/ ___/ / __  / )" << endl;
+    cout << R"( / /  / / /_/ / /  / / /_/ / /  / / /_/ /  )" << endl;
+    cout << R"(/_/  /_/\____/_/  /_/\____/_/  /_/\__,_/   )" << endl;
+    cout << R"(                                           )" << endl;
+    cout << "Start time:            " << dateString() << "\n"
+         << "Number of ranks:       " << MPI::globalNoDomains() << "\n"
+#ifdef _OPENMP
+         << "Number of OMP threads: " << omp_get_max_threads() << "\n"
+#endif
+         << "Host (of rank 0):      " << hostString() << "\n"
+         << "Working directory:     " << getCWD() << "\n"
+         << "Executable:            " << argv[0] << "\n"
+         << endl;
+  }
+}
+
 /// Default entry point of the application. Parse commandline arguments.
 /// \param argc Number of received commandline arguments.
 /// \param argv String of received commandline arguments.
@@ -167,6 +189,8 @@ auto main(int argc, GChar** argv) -> int {
   NEW_TIMER_GROUP_NOCREATE(TimeKeeper[Timers::AppGroup], "Application");
   NEW_TIMER_NOCREATE(TimeKeeper[Timers::timertotal], "Total", TimeKeeper[Timers::AppGroup]);
   RECORD_TIMER_START(TimeKeeper[Timers::timertotal]);
+
+  startupInfo(argv);
 
   internal_::AppConfiguration gridGenRunner(argc, argv, domainId, noDomains);
 #ifdef SOLVER_AVAILABLE
