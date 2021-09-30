@@ -107,6 +107,7 @@ auto GridGenerator<DEBUG_LEVEL>::run() -> GInt {
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
   RECORD_TIMER_START(TimeKeeper[Timers::IO]);
+  RECORD_TIMER_START(TimeKeeper[Timers::GridIo]);
 
   if(!m_benchmark) {
     logger << "Loading configuration file [" << m_configurationFileName << "]" << endl;
@@ -150,6 +151,7 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
   }
 
   RECORD_TIMER_STOP(TimeKeeper[Timers::IO]);
+  RECORD_TIMER_STOP(TimeKeeper[Timers::GridIo]);
 }
 
 template <Debug_Level DEBUG_LEVEL>
@@ -222,14 +224,17 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
   logger.eraseAttribute("level");
 
   RECORD_TIMER_START(TimeKeeper[Timers::IO]);
+  RECORD_TIMER_START(TimeKeeper[Timers::GridIo]);
   m_grid->save(m_outputDir + m_outGridFilename, m_gridOutConfig);
   RECORD_TIMER_STOP(TimeKeeper[Timers::IO]);
+  RECORD_TIMER_STOP(TimeKeeper[Timers::GridIo]);
 }
 
 template <Debug_Level DEBUG_LEVEL>
 template <GInt NDIM>
 void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
   RECORD_TIMER_START(TimeKeeper[Timers::IO]);
+  RECORD_TIMER_START(TimeKeeper[Timers::GridIo]);
   if(m_benchmark) {
     return;
   }
@@ -279,6 +284,7 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
 
 
   RECORD_TIMER_STOP(TimeKeeper[Timers::IO]);
+  RECORD_TIMER_STOP(TimeKeeper[Timers::GridIo]);
 }
 
 template <Debug_Level DEBUG_LEVEL>
