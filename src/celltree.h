@@ -146,7 +146,7 @@ class Tree {
     return m_globalIds[id];
   }
 
-  inline auto level(const GInt id) -> GInt& {
+  inline auto level(const GInt id) -> std::byte& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       return m_levels.at(id);
@@ -154,7 +154,7 @@ class Tree {
     return m_levels[id];
   }
 
-  [[nodiscard]] inline auto level(const GInt id) const -> GInt {
+  [[nodiscard]] inline auto level(const GInt id) const -> std::byte {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       return m_levels.at(id);
@@ -162,30 +162,30 @@ class Tree {
     return m_levels[id];
   }
 
-  inline auto coordinate(const GInt id, const GInt dir) -> GDouble& {
+  inline auto center(const GInt id, const GInt dir) -> GDouble& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       checkDir(dir);
-      return m_coordinates.at(id * NDIM + dir);
+      return m_center.at(id * NDIM + dir);
     }
-    return m_coordinates[id * NDIM + dir];
+    return m_center[id * NDIM + dir];
   }
 
-  [[nodiscard]] inline auto coordinate(const GInt id, const GInt dir) const -> GDouble {
+  [[nodiscard]] inline auto center(const GInt id, const GInt dir) const -> GDouble {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       checkDir(dir);
-      return m_coordinates.at(id * NDIM + dir);
+      return m_center.at(id * NDIM + dir);
     }
-    return m_coordinates[id * NDIM + dir];
+    return m_center[id * NDIM + dir];
   }
 
-  [[nodiscard]] inline auto coordinate(const GInt id) const -> const GDouble* {
+  [[nodiscard]] inline auto center(const GInt id) const -> const GDouble* {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
-      return &m_coordinates.at(id * NDIM);
+      return &m_center.at(id * NDIM);
     }
-    return &m_coordinates[id * NDIM];
+    return &m_center[id * NDIM];
   }
 
   inline auto weight(const GInt id) -> GFloat& {
@@ -312,13 +312,13 @@ class Tree {
   [[nodiscard]] inline auto size() const -> GInt { return m_size; }
   [[nodiscard]] inline auto empty() const -> GBool { return m_size == 0; }
 
-  void reset(const GInt capacity) {
+  void setCapacity(const GInt capacity) {
     m_parentIds.resize(capacity);
-    m_childIds.resize(capacity);
-    m_neighborIds.resize(capacity);
+    m_childIds.resize(capacity * maxNoChildren<NDIM>());
+    m_neighborIds.resize(capacity * maxNoNghbrs<NDIM>());
     m_globalIds.resize(capacity);
     m_levels.resize(capacity);
-    m_coordinates.resize(capacity);
+    m_center.resize(capacity * NDIM);
     m_weight.resize(capacity);
     m_properties.resize(capacity);
     m_noOffsprings.resize(capacity);
@@ -326,14 +326,13 @@ class Tree {
     reset();
   }
 
- private:
   void reset() {
     std::fill(m_parentIds.begin(), m_parentIds.end(), -1);
     std::fill(m_childIds.begin(), m_childIds.end(), -1);
     std::fill(m_neighborIds.begin(), m_neighborIds.end(), -1);
     std::fill(m_globalIds.begin(), m_globalIds.end(), -1);
-    std::fill(m_levels.begin(), m_levels.end(), -1);
-    std::fill(m_coordinates.begin(), m_coordinates.end(), NAN);
+    std::fill(m_levels.begin(), m_levels.end(), std::byte(-1));
+    std::fill(m_center.begin(), m_center.end(), NAN);
     std::fill(m_weight.begin(), m_weight.end(), NAN);
     std::fill(m_properties.begin(), m_properties.end(), 0);
     std::fill(m_noOffsprings.begin(), m_noOffsprings.end(), -1);
@@ -341,13 +340,14 @@ class Tree {
     m_size = 0;
   }
 
+ private:
   void invalidate(const GInt begin, const GInt end) {
     std::fill(m_parentIds.begin() + begin, m_parentIds.begin() + end, -1);
     std::fill(m_childIds.begin() + begin, m_childIds.begin() + end, -1);
     std::fill(m_neighborIds.begin() + begin, m_neighborIds.begin() + end, -1);
     std::fill(m_globalIds.begin() + begin, m_globalIds.begin() + end, -1);
     std::fill(m_levels.begin() + begin, m_levels.begin() + end, -1);
-    std::fill(m_coordinates.begin() + begin, m_coordinates.begin() + end, NAN);
+    std::fill(m_center.begin() + begin, m_center.begin() + end, NAN);
     std::fill(m_weight.begin() + begin, m_weight.begin() + end, NAN);
     std::fill(m_properties.begin() + begin, m_properties.begin() + end, 0);
     std::fill(m_noOffsprings.begin() + begin, m_noOffsprings.begin() + end, -1);
@@ -459,19 +459,19 @@ class Tree {
   }
 
   // Data containers
-  std::vector<GInt> m_globalIds{};
-  std::vector<GInt> m_parentIds{};
-  std::vector<GInt> m_childIds{};
-  std::vector<GInt> m_neighborIds{};
-  std::vector<GInt> m_levels{};
-  std::vector<GInt> m_noOffsprings{};
+  std::vector<GInt>      m_globalIds{};
+  std::vector<GInt>      m_parentIds{};
+  std::vector<GInt>      m_childIds{};
+  std::vector<GInt>      m_neighborIds{};
+  std::vector<std::byte> m_levels{};
+  std::vector<GInt>      m_noOffsprings{};
 
   std::vector<PropertyBitsetType> m_properties{};
 
   std::vector<GFloat> m_weight{};
   std::vector<GFloat> m_workload{};
 
-  std::vector<GDouble> m_coordinates{};
+  std::vector<GDouble> m_center{};
 
   GInt m_size = 0;
 };

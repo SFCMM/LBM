@@ -8,14 +8,19 @@
 template <Debug_Level DEBUG_LEVEL>
 class LBMSolver : public AppInterface {
  public:
-  LBMSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
+  LBMSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains) {
+
+  };
   ~LBMSolver() override = default;
 
   void init(int argc, GChar** argv);
   void init(int argc, GChar** argv, GString config_file) override;
 
 
-  void initBenchmark(int argc, GChar** argv) override { TERMM(-1, "Not implemented!"); };
+  void initBenchmark(int argc, GChar** argv) override {
+    init(argc, argv);
+    TERMM(-1, "Not implemented!");
+  };
 
   auto               run() -> GInt override { return 0; };
   [[nodiscard]] auto grid() const -> const GridInterface& override { return *m_grid; };
@@ -25,6 +30,20 @@ class LBMSolver : public AppInterface {
     logger << "Transferring Grid to LBM solver" << std::endl;
 
     m_dim = grid.dim();
+
+    switch(m_dim) {
+      case 1:
+        m_grid = std::make_unique<CartesianGrid<DEBUG_LEVEL, 1>>();
+        break;
+      case 2:
+        m_grid = std::make_unique<CartesianGrid<DEBUG_LEVEL, 2>>();
+        break;
+      case 3:
+        m_grid = std::make_unique<CartesianGrid<DEBUG_LEVEL, 3>>();
+        break;
+      default:
+        TERMM(-1, "Only dimensions 1,2 and 3 are supported.");
+    }
 
     switch(m_dim) {
       case 1:
@@ -52,9 +71,10 @@ class LBMSolver : public AppInterface {
   GString m_exe;
   GString m_configurationFileName;
 
-  GInt   m_dim       = 0;
   GInt32 m_domainId  = -1;
   GInt32 m_noDomains = -1;
+  GInt   m_dim       = 0;
+
 };
 
 #endif // LBM_LBM_SOLVER_H

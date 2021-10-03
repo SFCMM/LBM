@@ -63,7 +63,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   /// Create the grid that is used for partitioning. This grid has the level of the option provided in the grid
   /// configuration file. The grid up to this level is always produced on a single MPI rank.
-  /// \param partioningLvl Level of the partitioing grid.
+  /// \param partitioningLvl Level of the partitioning grid.
   void createPartitioningGrid(const GInt partitioningLvl) {
     RECORD_TIMER_START(TimeKeeper[Timers::GridPart]);
     if(m_capacity < 1) {
@@ -280,14 +280,45 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
            + 1;                               // m_level
   }
 
+  [[nodiscard]] auto capacity() const -> GInt {
+    return m_capacity;
+  }
+
+  [[nodiscard]] auto size() const -> GInt {
+    return m_size;
+  }
+
+  [[nodiscard]] auto parent(const GInt id) const -> GInt {
+    return m_parentId[id];
+  }
+
+  [[nodiscard]] auto globalId(const GInt id) const -> GInt {
+    return m_globalId[id];
+  }
+
+  [[nodiscard]] auto level(const GInt id) const -> std::byte {
+    return m_level[id];
+  }
+
+  [[nodiscard]] auto child(const GInt id, const GInt childId) const -> GInt {
+    return m_childIds[id].c[childId];
+  }
+
+  [[nodiscard]] auto neighbor(const GInt id, const GInt dir) const -> GInt {
+    return m_nghbrIds[id].n[dir];
+  }
+
+  [[nodiscard]] auto center(const GInt id, const GInt dir) const -> GDouble {
+    return m_center[id][dir];
+  }
 
  private:
   inline auto                  property(const GInt id, CellProperties p) -> auto { return m_properties[id][static_cast<GInt>(p)]; }
   [[nodiscard]] inline auto    property(const GInt id, CellProperties p) const -> GBool { return m_properties[id][static_cast<GInt>(p)]; }
   std::vector<LevelOffsetType> m_levelOffsets{};
   std::vector<Point<NDIM>>     m_center{};
-  std::vector<GInt>            m_parentId{INVALID_CELLID};
-  std::vector<GInt>            m_globalId{INVALID_CELLID};
+  std::vector<GInt>            m_parentId{};
+  std::vector<GInt>            m_globalId{};
   std::vector<GInt>            m_noChildren{};
   std::vector<std::byte>       m_level{};
   std::vector<NeighborList<NDIM>> m_nghbrIds{};
@@ -648,7 +679,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       }
     }
 
-    // sort index by hilberId
+    // sort index by hilbertId
     std::sort(index.begin(), index.end(), [&](int A, int B) -> bool { return hilbertIds[A] < hilbertIds[B]; });
 
     for(GInt id = 0; id < m_size; ++id) {

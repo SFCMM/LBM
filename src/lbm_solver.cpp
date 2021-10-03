@@ -17,7 +17,7 @@ void LBMSolver<DEBUG_LEVEL>::init(int argc, GChar** argv) {
 #endif
   logger.setMinFlushSize(LOG_MIN_FLUSH_SIZE);
 
-    initTimers();
+  initTimers();
 }
 
 template <Debug_Level DEBUG_LEVEL>
