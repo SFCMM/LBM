@@ -4,10 +4,11 @@
 #include <gcem.hpp>
 
 #include <sfcmm_common.h>
-#include "celltree.h"
+//#include "celltree.h"
 #include "common/IO.h"
 #include "geometry.h"
 #include "globaltimers.h"
+#include "gridcell_properties.h"
 #include "interface/grid_interface.h"
 
 struct LevelOffsetType {
@@ -34,6 +35,11 @@ struct /*alignas(64)*/ ChildList {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class BaseCartesianGrid : public GridInterface {
  public:
+  using PropertyBitsetType = grid::cell::BitsetType;
+
+  /// Underlying enum type for property access
+  using Cell = CellProperties;
+
   BaseCartesianGrid()                         = default;
   ~BaseCartesianGrid() override               = default;
   BaseCartesianGrid(const BaseCartesianGrid&) = delete;
@@ -90,6 +96,74 @@ class BaseCartesianGrid : public GridInterface {
   };
   [[nodiscard]] inline auto currentHighestLvl() const -> GInt override { return m_currentHighestLvl; }
   [[nodiscard]] inline auto dim() const -> GInt override { return NDIM; }
+  inline auto               property(const GInt id, CellProperties p) -> auto {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      checkProperty(p);
+      return m_properties.at(id)[grid::cell::p(p)];
+    }
+    return m_properties[id][static_cast<GInt>(p)];
+  }
+  [[nodiscard]] inline auto property(const GInt id, CellProperties p) const -> GBool {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      checkProperty(p);
+      return m_properties.at(id)[grid::cell::p(p)];
+    }
+    return m_properties[id][static_cast<GInt>(p)];
+  }
+  [[nodiscard]] inline auto propertiesToBits(const GInt id) const -> GUint {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      return m_properties.at(id).to_ullong();
+    }
+    return m_properties[id].to_ullong();
+  }
+
+  void propertiesFromBits(const GInt id, const GUint bits) {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+    }
+    m_properties[id] = PropertyBitsetType(bits);
+  }
+  [[nodiscard]] inline auto propertiesToString(const GInt id) const -> GString {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      return m_properties.at(id).to_string();
+    }
+    return m_properties[id].to_string();
+  }
+  inline auto property(const GInt id) -> PropertyBitsetType& {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      return m_properties.at(id);
+    }
+    return m_properties[id];
+  }
+
+  void resetProperties(const GInt id) {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+    }
+    m_properties[id].reset();
+  }
+
+  [[nodiscard]] inline auto isLeafCell(const GInt id) const -> GBool {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      return m_properties.at(id)[static_cast<GInt>(CellProperties::leaf)];
+    }
+    return m_properties[id][static_cast<GInt>(CellProperties::leaf)];
+  }
+
+  void checkBounds(const GInt id) const {
+    if(id > this->size()) {
+      TERMM(-1, "Out of bounds.");
+    }
+  }
+
+  [[nodiscard]] inline auto size() const -> GInt { return m_size; }
+  [[nodiscard]] inline auto empty() const -> GBool { return m_size == 0; }
 
  protected:
   /// Increase the current highest level by 1
@@ -104,12 +178,27 @@ class BaseCartesianGrid : public GridInterface {
   /// Get access to geometry
   inline auto geometry() const { return m_geometry; }
 
+  void setCapacity(const GInt capacity) override { m_properties.resize(capacity); }
+
+  void reset() override {
+    m_properties.clear();
+    m_size = 0;
+  }
+
  private:
+  void checkProperty(const Cell p) const {
+    if(p != Cell::NumProperties) {
+      TERMM(-1, "Invalid property!");
+    }
+  }
+
   std::shared_ptr<GeometryManager<DEBUG_LEVEL, NDIM>> m_geometry;
 
   GInt m_currentHighestLvl = 0;
   GInt m_partitioningLvl   = 0;
   GInt m_maxLvl            = 0;
+  GInt m_size              = 0;
+
 
   // box containing the whole geometry
   BoundingBoxCT<NDIM> m_boundingBox;
@@ -122,6 +211,8 @@ class BaseCartesianGrid : public GridInterface {
   GInt m_decisiveDirection{};
   // length of the cells on each level basest on the largest extent
   std::array<GDouble, MAX_LVL> m_lengthOnLevel{NAN_LIST<MAX_LVL>()};
+
+  std::vector<PropertyBitsetType> m_properties{};
 };
 
 #endif // GRIDGENERATOR_CARTESIANGRID_H
