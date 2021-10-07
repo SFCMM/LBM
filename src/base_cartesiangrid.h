@@ -126,6 +126,7 @@ class BaseCartesianGrid : public GridInterface {
     }
     m_properties[id] = PropertyBitsetType(bits);
   }
+
   [[nodiscard]] inline auto propertiesToString(const GInt id) const -> GString {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
@@ -133,6 +134,7 @@ class BaseCartesianGrid : public GridInterface {
     }
     return m_properties[id].to_string();
   }
+
   inline auto property(const GInt id) -> PropertyBitsetType& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
@@ -162,8 +164,37 @@ class BaseCartesianGrid : public GridInterface {
     }
   }
 
+  [[nodiscard]] inline auto capacity() const -> GInt { return m_parentId.capacity(); }
   [[nodiscard]] inline auto size() const -> GInt { return m_size; }
   [[nodiscard]] inline auto empty() const -> GBool { return m_size == 0; }
+
+  // Parent-child relationship
+  inline auto parent(const GInt id) -> GInt& {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      return m_parentId.at(id);
+    }
+    // no bound checking
+    return m_parentId[id];
+  }
+
+  [[nodiscard]] inline auto parent(const GInt id) const -> GInt {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      return m_parentId.at(id);
+    }
+    // no bound checking
+    return m_parentId[id];
+  }
+
+  [[nodiscard]] inline auto hasParent(const GInt id) const -> GBool {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      return m_parentId.at(id) > -1;
+    }
+    // no bound checking
+    return m_parentId[id] > -1;
+  }
 
  protected:
   /// Increase the current highest level by 1
@@ -178,10 +209,20 @@ class BaseCartesianGrid : public GridInterface {
   /// Get access to geometry
   inline auto geometry() const { return m_geometry; }
 
-  void setCapacity(const GInt capacity) override { m_properties.resize(capacity); }
+  void setCapacity(const GInt capacity) override {
+    m_properties.resize(capacity);
+    m_parentId.resize(capacity);
+  }
 
   void reset() override {
+    std::for_each(m_properties.begin(), m_properties.end(), [](auto& prop){prop.reset();});
+    std::fill(m_parentId.begin(), m_parentId.end(), INVALID_CELLID);
+    m_size = 0;
+  }
+
+  void clear() {
     m_properties.clear();
+    m_parentId.clear();
     m_size = 0;
   }
 
@@ -213,6 +254,7 @@ class BaseCartesianGrid : public GridInterface {
   std::array<GDouble, MAX_LVL> m_lengthOnLevel{NAN_LIST<MAX_LVL>()};
 
   std::vector<PropertyBitsetType> m_properties{};
+  std::vector<GInt>               m_parentId{};
 };
 
 #endif // GRIDGENERATOR_CARTESIANGRID_H
