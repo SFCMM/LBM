@@ -160,26 +160,23 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       checkDir(dir);
-      return m_center.at(id * NDIM + dir);
     }
-    return m_center[id * NDIM + dir];
+    return m_center[id][dir];
   }
 
   [[nodiscard]] inline auto center(const GInt id, const GInt dir) const -> GDouble {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       checkDir(dir);
-      return m_center.at(id * NDIM + dir);
     }
-    return m_center[id * NDIM + dir];
+    return m_center[id][dir];
   }
 
-  [[nodiscard]] inline auto center(const GInt id) const -> const GDouble* {
+  [[nodiscard]] inline auto center(const GInt id) const -> const Point<NDIM>& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
-      return &m_center.at(id * NDIM);
     }
-    return &m_center[id * NDIM];
+    return m_center[id];
   }
 
   inline auto weight(const GInt id) -> GFloat& {
@@ -234,33 +231,33 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   /// Return number of properties defined for each node
   static constexpr auto noProperties() -> GInt { return grid::cell::p(Cell::NumProperties); }
 
-  void setCapacity(const GInt capacity) override {
+  void setCapacity(const GInt _capacity) override {
     if(!empty()) {
       TERMM(-1, "Invalid operation tree already allocated.");
     }
-    m_childIds.resize(capacity * cartesian::maxNoChildren<NDIM>());
-    m_neighborIds.resize(capacity * cartesian::maxNoNghbrs<NDIM>());
-    m_globalIds.resize(capacity);
-    m_levels.resize(capacity);
-    m_center.resize(capacity * NDIM);
-    m_weight.resize(capacity);
-    m_noOffsprings.resize(capacity);
-    m_workload.resize(capacity);
-    BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setCapacity(capacity);
+    m_childIds.resize(_capacity * cartesian::maxNoChildren<NDIM>());
+    m_neighborIds.resize(_capacity * cartesian::maxNoNghbrs<NDIM>());
+    m_globalIds.resize(_capacity);
+    m_levels.resize(_capacity);
+    m_center.resize(_capacity);
+    m_weight.resize(_capacity);
+    m_noOffsprings.resize(_capacity);
+    m_workload.resize(_capacity);
+    BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setCapacity(_capacity);
     reset();
   }
 
   void reset() override {
-    std::fill(m_childIds.begin(), m_childIds.end(), -1);
-    std::fill(m_neighborIds.begin(), m_neighborIds.end(), -1);
-    std::fill(m_globalIds.begin(), m_globalIds.end(), -1);
+    std::fill(m_childIds.begin(), m_childIds.end(), INVALID_CELLID);
+    std::fill(m_neighborIds.begin(), m_neighborIds.end(), INVALID_CELLID);
+    std::fill(m_globalIds.begin(), m_globalIds.end(), INVALID_CELLID);
     std::fill(m_levels.begin(), m_levels.end(), std::byte(-1));
-    std::fill(m_center.begin(), m_center.end(), NAN);
     std::fill(m_weight.begin(), m_weight.end(), NAN);
-    std::fill(m_noOffsprings.begin(), m_noOffsprings.end(), -1);
+    std::fill(m_noOffsprings.begin(), m_noOffsprings.end(), INVALID_CELLID);
     std::fill(m_workload.begin(), m_workload.end(), NAN);
     for(GInt i = 0; i < capacity(); ++i) {
       property(i).reset();
+      m_center[i].fill(NAN);
     }
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::reset();
   }
@@ -445,7 +442,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   std::vector<GFloat> m_weight{};
   std::vector<GFloat> m_workload{};
 
-  std::vector<GDouble> m_center{};
+  std::vector<Point<NDIM>> m_center{};
 };
 
 #endif // GRIDGENERATOR_CARTESIANGRID_H
