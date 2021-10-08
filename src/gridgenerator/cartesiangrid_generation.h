@@ -15,6 +15,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::property;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::parent;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::level;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::globalId;
 
   using PropertyBitsetType = grid::cell::BitsetType;
   using ChildListType      = std::array<GInt, cartesian::maxNoChildren<NDIM>()>;
@@ -36,7 +37,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       return;
     }
     m_center.resize(capacity);
-    m_globalId.resize(capacity);
     m_noChildren.resize(capacity);
     m_nghbrIds.resize(capacity);
     m_childIds.resize(capacity);
@@ -47,7 +47,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void reset() override {
     m_center.clear();
-    m_globalId.clear();
     m_noChildren.clear();
     m_nghbrIds.clear();
     m_childIds.clear();
@@ -99,7 +98,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
     const GInt begin                       = m_levelOffsets[0].begin;
     m_center[begin]                        = Point<NDIM>(cog().data());
-    m_globalId[begin]                      = begin;
+    globalId(begin)                        = begin;
     property(begin, CellProperties::bndry) = true;
     m_size                                 = 1;
 
@@ -281,8 +280,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   [[nodiscard]] auto capacity() const -> GInt { return m_capacity; }
 
-  [[nodiscard]] auto globalId(const GInt id) const -> GInt { return m_globalId[id]; }
-
   [[nodiscard]] auto child(const GInt id, const GInt childId) const -> GInt { return m_childIds[id].c[childId]; }
 
   [[nodiscard]] auto neighbor(const GInt id, const GInt dir) const -> GInt { return m_nghbrIds[id].n[dir]; }
@@ -391,9 +388,9 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
           m_center[cellId]
           + HALF * refinedLvlLength
                 * Point<NDIM>(cartesian::childDir[childId].data()); // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
-      level(childCellId)      = static_cast<std::byte>(refinedLvl);
-      parent(childCellId)     = cellId;
-      m_globalId[childCellId] = childCellId;
+      level(childCellId)    = static_cast<std::byte>(refinedLvl);
+      parent(childCellId)   = cellId;
+      globalId(childCellId) = childCellId;
 
       // reset since we overwrite previous levels
       m_noChildren[childCellId] = 0;
@@ -560,7 +557,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     property(to)     = property(from);
     level(to)        = level(from);
     m_center[to]     = m_center[from];
-    m_globalId[to]   = m_globalId[from];
+    globalId(to)     = globalId(from);
     parent(to)       = parent(from);
     m_nghbrIds[to]   = m_nghbrIds[from];
     m_childIds[to]   = m_childIds[from];
@@ -675,7 +672,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   std::vector<LevelOffsetType>    m_levelOffsets{};
   std::vector<Point<NDIM>>        m_center{};
-  std::vector<GInt>               m_globalId{};
   std::vector<GInt>               m_noChildren{};
   std::vector<NeighborList<NDIM>> m_nghbrIds{};
   std::vector<ChildList<NDIM>>    m_childIds{};
