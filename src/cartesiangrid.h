@@ -92,27 +92,27 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       checkDir(dir);
-      return m_neighborIds.at(id * cartesian::maxNoNghbrs<NDIM>() + dir);
+      return m_nghbrIds.at(id * cartesian::maxNoNghbrs<NDIM>() + dir);
     }
-    return m_neighborIds[id * cartesian::maxNoNghbrs<NDIM>() + dir];
+    return m_nghbrIds[id * cartesian::maxNoNghbrs<NDIM>() + dir];
   }
 
   [[nodiscard]] inline auto neighbor(const GInt id, const GInt dir) const -> GInt {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       checkDir(dir);
-      return m_neighborIds.at(id * cartesian::maxNoNghbrs<NDIM>() + dir);
+      return m_nghbrIds.at(id * cartesian::maxNoNghbrs<NDIM>() + dir);
     }
-    return m_neighborIds[id * cartesian::maxNoNghbrs<NDIM>() + dir];
+    return m_nghbrIds[id * cartesian::maxNoNghbrs<NDIM>() + dir];
   }
 
   [[nodiscard]] inline auto hasNeighbor(const GInt id, const GInt dir) const -> GBool {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       checkDir(dir);
-      return m_neighborIds.at(id * cartesian::maxNoNghbrs<NDIM>() + dir) > -1;
+      return m_nghbrIds.at(id * cartesian::maxNoNghbrs<NDIM>() + dir) > -1;
     }
-    return m_neighborIds[id * cartesian::maxNoNghbrs<NDIM>() + dir] > -1;
+    return m_nghbrIds[id * cartesian::maxNoNghbrs<NDIM>() + dir] > -1;
   }
 
   [[nodiscard]] inline auto hasAnyNeighbor(const GInt id, const GInt dir) const -> GBool {
@@ -236,7 +236,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       TERMM(-1, "Invalid operation tree already allocated.");
     }
     m_childIds.resize(_capacity * cartesian::maxNoChildren<NDIM>());
-    m_neighborIds.resize(_capacity * cartesian::maxNoNghbrs<NDIM>());
+    m_nghbrIds.resize(_capacity * cartesian::maxNoNghbrs<NDIM>());
     m_globalIds.resize(_capacity);
     m_levels.resize(_capacity);
     m_center.resize(_capacity);
@@ -249,7 +249,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void reset() override {
     std::fill(m_childIds.begin(), m_childIds.end(), INVALID_CELLID);
-    std::fill(m_neighborIds.begin(), m_neighborIds.end(), INVALID_CELLID);
+    std::fill(m_nghbrIds.begin(), m_nghbrIds.end(), INVALID_CELLID);
     std::fill(m_globalIds.begin(), m_globalIds.end(), INVALID_CELLID);
     std::fill(m_levels.begin(), m_levels.end(), std::byte(-1));
     std::fill(m_weight.begin(), m_weight.end(), NAN);
@@ -322,7 +322,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   void invalidate(const GInt begin, const GInt end) {
     std::fill(&parent(begin), &parent(end), INVALID_CELLID);
     std::fill(m_childIds.begin() + begin, m_childIds.begin() + end, INVALID_CELLID);
-    std::fill(m_neighborIds.begin() + begin, m_neighborIds.begin() + end, INVALID_CELLID);
+    std::fill(m_nghbrIds.begin() + begin, m_nghbrIds.begin() + end, INVALID_CELLID);
     std::fill(m_globalIds.begin() + begin, m_globalIds.begin() + end, INVALID_CELLID);
     std::fill(m_levels.begin() + begin, m_levels.begin() + end, INVALID_CELLID);
     std::fill(m_center.begin() + begin, m_center.begin() + end, NAN);
@@ -435,7 +435,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   // Data containers
   std::vector<GInt>      m_globalIds{};
   std::vector<GInt>      m_childIds{};
-  std::vector<GInt>      m_neighborIds{};
+  std::vector<GInt>      m_nghbrIds{};
   std::vector<std::byte> m_levels{};
   std::vector<GInt>      m_noOffsprings{};
 
