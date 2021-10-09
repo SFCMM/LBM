@@ -6,6 +6,7 @@ namespace sfcmm {
 static constexpr int MAX_DIM = 4;
 }
 
+#include "common/boundingbox.h"
 #include "common/compiler_config.h"
 #include "common/constants.h"
 #include "common/globalmpi.h"

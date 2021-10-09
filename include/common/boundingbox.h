@@ -1,6 +1,9 @@
 #ifndef GRIDGENERATOR_BOUNDINGBOX_H
 #define GRIDGENERATOR_BOUNDINGBOX_H
 
+#include "common/constants.h"
+#include "common/sfcmm_types.h"
+
 /// Interface for accessing bounding boxes.
 class BoundingBoxInterface {
  public:
@@ -73,7 +76,12 @@ class BoundingBoxCT : public BoundingBox<BoundingBoxCT<NDIM>> {
 
  public:
   BoundingBoxCT() = default;
+  /// Initialize from dynamic bounding box
+  /// \param rhs Dynamic Bounding Box type to copy from
   BoundingBoxCT(const BoundingBoxDynamic& rhs);
+
+  /// Initialize from any bounding box
+  /// \param rhs Any bounding box type
   BoundingBoxCT(const BoundingBoxInterface& rhs);
 
   [[nodiscard]] inline auto size() const -> GInt override { return NDIM; }
@@ -102,11 +110,17 @@ class BoundingBoxDynamic : public BoundingBox<BoundingBoxDynamic> {
   friend BoundingBox<BoundingBoxDynamic>;
 
  public:
+  // todo: add constructor with dimension
   BoundingBoxDynamic() = default;
 
+  /// Initialize from a compile time constant bounding box
+  /// \param rhs Compile time constant bounding box type
   template <GInt NDIM>
   BoundingBoxDynamic(const BoundingBoxCT<NDIM>& rhs);
 
+  /// initialize dynamic type
+  /// \param dim Dimension of the initialization.
+  // todo: add init to interface
   void init(const GInt dim) {
     m_min.resize(dim);
     m_max.resize(dim);

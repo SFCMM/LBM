@@ -21,8 +21,8 @@
 /// Define a short-hand macros for the location in the code (<file>:<line>)
 #define LOC_ __FILE__ ":" XSTRINGIFY(__LINE__)
 
-#define FUN_ static_cast<const char*>(__PRETTY_FUNCTION__)
-#define SHORT_FUN_ static_cast<const char *>(__FUNCTION__)
+#define FUN_       static_cast<const char*>(__PRETTY_FUNCTION__)
+#define SHORT_FUN_ static_cast<const char*>(__FUNCTION__)
 
 #define AT_ std::string(FUN_) + " (" + LOC_ + ")"
 

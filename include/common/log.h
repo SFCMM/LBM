@@ -2,8 +2,6 @@
 
 #ifndef SFCMM_LOG_H
 #define SFCMM_LOG_H
-#include "macros.h"
-#include "util/sys.h"
 #include <fstream>
 #include <map>
 #include <memory>
@@ -11,64 +9,64 @@
 #include <sstream>
 #include <utility>
 #include <vector>
+#include "macros.h"
+#include "util/sys.h"
 
 // todo: add tests
 
 class Log_buffer : public std::stringbuf {
   friend class Log;
 
-public:
+ public:
   Log_buffer() = default;
 
-  Log_buffer(const GInt argc, GChar **argv) : m_argc(argc), m_argv(argv) {}
+  Log_buffer(const GInt argc, GChar** argv) : m_argc(argc), m_argv(argv) {}
 
   /**
-   * \brief Sets the minimum buffer length that has to be reached before the
-   * buffer is flushed. \params[in] minFlushSize Minimum buffer length.
+   * \brief Sets the minimum buffer length that has to be reached before the buffer is flushed.
+   * \params[in] minFlushSize Minimum buffer length.
    */
   void setMinFlushSize(GInt minFlushSize) { m_minFlushSize = minFlushSize; }
 
   virtual void close() = 0;
 
-protected:
+ protected:
   /**
-   * \brief Parses the string input and returns the string with XML entities
-   * escaped \details This method iterates over each character of the given
-   * input string str and replaces relevant XML entities with their escaped
-   * counterparts. This code is adapted from
-   * http://www.mdawson.net/misc/xmlescape.php (Matson Dawson, 2009).
+   * \brief Parses the string input and returns the string with XML entities escaped
+   * \details This method iterates over each character of the given input string str and replaces relevant XML
+   *          entities with their escaped counterparts.
+   *          This code is adapted from http://www.mdawson.net/misc/xmlescape.php (Matson Dawson, 2009).
    *
    * \param[in] str Input string that has characters which need escaping.
    * \return Modified string with XML entities escaped.
    */
-  static auto encodeXml(const GString &inputStr) -> GString {
+  static auto encodeXml(const GString& inputStr) -> GString {
     std::ostringstream tmpEncodeBuffer; // Used as a temporary string buffer
 
     // Create a for loop that uses an iterator to traverse the complete string
-    for (GString::const_iterator iter = inputStr.begin(); iter < inputStr.end();
-         iter++) {
+    for(GString::const_iterator iter = inputStr.begin(); iter < inputStr.end(); iter++) {
       // Get current character
       auto c = static_cast<GChar>(*iter);
 
       // Use a switch/case statement for the five XML entities
-      switch (c) {
-      case '"':
-        tmpEncodeBuffer << "&quot;";
-        break; // Replace double quotes
-      case '&':
-        tmpEncodeBuffer << "&amp;";
-        break; // Replace ampersand
-      case '\'':
-        tmpEncodeBuffer << "&apos;";
-        break; // Replace single quote
-      case '<':
-        tmpEncodeBuffer << "&lt;";
-        break; // Replace less-than sign
-      case '>':
-        tmpEncodeBuffer << "&gt;";
-        break; // Replace greater-than sign
-      default:
-        tmpEncodeBuffer << c; // By default, just append current character
+      switch(c) {
+        case '"':
+          tmpEncodeBuffer << "&quot;";
+          break; // Replace double quotes
+        case '&':
+          tmpEncodeBuffer << "&amp;";
+          break; // Replace ampersand
+        case '\'':
+          tmpEncodeBuffer << "&apos;";
+          break; // Replace single quote
+        case '<':
+          tmpEncodeBuffer << "&lt;";
+          break; // Replace less-than sign
+        case '>':
+          tmpEncodeBuffer << "&gt;";
+          break; // Replace greater-than sign
+        default:
+          tmpEncodeBuffer << c; // By default, just append current character
       }
     }
 
@@ -115,7 +113,7 @@ protected:
     stringstream executionCommand;
     executionCommand.str("");
     executionCommand << m_argv[0];
-    for (GInt n = 1; n < m_argc; n++) {
+    for(GInt n = 1; n < m_argc; n++) {
       executionCommand << " " << m_argv[n];
     }
 
@@ -127,21 +125,15 @@ protected:
               << "\n";
     tmpBuffer << R"(<root>)"
               << "\n";
-    tmpBuffer << R"(<meta name="noDomains" content=")" << m_noDomains
-              << "\" />\n";
-    tmpBuffer << R"(<meta name="dateCreation" content=")" << dateString()
-              << "\" />\n";
-    tmpBuffer << R"(<meta name="fileFormatVersion" content=")"
-              << m_fileFormatVersion << "\" />\n";
+    tmpBuffer << R"(<meta name="noDomains" content=")" << m_noDomains << "\" />\n";
+    tmpBuffer << R"(<meta name="dateCreation" content=")" << dateString() << "\" />\n";
+    tmpBuffer << R"(<meta name="fileFormatVersion" content=")" << m_fileFormatVersion << "\" />\n";
     tmpBuffer << R"(<meta name="user" content=")" << userString() << "\" />\n";
     tmpBuffer << R"(<meta name="host" content=")" << hostString() << "\" />\n";
     tmpBuffer << R"(<meta name="dir" content=")" << getCWD() << "\" />\n";
-    tmpBuffer << R"(<meta name="executionCommand" content=")"
-              << executionCommand.str() << "\" />\n";
-    tmpBuffer << R"(<meta name="revision" content=")" << XSTRINGIFY(PROJECT_VER)
-              << "\" />\n";
-    tmpBuffer << R"(<meta name="build" content=")" << XSTRINGIFY(COMPILER_NAME)
-              << " " << XSTRINGIFY(BUILD_TYPE) << " ("
+    tmpBuffer << R"(<meta name="executionCommand" content=")" << executionCommand.str() << "\" />\n";
+    tmpBuffer << R"(<meta name="revision" content=")" << XSTRINGIFY(PROJECT_VER) << "\" />\n";
+    tmpBuffer << R"(<meta name="build" content=")" << XSTRINGIFY(COMPILER_NAME) << " " << XSTRINGIFY(BUILD_TYPE) << " ("
               << GString(XSTRINGIFY(COMPILER_VER)) << ")"
               << "\" />\n";
 
@@ -158,8 +150,7 @@ protected:
     std::ostringstream tmpBuffer;
 
     // Write XML footer to buffer
-    tmpBuffer << R"(<meta name="dateClosing" content=")" << dateString()
-              << "\" />\n";
+    tmpBuffer << R"(<meta name="dateClosing" content=")" << dateString() << "\" />\n";
     tmpBuffer << "</root>\n";
 
     // Return XML footer
@@ -175,7 +166,7 @@ protected:
 
   /// Current domain Id (reference version)
   /// \return reference to domain Id
-  auto inline domainId() -> int & { return m_domainId; }
+  auto inline domainId() -> int& { return m_domainId; }
 
   /// Current number of MPI ranks
   /// \return number of MPI ranks
@@ -183,40 +174,29 @@ protected:
 
   /// Current number of MPI ranks (reference version)
   /// \return reference to the number of MPI ranks
-  auto inline noDomains() -> int & { return m_noDomains; }
+  auto inline noDomains() -> int& { return m_noDomains; }
 
   /// Prefix message of the XML output of the log message
   /// \return Prefix message of the XML output
-  [[nodiscard]] auto inline prefixMessage() const -> const GString & {
-    return m_prefixMessage;
-  }
+  [[nodiscard]] auto inline prefixMessage() const -> const GString& { return m_prefixMessage; }
 
   /// Suffix message of the XML output of the log message
   /// \return Suffix message of the XML output
-  [[nodiscard]] auto inline suffixMessage() const -> const GString & {
-    return m_suffixMessage;
-  }
-  [[nodiscard]] auto inline minFlushSize() const -> GInt {
-    return m_minFlushSize;
-  }
+  [[nodiscard]] auto inline suffixMessage() const -> const GString& { return m_suffixMessage; }
+  [[nodiscard]] auto inline minFlushSize() const -> GInt { return m_minFlushSize; }
 
-private:
-  static constexpr GInt m_fileFormatVersion =
-      1; //!< File format version (increase this by one every time you make
+ private:
+  static constexpr GInt m_fileFormatVersion = 1; //!< File format version (increase this by one every time you make
   //!< changes that could affect postprocessing tools)
-  int m_domainId{0};  //!< Contains the MPI rank (= domain id) of this process
-  int m_noDomains{1}; //!< Contains the MPI rank count (= number of domains)
-  GInt m_minFlushSize{
-      0}; //!< Minimum length of the internal buffer before flushing
-  GString
-      m_prefixMessage; //!< Stores the prefix that is prepended to each output
-  GString
-      m_suffixMessage; //!< Stores the suffix that is appended to each output
-  GInt m_argc{};       /// Command line argument count
-  GChar **m_argv{};    /// Command line arguments
+  int     m_domainId{0};     //!< Contains the MPI rank (= domain id) of this process
+  int     m_noDomains{1};    //!< Contains the MPI rank count (= number of domains)
+  GInt    m_minFlushSize{0}; //!< Minimum length of the internal buffer before flushing
+  GString m_prefixMessage;   //!< Stores the prefix that is prepended to each output
+  GString m_suffixMessage;   //!< Stores the suffix that is appended to each output
+  GInt    m_argc{};          /// Command line argument count
+  GChar** m_argv{};          /// Command line arguments
 
-  std::map<GString, std::function<GString()>>
-      m_prefixAttributes; /// attributes of the XML log message
+  std::map<GString, std::function<GString()>> m_prefixAttributes; /// attributes of the XML log message
 };
 
 
@@ -229,24 +209,21 @@ private:
  *          for the MPI root domain (see #m_rootOnlyHardwired).
  */
 class Log_simpleFileBuffer : public Log_buffer {
-public:
+ public:
   Log_simpleFileBuffer() = default;
 
   /**
-   * \brief This constructor yields a new instance that can immediately be used
-   * to write messages to a regular file. \details Internally, this constructor
-   * just passes the parameters to open() (see open() for more details).
+   * \brief This constructor yields a new instance that can immediately be used to write messages to a regular file.
+   * \details Internally, this constructor just passes the parameters to open() (see open() for more details).
    *
    * \param[in] filename          Filename that should be used for the file.
-   * \param[in] mpiComm           MPI communicator which is used to determine
-   * rank/domain information. \param[in] rootOnlyHardwired If true, only rank 0
-   * creates a file and writes to it. On all other processors, no file is opened
-   * and at each flushing of the buffer, the buffer content is discarded.
+   * \param[in] mpiComm           MPI communicator which is used to determine rank/domain information.
+   * \param[in] rootOnlyHardwired If true, only rank 0 creates a file and writes to it. On all other processors, no
+   *                              file is opened and at each flushing of the buffer, the buffer content is discarded.
    */
-  Log_simpleFileBuffer(const GString &filename, const GInt argc, GChar **argv,
-                       MPI_Comm mpiComm = MPI_COMM_WORLD,
+  Log_simpleFileBuffer(const GString& filename, const GInt argc, GChar** argv, MPI_Comm mpiComm = MPI_COMM_WORLD,
                        GBool rootOnlyHardwired = false)
-      : Log_buffer(argc, argv) {
+    : Log_buffer(argc, argv) {
     open(filename, mpiComm, rootOnlyHardwired);
   }
 
@@ -328,13 +305,12 @@ public:
     }
   }
 
-protected:
+ protected:
   /**
    * \brief Flushes the buffer by writing the contents to the file.
-   * \details Sync is called automatically when an "endl" is sent to the stream.
-   * At first the buffer content is wrapped in the prefix and suffix messages,
-   * then the entire string is written to the file by calling flushBuffer().
-   * Finally, the internal buffers are reset.
+   * \details Sync is called automatically when an "endl" is sent to the stream. At first the buffer content is
+   *          wrapped in the prefix and suffix messages, then the entire string is written to the file by calling
+   *          flushBuffer(). Finally, the internal buffers are reset.
    *
    * \return Zero by default.
    */
@@ -371,7 +347,7 @@ protected:
    */
   void flushBuffer() override {
     // Only write if the file was already opened
-    if (m_isOpen) {
+    if(m_isOpen) {
       // Write the string to the file and flush the stream
       m_file << m_tmpBuffer.str() << std::flush;
 
@@ -380,15 +356,13 @@ protected:
     }
   }
 
-private:
-  GBool m_isOpen{false}; //!< Stores whether the file(s) were already opened
-  GBool m_rootOnlyHardwired{
-      false};           //!< If true, only domain 0 opens and uses a file
-  GString m_filename;   //!< Filename on disk
-  std::ofstream m_file; //!< File stream tied to physical file on disk
-  MPI_Comm m_mpiComm{}; //!< MPI communicator group
-  std::ostringstream
-      m_tmpBuffer; //!< Temporary buffer to hold string until flushing
+ private:
+  GBool              m_isOpen{false};            //!< Stores whether the file(s) were already opened
+  GBool              m_rootOnlyHardwired{false}; //!< If true, only domain 0 opens and uses a file
+  GString            m_filename;                 //!< Filename on disk
+  std::ofstream      m_file;                     //!< File stream tied to physical file on disk
+  MPI_Comm           m_mpiComm{};                //!< MPI communicator group
+  std::ostringstream m_tmpBuffer;                //!< Temporary buffer to hold string until flushing
 };
 
 /**
@@ -400,7 +374,7 @@ private:
 class Log : public std::ostream {
   friend class Log_buffer;
 
-public:
+ public:
 #ifdef CLANG_COMPILER
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wuninitialized"
@@ -440,11 +414,9 @@ public:
 
   /** \brief Modifies an attribute of the prefix of the XML string.
    *  \param[in] attName The Name of the attribute to modify.
-   *  \param[in] att The new attribute to replace the old one, given by a pair
-   * of MStrings.
+   *  \param[in] att The new attribute to replace the old one, given by a pair of MStrings.
    */
-  void updateAttributeValue(const GString &attName,
-                            std::function<GString()> att) {
+  void updateAttributeValue(const GString& attName, std::function<GString()> att) {
     m_buffer->m_prefixAttributes[attName] = std::move(att);
     m_buffer->createPrefixMessage();
   }
@@ -453,18 +425,15 @@ public:
    */
   void updateAttributes() { m_buffer->createPrefixMessage(); }
 
-  /// Get access to the buffer of the Log using an unique ptr to log_buffer
-  /// instance. \return Unique ptr to the log_buffer instance.
-  inline auto buffer() -> std::unique_ptr<Log_buffer> & { return m_buffer; }
+  /// Get access to the buffer of the Log using an unique ptr to log_buffer instance.
+  /// \return Unique ptr to the log_buffer instance.
+  inline auto buffer() -> std::unique_ptr<Log_buffer>& { return m_buffer; }
 
-  /// Get access to the buffer of the Log using an *const* unique ptr to
-  /// log_buffer instance. \return *Const* Unique ptr to the log_buffer
-  /// instance.
-  inline auto buffer() const -> const std::unique_ptr<Log_buffer> & {
-    return m_buffer;
-  }
+  /// Get access to the buffer of the Log using an *const* unique ptr to log_buffer instance.
+  /// \return *Const* Unique ptr to the log_buffer instance.
+  inline auto buffer() const -> const std::unique_ptr<Log_buffer>& { return m_buffer; }
 
-private:
+ private:
   std::unique_ptr<Log_buffer> m_buffer;
 };
 
@@ -478,19 +447,17 @@ private:
  *          within an MPI communicator opens a file to write to.
  */
 class LogFile : public Log {
-public:
+ public:
   LogFile() = default;
   /**
-   * \brief Constructor creates LogFile and calls ostream constructor with
-   * reference to it. \details When this constructor is used, the stream is
-   * immediately ready to use. For information about the parameters, please have
-   * a look at Log*Buffer::open.
+   * \brief Constructor creates LogFile and calls ostream constructor with reference to it.
+   * \details When this constructor is used, the stream is immediately ready to use. For information about the
+   * parameters, please have a look at Log*Buffer::open.
    *
    * \param[in] filename Name of the file to open.
    * \param[in] mpiComm MPI communicator for which to open the file.
    */
-  explicit LogFile(const GString &filename, MPI_Comm mpiComm = MPI_COMM_WORLD,
-                   GBool rootOnlyHardwired = false) {
+  explicit LogFile(const GString& filename, MPI_Comm mpiComm = MPI_COMM_WORLD, GBool rootOnlyHardwired = false) {
     open(filename, rootOnlyHardwired, 0, nullptr, mpiComm);
   }
   ~LogFile() override { close(); };
@@ -541,20 +508,19 @@ public:
   }
 
   /**
-   * \brief Sets the minimum buffer length that has to be reached before the
-   * buffer is flushed. \details Flushing the buffer means that the contents of
-   * the buffer in memory is written to the file. If the file stream was not
-   * opened yet, this method just returns 0 and does nothing else.
+   * \brief Sets the minimum buffer length that has to be reached before the buffer is flushed.
+   * \details Flushing the buffer means that the contents of the buffer in memory is written to the file. If the
+   *          file stream was not opened yet, this method just returns 0 and does nothing else.
    *
    * \params[in] minFlushSize Minimum buffer length.
    */
   void setMinFlushSize(const GInt minFlushSize) {
-    if (buffer() != nullptr) {
+    if(buffer() != nullptr) {
       buffer()->setMinFlushSize(minFlushSize);
     }
   }
 
-private:
+ private:
   bool m_isOpen = false; //!< Stores whether a file was already opened or not
 };
 inline LogFile logger; // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)

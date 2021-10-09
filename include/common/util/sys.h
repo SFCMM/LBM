@@ -34,8 +34,8 @@ inline auto userString() -> GString {
   // Gets the current username
   GString user;
 
-  passwd *p = getpwuid(getuid());
-  if (p != nullptr) {
+  passwd* p = getpwuid(getuid());
+  if(p != nullptr) {
     user = GString(p->pw_name);
   } else {
     user = "n/a";
@@ -50,18 +50,15 @@ inline auto getCWD() -> GString { return std::filesystem::current_path(); }
 /// Check if the given file name is already existing.
 /// \param name File name to check for existence.
 /// \return File exists?
-inline auto isFile(const std::string &name) -> GBool {
-  return std::filesystem::exists(name);
-}
+inline auto isFile(const std::string& name) -> GBool { return std::filesystem::exists(name); }
 
 /// Check if the given path is valid.
 /// \param path to check
 /// \param generateDir if path doesn't exist create dir (default=false)
 /// \return Path exists?
-inline auto isPath(const std::string &path, const GBool generateDir = false)
-    -> GBool {
+inline auto isPath(const std::string& path, const GBool generateDir = false) -> GBool {
   const GBool existPath = std::filesystem::exists(path);
-  if (!existPath && generateDir) {
+  if(!existPath && generateDir) {
     return std::filesystem::create_directory(path);
   }
   return existPath;
@@ -70,7 +67,5 @@ inline auto isPath(const std::string &path, const GBool generateDir = false)
 /// Get size of a file in bytes.
 /// \param name File name of the file to be sized.
 /// \return Number of bytes contained in the file.
-inline auto fileSize(const std::string &name) -> GInt {
-  return static_cast<GInt>(std::filesystem::file_size(name));
-}
+inline auto fileSize(const std::string& name) -> GInt { return static_cast<GInt>(std::filesystem::file_size(name)); }
 #endif // SFCMM_SYS_H

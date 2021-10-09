@@ -3,14 +3,14 @@
 #ifndef SFCMM_CONSTANTS_H
 #define SFCMM_CONSTANTS_H
 
-#include "sfcmm_types.h"
 #include <array>
 #include <limits>
 #include <vector>
+#include "sfcmm_types.h"
 
-static constexpr GInt BASE2 = 2;
-static constexpr GDouble HALF = 0.5;
-static constexpr GInt INVALID_CELLID = -1;
+static constexpr GInt    BASE2          = 2;
+static constexpr GDouble HALF           = 0.5;
+static constexpr GInt    INVALID_CELLID = -1;
 
 /// Generate invalid list for init of arrays
 /// \tparam LENGTH Length of the invalid list
@@ -33,33 +33,29 @@ static constexpr auto NAN_LIST() -> std::array<GDouble, LENGTH> {
 }
 
 // Memory
-static constexpr GInt KBIT = 1024;
+static constexpr GInt    KBIT  = 1024;
 static constexpr GDouble DKBIT = static_cast<GDouble>(KBIT);
 
 // Time
 namespace timeconst {
-static constexpr GInt MINUTE = 60;
+static constexpr GInt    MINUTE  = 60;
 static constexpr GDouble DMINUTE = 60;
-static constexpr GInt HOUR = 3600;
-static constexpr GDouble DHOUR = 3600;
-static constexpr GInt DAY = HOUR * 24;
-static constexpr GDouble DDAY = DHOUR * 24;
-static constexpr GInt WEEK = DAY * 7;
-static constexpr GDouble DWEEK = DDAY * 7;
+static constexpr GInt    HOUR    = 3600;
+static constexpr GDouble DHOUR   = 3600;
+static constexpr GInt    DAY     = HOUR * 24;
+static constexpr GDouble DDAY    = DHOUR * 24;
+static constexpr GInt    WEEK    = DAY * 7;
+static constexpr GDouble DWEEK   = DDAY * 7;
 } // namespace timeconst
 
 enum class Debug_Level { no_debug, min_debug, debug, more_debug, max_debug };
-static constexpr std::array<std::string_view, 5> DEBUG_LEVEL = {
-    "NO DEBUG", "MINIMAL DEBUG", "DEBUG", "MORE DEBUG", "MAXIMUM DEBUG"};
+static constexpr std::array<std::string_view, 5> DEBUG_LEVEL = {"NO DEBUG", "MINIMAL DEBUG", "DEBUG", "MORE DEBUG", "MAXIMUM DEBUG"};
 
 enum class SolverType { NONE, LBM };
 static constexpr std::array<std::string_view, 2> SOLVER_NAME = {"NONE", "LBM"};
 
 static const std::vector<std::vector<GDouble>> DEFAULT_BOUNDINGBOX = {
-    {0.0, 1.0},
-    {0.0, 1.0, 0.0, 1.0},
-    {0.0, 1.0, 0.0, 1.0, 0.0, 1.0},
-    {0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0}};
+    {0.0, 1.0}, {0.0, 1.0, 0.0, 1.0}, {0.0, 1.0, 0.0, 1.0, 0.0, 1.0}, {0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0}};
 
 // just some spaces to arrange output
 static constexpr std::string_view SP1{"  "};

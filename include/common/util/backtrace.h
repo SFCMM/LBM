@@ -3,10 +3,10 @@
 #ifndef SFCMM_BACKTRACE_H
 #define SFCMM_BACKTRACE_H
 
-#include "common/compiler_config.h"
 #include <cmath>
 #include <iostream>
 #include <sstream>
+#include "common/compiler_config.h"
 
 // todo: activate
 

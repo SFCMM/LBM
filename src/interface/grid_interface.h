@@ -2,7 +2,6 @@
 #define GRIDGENERATOR_GRIDINTERFACE_H
 
 #include <sfcmm_common.h>
-#include "common/boundingbox.h"
 #include "geometry.h"
 
 class GridInterface {
