@@ -18,32 +18,33 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::globalId;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::center;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::empty;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::size;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::capacity;
 
   using PropertyBitsetType = grid::cell::BitsetType;
   using ChildListType      = std::array<GInt, cartesian::maxNoChildren<NDIM>()>;
 
-  explicit CartesianGridGen(const GInt maxNoCells) : m_capacity(maxNoCells) { setCapacity(maxNoCells); }
+  explicit CartesianGridGen(const GInt maxNoCells) { setCapacity(maxNoCells); }
   ~CartesianGridGen() override              = default;
   CartesianGridGen(const CartesianGridGen&) = delete;
   CartesianGridGen(CartesianGridGen&&)      = delete;
   auto operator=(const CartesianGridGen&) -> CartesianGridGen& = delete;
   auto operator=(CartesianGridGen&&) -> CartesianGridGen& = delete;
 
-  void setCapacity(const GInt capacity) override {
+  void setCapacity(const GInt _capacity) override {
     if(!empty()) {
       TERMM(-1, "Invalid operation tree already allocated.");
     }
-    if(capacity < m_capacity) {
-      logger << "WARNING: memory allocation requested. But capacity is sufficient CartesianGridGen::setCapacity() requested " << capacity
-             << " but allocated " << m_capacity << std::endl;
+    if(_capacity < capacity()) {
+      logger << "WARNING: memory allocation requested. But capacity is sufficient CartesianGridGen::setCapacity() requested " << capacity()
+             << " but allocated " << capacity() << std::endl;
       return;
     }
-    m_noChildren.resize(capacity);
-    m_nghbrIds.resize(capacity);
-    m_childIds.resize(capacity);
-    m_rfnDistance.resize(capacity);
-    m_capacity = capacity;
-    BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setCapacity(capacity);
+    m_noChildren.resize(_capacity);
+    m_nghbrIds.resize(_capacity);
+    m_childIds.resize(_capacity);
+    m_rfnDistance.resize(_capacity);
+    BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setCapacity(_capacity);
   }
 
   void reset() override {
@@ -51,8 +52,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     m_nghbrIds.clear();
     m_childIds.clear();
     m_rfnDistance.clear();
-    m_capacity = 0;
-    m_size     = 0;
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::clear();
   }
 
@@ -66,7 +65,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   /// \param partitioningLvl Level of the partitioning grid.
   void createPartitioningGrid(const GInt partitioningLvl) {
     RECORD_TIMER_START(TimeKeeper[Timers::GridPart]);
-    if(m_capacity < 1) {
+    if(capacity() < 1) {
       TERMM(-1, "Invalid grid capacity.");
     }
     if(geometry() == nullptr) {
@@ -91,10 +90,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     if(isEven(partitionLvl())) {
       // initial cell placed in the beginning
       m_levelOffsets[0] = {0, 1};
-      m_levelOffsets[1] = {m_capacity - cartesian::maxNoChildren<NDIM>(), m_capacity};
+      m_levelOffsets[1] = {capacity() - cartesian::maxNoChildren<NDIM>(), capacity()};
     } else {
       // initial cell placed at the end
-      m_levelOffsets[0] = {m_capacity - 1, m_capacity};
+      m_levelOffsets[0] = {capacity() - 1, capacity()};
       m_levelOffsets[1] = {0, cartesian::maxNoChildren<NDIM>()};
     }
 
@@ -102,7 +101,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     center(begin)                          = Point<NDIM>(cog().data());
     globalId(begin)                        = begin;
     property(begin, CellProperties::bndry) = true;
-    m_size                                 = 1;
+    size()                                 = 1;
 
     //  Refine to min level
     for(GInt l = 0; l < partitionLvl(); l++) {
@@ -117,8 +116,8 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       if(m_levelOffsets[l].begin == 0) {
         // m_capacity - (prevLevelNoCells) * cartesian::maxNoChildren<NDIM>()
         // from the end - maximum number of cells at the current level
-        const GInt newLevelBegin = m_capacity - (prevLevelNoCells)*cartesian::maxNoChildren<NDIM>();
-        m_levelOffsets[l + 1]    = {newLevelBegin, m_capacity};
+        const GInt newLevelBegin = capacity() - (prevLevelNoCells)*cartesian::maxNoChildren<NDIM>();
+        m_levelOffsets[l + 1]    = {newLevelBegin, capacity()};
 
         if(prevLevelEnd > newLevelBegin) {
           outOfMemory(l + 1);
@@ -154,8 +153,8 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
 
     for(GInt l = partitionLvl(); l < uniformLevel; l++) {
-      m_levelOffsets[l + 1] = {m_size, m_size + levelSize(m_levelOffsets[l]) * cartesian::maxNoChildren<NDIM>()};
-      if(m_levelOffsets[l + 1].end > m_capacity) {
+      m_levelOffsets[l + 1] = {size(), size() + levelSize(m_levelOffsets[l]) * cartesian::maxNoChildren<NDIM>()};
+      if(m_levelOffsets[l + 1].end > capacity()) {
         outOfMemory(l + 1);
       }
 
@@ -175,8 +174,8 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     logger << SP1 << "Refining marked cells to level " << currentHighestLvl() + 1 << std::endl;
     std::cout << SP1 << "Refining marked cells to level " << currentHighestLvl() + 1 << std::endl;
     // update the offsets
-    m_levelOffsets[currentHighestLvl() + 1] = {m_size, m_size + noCellsToRefine * cartesian::maxNoChildren<NDIM>()};
-    if(m_levelOffsets[currentHighestLvl() + 1].end > m_capacity) {
+    m_levelOffsets[currentHighestLvl() + 1] = {size(), size() + noCellsToRefine * cartesian::maxNoChildren<NDIM>()};
+    if(m_levelOffsets[currentHighestLvl() + 1].end > capacity()) {
       outOfMemory(currentHighestLvl() + 1);
     }
     logger << SP2 << "* cells to refine: " << noCellsToRefine << std::endl;
@@ -247,11 +246,11 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     for(const auto& outputvalue : outvalues) {
       if(outputvalue == "level") {
         index.emplace_back("Level");
-        values.emplace_back(toStringVector(level(), m_size));
+        values.emplace_back(toStringVector(level(), size()));
         cerr0 << " level ";
       } else if(outputvalue == "noChildren") {
         index.emplace_back("NoChildren");
-        values.emplace_back(toStringVector(m_noChildren, m_size));
+        values.emplace_back(toStringVector(m_noChildren, size()));
         cerr0 << " noChildren ";
       } else {
         logger << "WARNING: The output value " + outputvalue + " is not a valid output!" << std::endl;
@@ -260,12 +259,12 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     cerr0 << std::endl;
 
     if(format == "ASCII") {
-      ASCII::writePointsCSV<NDIM>(fileName, m_size, center(), index, values, outputFilter);
+      ASCII::writePointsCSV<NDIM>(fileName, size(), center(), index, values, outputFilter);
     } else if(format == "VTK") {
-      VTK::ASCII::writePoints<NDIM>(fileName, m_size, center(), index, values, outputFilter);
+      VTK::ASCII::writePoints<NDIM>(fileName, size(), center(), index, values, outputFilter);
     } else if(format == "VTKB") {
       // todo: rename format
-      VTK::BINARY::writePoints<NDIM>(fileName, m_size, center(), index, values, outputFilter);
+      VTK::BINARY::writePoints<NDIM>(fileName, size(), center(), index, values, outputFilter);
     } else {
       TERMM(-1, "Unknown output format " + format);
     }
@@ -280,19 +279,15 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
            + 1;                               // m_level
   }
 
-  [[nodiscard]] auto capacity() const -> GInt { return m_capacity; }
-
   [[nodiscard]] auto child(const GInt id, const GInt childId) const -> GInt { return m_childIds[id].c[childId]; }
 
   [[nodiscard]] auto neighbor(const GInt id, const GInt dir) const -> GInt { return m_nghbrIds[id].n[dir]; }
 
-  [[nodiscard]] auto center(const GInt id, const GInt dir) const -> GDouble { return center(id)[dir]; }
-
  private:
   void outOfMemory(GInt level) {
     cerr0 << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-    logger << "ERROR: Not enough memory to generate grid! Increase maxNoCells: " << m_capacity << std::endl;
-    cerr0 << "ERROR: Not enough memory to generate grid! Increase maxNoCells: " << m_capacity << std::endl;
+    logger << "ERROR: Not enough memory to generate grid! Increase maxNoCells: " << capacity() << std::endl;
+    cerr0 << "ERROR: Not enough memory to generate grid! Increase maxNoCells: " << capacity()  << std::endl;
     logger << "level " << level - 1 << " [" << m_levelOffsets[level - 1].begin << ", " << m_levelOffsets[level - 1].end << "]" << std::endl;
     cerr0 << "level " << level - 1 << " [" << m_levelOffsets[level - 1].begin << ", " << m_levelOffsets[level - 1].end << "]" << std::endl;
     logger << "level " << level << " [" << m_levelOffsets[level].begin << ", " << m_levelOffsets[level].end << "]" << std::endl;
@@ -321,7 +316,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
         // refineGridMarkedOnly(m_haloOffsets, l);
       }
     }
-    m_size = m_levelOffsets[level + 1].end;
+    size() = m_levelOffsets[level + 1].end;
 
     findChildLevelNghbrs(m_levelOffsets, level);
     if(DISTRIBUTED && !MPI::isSerial()) {
@@ -336,7 +331,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       deleteOutsideCells(level + 1);
     }
 
-    m_size = m_levelOffsets[level + 1].end;
+    size() = m_levelOffsets[level + 1].end;
     increaseCurrentHighestLvl();
     logger.updateAttributes();
   }
@@ -497,9 +492,9 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
         m_levelOffsets[_level].end--;
       }
     }
-    m_size = levelSize(m_levelOffsets[_level]);
-    logger << SP3 << "* grid has " << m_size << " cells" << std::endl;
-    std::cout << SP3 << "* grid has " << m_size << " cells" << std::endl;
+    size() = levelSize(m_levelOffsets[_level]);
+    logger << SP3 << "* grid has " << size() << " cells" << std::endl;
+    std::cout << SP3 << "* grid has " << size() << " cells" << std::endl;
   }
 
   void markOutsideCells(const std::vector<LevelOffsetType>& levelOffset, const GInt _level) {
@@ -583,9 +578,9 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void swapCell(GInt idA, GInt idB) {
-    copyCell(idA, m_capacity - 1);
+    copyCell(idA, capacity() - 1);
     copyCell(idB, idA);
-    copyCell(m_capacity - 1, idB);
+    copyCell(capacity() - 1, idB);
   }
 
   void updateParent(const GInt parentId, const GInt oldChildCellId, const GInt newChildCellId) {
@@ -603,17 +598,17 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     std::cout << SP2 << "+ reordering grid based on Hilbert curve" << std::endl;
 
     Point<NDIM>       centerOfGravity = Point<NDIM>(cog().data());
-    std::vector<GInt> hilbertIds(m_size);
-    std::vector<GInt> index(m_size);
-    std::vector<GInt> pos(m_size);
-    std::vector<GInt> rev(m_size);
+    std::vector<GInt> hilbertIds(size());
+    std::vector<GInt> index(size());
+    std::vector<GInt> pos(size());
+    std::vector<GInt> rev(size());
     // generate indices
     std::iota(index.begin(), index.end(), 0);
     std::iota(pos.begin(), pos.end(), 0);
     std::iota(rev.begin(), rev.end(), 0);
 
     GInt hilbertLevel = partitionLvl();
-    for(GInt cellId = 0; cellId < m_size; ++cellId) {
+    for(GInt cellId = 0; cellId < size(); ++cellId) {
       // Normalization to unit cube
       // array() since there is no scalar addition for vectors...
       Point<NDIM> x      = ((center(cellId) - centerOfGravity).array() + HALF * lengthOnLvl(0)) / lengthOnLvl(0);
@@ -641,7 +636,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     // sort index by hilbertId
     std::sort(index.begin(), index.end(), [&](int A, int B) -> bool { return hilbertIds[A] < hilbertIds[B]; });
 
-    for(GInt id = 0; id < m_size; ++id) {
+    for(GInt id = 0; id < size(); ++id) {
       const GInt hilbertPos = index[id];
       if(id != hilbertPos) {
         // is not already in correct position due to swapping
@@ -656,13 +651,13 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
     if(DEBUG_LEVEL > Debug_Level::debug) {
       std::fill(hilbertIds.begin(), hilbertIds.end(), 0);
-      for(GInt cellId = 0; cellId < m_size; ++cellId) {
+      for(GInt cellId = 0; cellId < size(); ++cellId) {
         // Normalization to unit cube
         // array() since there is no scalar addition for vectors...
         Point<NDIM> x      = ((center(cellId) - centerOfGravity).array() + HALF * lengthOnLvl(0)) / lengthOnLvl(0);
         hilbertIds[cellId] = hilbert::index<NDIM>(x, hilbertLevel);
       }
-      for(GInt cellId = 1; cellId < m_size; ++cellId) {
+      for(GInt cellId = 1; cellId < size(); ++cellId) {
         if(hilbertIds[cellId - 1] > hilbertIds[cellId]) {
           std::cerr << hilbertIds[cellId - 1] << " > " << hilbertIds[cellId] << std::endl;
           TERMM(-1, "Hilbert Ids not ordered correctly!");
@@ -676,8 +671,5 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   std::vector<NeighborList<NDIM>> m_nghbrIds{};
   std::vector<ChildList<NDIM>>    m_childIds{};
   std::vector<GInt>               m_rfnDistance{};
-
-  GInt m_capacity{0};
-  GInt m_size{0};
 };
 #endif // GRIDGENERATOR_CARTESIANGRID_GENERATION_H

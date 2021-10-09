@@ -136,9 +136,7 @@ class BaseCartesianGrid : public GridInterface {
     return m_level[id];
   }
 
-  [[nodiscard]] inline auto level() -> std::vector<std::byte>& {
-    return m_level;
-  }
+  [[nodiscard]] inline auto level() -> std::vector<std::byte>& { return m_level; }
 
   [[nodiscard]] inline auto globalId(const GInt id) const -> GInt {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
@@ -200,7 +198,7 @@ class BaseCartesianGrid : public GridInterface {
     }
   }
 
-  [[nodiscard]] inline auto capacity() const -> GInt { return m_parentId.capacity(); }
+  [[nodiscard]] inline auto capacity() const -> GInt { return m_capacity; }
   [[nodiscard]] inline auto size() const -> GInt { return m_size; }
   [[nodiscard]] inline auto empty() const -> GBool { return m_size == 0; }
 
@@ -232,9 +230,7 @@ class BaseCartesianGrid : public GridInterface {
     return m_parentId[id];
   }
 
-  inline auto center() -> std::vector<Point<NDIM>>&{
-    return m_center;
-  }
+  inline auto center() -> std::vector<Point<NDIM>>& { return m_center; }
 
   inline auto center(const GInt id, const GInt dir) -> GDouble& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
@@ -267,6 +263,8 @@ class BaseCartesianGrid : public GridInterface {
     return m_level[id];
   }
 
+  inline auto size() -> GInt& { return m_size; }
+
   /// Increase the current highest level by 1
   inline void increaseCurrentHighestLvl() {
     ASSERT(m_currentHighestLvl <= m_maxLvl, "Level increased over maximum level!");
@@ -285,10 +283,11 @@ class BaseCartesianGrid : public GridInterface {
     m_parentId.resize(capacity);
     m_level.resize(capacity);
     m_globalId.resize(capacity);
+    m_capacity = capacity;
   }
 
   void reset() override {
-    std::for_each(m_properties.begin(), m_properties.end(), [](auto& prop){prop.reset();});
+    std::for_each(m_properties.begin(), m_properties.end(), [](auto& prop) { prop.reset(); });
     std::fill(m_parentId.begin(), m_parentId.end(), INVALID_CELLID);
     std::fill(m_level.begin(), m_level.end(), std::byte(-1));
     std::fill(m_globalId.begin(), m_globalId.end(), INVALID_CELLID);
@@ -302,6 +301,8 @@ class BaseCartesianGrid : public GridInterface {
     m_center.clear();
     m_globalId.clear();
     m_size = 0;
+    m_capacity = 0;
+    m_size     = 0;
   }
 
   void checkDir(const GInt dir) const {
@@ -324,6 +325,7 @@ class BaseCartesianGrid : public GridInterface {
   GInt m_partitioningLvl   = 0;
   GInt m_maxLvl            = 0;
   GInt m_size              = 0;
+  GInt m_capacity          = 0;
 
 
   // box containing the whole geometry
@@ -341,8 +343,8 @@ class BaseCartesianGrid : public GridInterface {
   std::vector<PropertyBitsetType> m_properties{};
   std::vector<GInt>               m_parentId{};
   std::vector<GInt>               m_globalId{};
-  std::vector<Point<NDIM>> m_center{};
-  std::vector<std::byte> m_level{};
+  std::vector<Point<NDIM>>        m_center{};
+  std::vector<std::byte>          m_level{};
 };
 
 #endif // GRIDGENERATOR_BASE_CARTESIANGRID_H
