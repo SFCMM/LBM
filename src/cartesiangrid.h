@@ -35,6 +35,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::capacity;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::level;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::globalId;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::center;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::checkDir;
 
   CartesianGrid()                     = default;
   ~CartesianGrid() override           = default;
@@ -126,29 +128,6 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   // Other data fields
-  inline auto center(const GInt id, const GInt dir) -> GDouble& {
-    if(DEBUG_LEVEL >= Debug_Level::debug) {
-      checkBounds(id);
-      checkDir(dir);
-    }
-    return m_center[id][dir];
-  }
-
-  [[nodiscard]] inline auto center(const GInt id, const GInt dir) const -> GDouble {
-    if(DEBUG_LEVEL >= Debug_Level::debug) {
-      checkBounds(id);
-      checkDir(dir);
-    }
-    return m_center[id][dir];
-  }
-
-  [[nodiscard]] inline auto center(const GInt id) const -> const Point<NDIM>& {
-    if(DEBUG_LEVEL >= Debug_Level::debug) {
-      checkBounds(id);
-    }
-    return m_center[id];
-  }
-
   inline auto weight(const GInt id) -> GFloat& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
@@ -207,7 +186,6 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
     m_childIds.resize(_capacity * cartesian::maxNoChildren<NDIM>());
     m_nghbrIds.resize(_capacity * cartesian::maxNoNghbrs<NDIM>());
-    m_center.resize(_capacity);
     m_weight.resize(_capacity);
     m_noOffsprings.resize(_capacity);
     m_workload.resize(_capacity);
@@ -223,7 +201,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     std::fill(m_workload.begin(), m_workload.end(), NAN);
     for(GInt i = 0; i < capacity(); ++i) {
       property(i).reset();
-      m_center[i].fill(NAN);
+      center(i).fill(NAN);
     }
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::reset();
   }
@@ -291,7 +269,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     std::fill(m_nghbrIds.begin() + begin, m_nghbrIds.begin() + end, INVALID_CELLID);
     std::fill(&globalId(begin), &globalId(end), INVALID_CELLID);
     std::fill(&level(begin), &level(end), std::byte(-1));
-    std::fill(m_center.begin() + begin, m_center.begin() + end, NAN);
+    std::fill(&center(begin), center(end), NAN);
     std::fill(m_weight.begin() + begin, m_weight.begin() + end, NAN);
     std::fill(m_noOffsprings.begin() + begin, m_noOffsprings.begin() + end, INVALID_CELLID);
     std::fill(m_workload.begin() + begin, m_workload.begin() + end, NAN);
@@ -387,26 +365,18 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
   }
 
-  void checkDir(const GInt dir) const {
-    if(dir > cartesian::maxNoNghbrs<NDIM>() || dir < 0) {
-      TERMM(-1, "Invalid direction");
-    }
-  }
-
   //  cartesian::Tree<DEBUG_LEVEL, NDIM> m_tree{};
   std::shared_ptr<GeometryManager<DEBUG_LEVEL, NDIM>> m_geometry;
 
   GBool m_loadBalancing = false;
 
   // Data containers
-  std::vector<GInt>      m_childIds{};
-  std::vector<GInt>      m_nghbrIds{};
-  std::vector<GInt>      m_noOffsprings{};
+  std::vector<GInt> m_childIds{};
+  std::vector<GInt> m_nghbrIds{};
+  std::vector<GInt> m_noOffsprings{};
 
   std::vector<GFloat> m_weight{};
   std::vector<GFloat> m_workload{};
-
-  std::vector<Point<NDIM>> m_center{};
 };
 
 #endif // GRIDGENERATOR_CARTESIANGRID_H

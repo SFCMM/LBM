@@ -113,12 +113,19 @@ class BaseCartesianGrid : public GridInterface {
     return m_properties[id][static_cast<GInt>(p)];
   }
 
-  inline auto level(const GInt id) -> std::byte& {
+  [[nodiscard]] inline auto center(const GInt id, const GInt dir) const -> GDouble {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
-      return m_level.at(id);
+      checkDir(dir);
     }
-    return m_level[id];
+    return m_center[id][dir];
+  }
+
+  [[nodiscard]] inline auto center(const GInt id) const -> const Point<NDIM>& {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+    }
+    return m_center[id];
   }
 
   [[nodiscard]] inline auto level(const GInt id) const -> std::byte {
@@ -133,14 +140,6 @@ class BaseCartesianGrid : public GridInterface {
     return m_level;
   }
 
-  inline auto globalId(const GInt id) -> GInt& {
-    if(DEBUG_LEVEL >= Debug_Level::debug) {
-      checkBounds(id);
-      return m_globalId.at(id);
-    }
-    return m_globalId[id];
-  }
-
   [[nodiscard]] inline auto globalId(const GInt id) const -> GInt {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
@@ -148,7 +147,6 @@ class BaseCartesianGrid : public GridInterface {
     }
     return m_globalId[id];
   }
-
 
   [[nodiscard]] inline auto propertiesToBits(const GInt id) const -> GUint {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
@@ -206,16 +204,6 @@ class BaseCartesianGrid : public GridInterface {
   [[nodiscard]] inline auto size() const -> GInt { return m_size; }
   [[nodiscard]] inline auto empty() const -> GBool { return m_size == 0; }
 
-  // Parent-child relationship
-  inline auto parent(const GInt id) -> GInt& {
-    if(DEBUG_LEVEL >= Debug_Level::debug) {
-      checkBounds(id);
-      return m_parentId.at(id);
-    }
-    // no bound checking
-    return m_parentId[id];
-  }
-
   [[nodiscard]] inline auto parent(const GInt id) const -> GInt {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
@@ -235,6 +223,50 @@ class BaseCartesianGrid : public GridInterface {
   }
 
  protected:
+  inline auto parent(const GInt id) -> GInt& {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      return m_parentId.at(id);
+    }
+    // no bound checking
+    return m_parentId[id];
+  }
+
+  inline auto center() -> std::vector<Point<NDIM>>&{
+    return m_center;
+  }
+
+  inline auto center(const GInt id, const GInt dir) -> GDouble& {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      checkDir(dir);
+    }
+    return m_center[id][dir];
+  }
+
+  [[nodiscard]] inline auto center(const GInt id) -> Point<NDIM>& {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+    }
+    return m_center[id];
+  }
+
+  inline auto globalId(const GInt id) -> GInt& {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      return m_globalId.at(id);
+    }
+    return m_globalId[id];
+  }
+
+  inline auto level(const GInt id) -> std::byte& {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      return m_level.at(id);
+    }
+    return m_level[id];
+  }
+
   /// Increase the current highest level by 1
   inline void increaseCurrentHighestLvl() {
     ASSERT(m_currentHighestLvl <= m_maxLvl, "Level increased over maximum level!");
@@ -249,6 +281,7 @@ class BaseCartesianGrid : public GridInterface {
 
   void setCapacity(const GInt capacity) override {
     m_properties.resize(capacity);
+    m_center.resize(capacity);
     m_parentId.resize(capacity);
     m_level.resize(capacity);
     m_globalId.resize(capacity);
@@ -266,9 +299,17 @@ class BaseCartesianGrid : public GridInterface {
     m_properties.clear();
     m_parentId.clear();
     m_level.clear();
+    m_center.clear();
     m_globalId.clear();
     m_size = 0;
   }
+
+  void checkDir(const GInt dir) const {
+    if(dir > cartesian::maxNoNghbrs<NDIM>() || dir < 0) {
+      TERMM(-1, "Invalid direction");
+    }
+  }
+
 
  private:
   void checkProperty(const Cell p) const {
@@ -300,7 +341,8 @@ class BaseCartesianGrid : public GridInterface {
   std::vector<PropertyBitsetType> m_properties{};
   std::vector<GInt>               m_parentId{};
   std::vector<GInt>               m_globalId{};
+  std::vector<Point<NDIM>> m_center{};
   std::vector<std::byte> m_level{};
 };
 
-#endif // GRIDGENERATOR_CARTESIANGRID_H
+#endif // GRIDGENERATOR_BASE_CARTESIANGRID_H
