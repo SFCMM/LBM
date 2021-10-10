@@ -24,12 +24,26 @@ template <Debug_Level DEBUG_LEVEL>
 void LBMSolver<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_file) {
   m_configurationFileName = std::move(config_file);
   init(argc, argv);
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
 }
 
 template <Debug_Level DEBUG_LEVEL>
 void LBMSolver<DEBUG_LEVEL>::initTimers() {
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMSolverTotal], "Total run time of the LBM Solver.", TimeKeeper[Timers::timertotal]);
   RECORD_TIMER_START(TimeKeeper[Timers::LBMSolverTotal]);
+
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMInit], "Initialization of the LBM solver!", TimeKeeper[Timers::LBMSolverTotal]);
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
+
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMMainLoop], "Main Loop of the LBM solver!", TimeKeeper[Timers::LBMSolverTotal]);
+}
+
+template <Debug_Level DEBUG_LEVEL>
+auto LBMSolver<DEBUG_LEVEL>::run() -> GInt {
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMMainLoop]);
+
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LBMMainLoop]);
+  return 0;
 }
 
 template class LBMSolver<Debug_Level::no_debug>;

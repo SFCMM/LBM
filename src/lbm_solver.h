@@ -22,10 +22,11 @@ class LBMSolver : public AppInterface {
     TERMM(-1, "Not implemented!");
   };
 
-  auto               run() -> GInt override { return 0; };
+  auto               run() -> GInt override;
   [[nodiscard]] auto grid() const -> const GridInterface& override { return *m_grid; };
 
   void transferGrid(const GridInterface& grid) override {
+    RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
     cerr0 << "Transferring Grid to LBM solver" << std::endl;
     logger << "Transferring Grid to LBM solver" << std::endl;
 
@@ -61,6 +62,7 @@ class LBMSolver : public AppInterface {
       default:
         TERMM(-1, "Only dimensions 1,2 and 3 are supported.");
     }
+    RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
   };
 
  private:

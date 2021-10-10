@@ -23,6 +23,8 @@ struct Timers_ {
     GridIo,
 
     LBMSolverTotal,
+    LBMInit,
+    LBMMainLoop,
 
     // counter
     _count
