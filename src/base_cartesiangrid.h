@@ -221,6 +221,8 @@ class BaseCartesianGrid : public GridInterface {
   }
 
  protected:
+  inline auto currentHighestLvl() -> GInt& { return m_currentHighestLvl; }
+
   inline auto parent(const GInt id) -> GInt& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);

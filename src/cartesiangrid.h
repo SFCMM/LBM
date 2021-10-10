@@ -37,6 +37,11 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::globalId;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::center;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::checkDir;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::currentHighestLvl;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::partitionLvl;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMaxLvl;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::boundingBox;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setBoundingBox;
 
   CartesianGrid()                     = default;
   ~CartesianGrid() override           = default;
@@ -240,6 +245,13 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 #ifdef _OPENMP
     }
 #endif
+
+    currentHighestLvl() = grid.currentHighestLvl();
+    partitionLvl() = grid.partitionLvl();
+    setMaxLvl(grid.maxLvl());
+    setBoundingBox(grid.boundingBox());
+
+
     setProperties();
     if(m_loadBalancing) {
       setWorkload();
