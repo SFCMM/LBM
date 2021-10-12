@@ -3,17 +3,14 @@
 #include <sfcmm_common.h>
 #include "cartesiangrid.h"
 #include "interface/app_interface.h"
-//#include "interface/grid_interface.h"
+#include "lbm_constants.h"
 
 template <Debug_Level DEBUG_LEVEL>
 class LBMSolver : public AppInterface {
  public:
-  LBMSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains) {
-
-  };
+  LBMSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
   ~LBMSolver() override = default;
 
-  void init(int argc, GChar** argv);
   void init(int argc, GChar** argv, GString config_file) override;
 
 
@@ -25,47 +22,12 @@ class LBMSolver : public AppInterface {
   auto               run() -> GInt override;
   [[nodiscard]] auto grid() const -> const GridInterface& override { return *m_grid; };
 
-  void transferGrid(const GridInterface& grid) override {
-    RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
-    cerr0 << "Transferring Grid to LBM solver" << std::endl;
-    logger << "Transferring Grid to LBM solver" << std::endl;
+  void transferGrid(const GridInterface& grid) override;
 
-    m_dim = grid.dim();
-
-    switch(m_dim) {
-      case 1:
-        m_grid = std::make_unique<CartesianGrid<DEBUG_LEVEL, 1>>();
-        break;
-      case 2:
-        m_grid = std::make_unique<CartesianGrid<DEBUG_LEVEL, 2>>();
-        break;
-      case 3:
-        m_grid = std::make_unique<CartesianGrid<DEBUG_LEVEL, 3>>();
-        break;
-      default:
-        TERMM(-1, "Only dimensions 1,2 and 3 are supported.");
-    }
-
-    switch(m_dim) {
-      case 1:
-        static_cast<CartesianGrid<DEBUG_LEVEL, 1>*>(m_grid.get())
-            ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 1>*>(static_cast<const void*>(&grid)));
-        break;
-      case 2:
-        static_cast<CartesianGrid<DEBUG_LEVEL, 2>*>(m_grid.get())
-            ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 2>*>(static_cast<const void*>(&grid)));
-        break;
-      case 3:
-        static_cast<CartesianGrid<DEBUG_LEVEL, 3>*>(m_grid.get())
-            ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 3>*>(static_cast<const void*>(&grid)));
-        break;
-      default:
-        TERMM(-1, "Only dimensions 1,2 and 3 are supported.");
-    }
-    RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
-  };
+  constexpr auto isThermal() -> GBool;
 
  private:
+  void init(int argc, GChar** argv);
   void initTimers();
 
   std::unique_ptr<GridInterface> m_grid;
@@ -76,7 +38,25 @@ class LBMSolver : public AppInterface {
   GInt32 m_domainId  = -1;
   GInt32 m_noDomains = -1;
   GInt   m_dim       = 0;
+  GInt   m_noVars    = 1;
+  GInt   m_noSpecies = 1;
 
+  LBMethodType m_method     = LBMethodType::D2Q9;
+  LBSolverType m_solverType = LBSolverType::BGK;
+
+  std::vector<GDouble> m_f;
+  std::vector<GDouble> m_feq;
+  std::vector<GDouble> m_fold;
+  std::vector<GDouble> m_vars;
+  std::vector<GDouble> m_varsold;
+
+  void loadConfiguration();
+  void setupMethod();
+  void finishInit();
+
+  template <GInt NDIM>
+  void timeStep();
+  void initialCondition();
 };
 
 #endif // LBM_LBM_SOLVER_H

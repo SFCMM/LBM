@@ -77,6 +77,10 @@ class GridInterface {
   /// \return Dimensions of the grid.
   [[nodiscard]] virtual inline auto dim() const -> GInt = 0;
 
+  /// Number of cells in this grid.
+  /// \return Number of cells in this grid.
+  [[nodiscard]] virtual inline auto size() const -> GInt = 0;
+
 
   //  //// Grid Generation specific
   //  /// Create the grid that is used for partitioning. This grid has the level of the option provided in the grid
