@@ -283,6 +283,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   [[nodiscard]] auto neighbor(const GInt id, const GInt dir) const -> GInt { return m_nghbrIds[id].n[dir]; }
 
+ protected:
+  [[nodiscard]] auto neighbor(const GInt id, const GInt dir) -> GInt& { return m_nghbrIds[id].n[dir]; }
+
+
  private:
   void outOfMemory(GInt _level) {
     cerr0 << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;

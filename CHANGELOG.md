@@ -5,19 +5,19 @@
 # V0.0.2
 ## Planned
 - run basic 2D NS Case
-
+- load grid from disk
 
 # V0.0.1
 ## Planned:
-
 - implement toRun()
-- run basic 1D navier-stokes case
-- load generated grid
+- run basic 2D navier-stokes case (couette)
+- implement bounce back boundary condition
 
 ## Ongoing
 
 ## Done:
 ### Features
+-load grid generated from the generator
 
 ### Buildsystem
 

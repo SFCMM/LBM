@@ -81,6 +81,14 @@ class GridInterface {
   /// \return Number of cells in this grid.
   [[nodiscard]] virtual inline auto size() const -> GInt = 0;
 
+  /// Number of cells in this grid.
+  /// \return Number of cells in this grid.
+  [[nodiscard]] virtual inline auto noCells() const -> GInt = 0;
+
+  /// Number of cells in this grid.
+  /// \return Number of cells in this grid.
+  [[nodiscard]] virtual inline auto neighbor(const GInt cellId, const GInt dir) const -> GInt = 0;
+
 
   //  //// Grid Generation specific
   //  /// Create the grid that is used for partitioning. This grid has the level of the option provided in the grid

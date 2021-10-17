@@ -200,6 +200,7 @@ class BaseCartesianGrid : public GridInterface {
 
   [[nodiscard]] inline auto capacity() const -> GInt { return m_capacity; }
   [[nodiscard]] inline auto size() const -> GInt { return m_size; }
+  [[nodiscard]] inline auto noCells() const -> GInt { return m_size; }
   [[nodiscard]] inline auto empty() const -> GBool { return m_size == 0; }
 
   [[nodiscard]] inline auto parent(const GInt id) const -> GInt {
