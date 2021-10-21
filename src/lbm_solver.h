@@ -71,15 +71,17 @@ class LBMSolver : public AppInterface {
   GString m_exe;
   GString m_configurationFileName;
 
-  GInt32 m_domainId  = -1;
-  GInt32 m_noDomains = -1;
-  GInt   m_dim       = 0;
-  GInt   m_noVars    = 1;
-  GInt   m_noSpecies = 1;
-  GInt   m_noDists = 0;
+  GInt32 m_domainId           = -1;
+  GInt32 m_noDomains          = -1;
+  GInt   m_dim                = 0;
+  GInt   m_noVars             = 1;
+  GInt   m_noSpecies          = 1;
+  GInt   m_noDists            = 0;
+  GInt   m_outputInfoInterval = 10;
+  GInt   m_timeStep           = 0;
 
-  LBMethodType m_method     = LBMethodType::D2Q9;
-  LBSolverType m_solverType = LBSolverType::BGK;
+  LBMethodType         m_method     = LBMethodType::D2Q9;
+  LBSolverType         m_solverType = LBSolverType::BGK;
   std::vector<GDouble> m_weight;
 
   std::vector<GDouble> m_f;
@@ -90,17 +92,17 @@ class LBMSolver : public AppInterface {
 
   // Reference values
   GDouble m_refLength = 1.0;
-  GDouble m_refRho = 1.0;
-  GDouble m_refT = 293.15;
-  GDouble m_refU = 1.0;
+  GDouble m_refRho    = 1.0;
+  GDouble m_refT      = 293.15;
+  GDouble m_refU      = 1.0;
 
   GDouble m_nu = 0;
   GDouble m_re = 1;
   GDouble m_ma = 0.2;
 
-  //todo: move to method impl
+  // todo: move to method impl
   GDouble m_relaxTime = 0.9;
-  GDouble m_omega = 1.0/m_relaxTime;
+  GDouble m_omega     = 1.0 / m_relaxTime;
 };
 
 #endif // LBM_LBM_SOLVER_H

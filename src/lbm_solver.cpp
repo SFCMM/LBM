@@ -45,10 +45,11 @@ void LBMSolver<DEBUG_LEVEL>::initTimers() {
 
 template <Debug_Level DEBUG_LEVEL>
 void LBMSolver<DEBUG_LEVEL>::loadConfiguration() {
-  m_solverType = LBSolverType::BGK;  // todo: load from file
-  m_method     = LBMethodType::D2Q9; // todo: load from file
-  m_noDists    = LBMethod::noDists.at(static_cast<GInt>(m_method));
-  m_noVars     = m_dim + 1 + static_cast<GInt>(isThermal());
+  m_solverType         = LBSolverType::BGK;  // todo: load from file
+  m_method             = LBMethodType::D2Q9; // todo: load from file
+  m_noDists            = LBMethod::noDists.at(static_cast<GInt>(m_method));
+  m_noVars             = m_dim + 1 + static_cast<GInt>(isThermal());
+  m_outputInfoInterval = 10;
 }
 
 
@@ -103,6 +104,10 @@ auto LBMSolver<DEBUG_LEVEL>::run() -> GInt {
   }
   const GInt noTimesteps = 100;
   for(GInt ts = 0; ts < noTimesteps; ++ts) {
+    if(m_timeStep>0 && m_timeStep % m_outputInfoInterval == 0) {
+      cerr0 << "Running LBM at " << m_timeStep << std::endl;
+      logger << "Running LBM at " << m_timeStep << std::endl;
+    }
     switch(m_dim) {
       case 1:
         timeStep<1>();
@@ -119,6 +124,7 @@ auto LBMSolver<DEBUG_LEVEL>::run() -> GInt {
       default:
         TERMM(-1, "Invalid number of dimensions 1-4.");
     }
+    ++m_timeStep;
   }
 
   logger << "LBM Solver finished <||" << endl;
@@ -150,7 +156,7 @@ void LBMSolver<DEBUG_LEVEL>::initialCondition() {
   //  m_nu = m_ma / gcem::sqrt(3) / m_re * m_refLength;
   // todo: make settable
   m_relaxTime = 0.9;
-  m_omega = 1.0/m_relaxTime;
+  m_omega     = 1.0 / m_relaxTime;
   m_re        = 10;
   m_nu        = (2.0 * m_relaxTime - 1) / 6.0; // default=0.133
   m_refU      = m_re * m_nu / m_refLength;     // default=1.3333
@@ -210,7 +216,7 @@ template <GInt NDIM>
 void LBMSolver<DEBUG_LEVEL>::collisionStep() {
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     for(GInt dist = 0; dist < m_noDists; ++dist) {
-      m_f[cellId * m_noDists + dist] = (1-m_omega) * m_fold[cellId * m_noDists + dist] + m_omega * m_feq[cellId * m_noDists + dist];
+      m_f[cellId * m_noDists + dist] = (1 - m_omega) * m_fold[cellId * m_noDists + dist] + m_omega * m_feq[cellId * m_noDists + dist];
     }
   }
 }
