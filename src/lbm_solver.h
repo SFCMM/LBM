@@ -37,6 +37,8 @@ class LBMSolver : public AppInterface {
   void finishInit();
 
   template <GInt NDIM>
+  auto               run() -> GInt;
+  template <GInt NDIM>
   void timeStep();
   template <GInt NDIM>
   void initialCondition();
@@ -52,6 +54,8 @@ class LBMSolver : public AppInterface {
   void calcEquilibriumMoments();
   template <GInt NDIM>
   void collisionStep();
+  template <GInt NDIM>
+  [[nodiscard]] auto convergence(const GInt var) const -> GDouble;
 
   template <GInt NDIM>
   auto inline rho(const GInt cellId) -> GDouble& {

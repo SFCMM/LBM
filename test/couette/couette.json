@@ -29,5 +29,26 @@
       ]
     }
   },
-  "solver": "lbm"
+  "solver": "lbm",
+  "boundary": {
+    "cube": {
+      "+x":{
+        "type": "periodic",
+        "connection": "-x"
+      },
+      "-x":{
+        "type": "periodic",
+        "connection": "+x"
+      },
+      "-y": {
+        "type": "wall",
+        "model": "bounceback",
+        "tangential velocity": 1.0
+      },
+      "+y": {
+        "type": "wall",
+        "model": "bounceback"
+      }
+    }
+  }
 }

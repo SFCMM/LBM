@@ -21,6 +21,20 @@ static constexpr auto velocities() -> std::array<GInt, NDIM> {
   TERMM(-1, "Not implemented!");
 }
 
+static constexpr auto velocitiy(const GInt dir) -> GInt {
+  if(dir == 0) {
+    return U();
+  }
+  if(dir == 1) {
+    return V();
+  }
+  if(dir == 2) {
+    return W();
+  }
+  TERMM(-1, "Not implemented!");
+}
+
+
 template <GInt NDIM>
 static constexpr auto rho() -> GInt {
   return velocities<NDIM>()[NDIM - 1] + 1;

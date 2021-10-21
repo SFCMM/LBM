@@ -82,48 +82,62 @@ void LBMSolver<DEBUG_LEVEL>::setupMethod() {
   }
 }
 
-
 template <Debug_Level DEBUG_LEVEL>
 auto LBMSolver<DEBUG_LEVEL>::run() -> GInt {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMMainLoop]);
   switch(m_dim) {
     case 1:
-      initialCondition<1>();
+      return run<1>();
       break;
     case 2:
-      initialCondition<2>();
+      return run<2>();
       break;
     case 3:
-      initialCondition<3>();
+      return run<3>();
       break;
     case 4:
-      initialCondition<4>();
+      return run<4>();
       break;
     default:
       TERMM(-1, "Invalid number of dimensions 1-4.");
   }
+  return -1;
+}
+
+template <Debug_Level DEBUG_LEVEL>
+template <GInt NDIM>
+auto LBMSolver<DEBUG_LEVEL>::run() -> GInt {
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMMainLoop]);
+  initialCondition<NDIM>();
+
   const GInt noTimesteps = 100;
   for(GInt ts = 0; ts < noTimesteps; ++ts) {
-    if(m_timeStep>0 && m_timeStep % m_outputInfoInterval == 0) {
+    if(m_timeStep > 0 && m_timeStep % m_outputInfoInterval == 0) {
       cerr0 << "Running LBM at " << m_timeStep << std::endl;
       logger << "Running LBM at " << m_timeStep << std::endl;
+
+      const GDouble convUx = convergence<NDIM>(PV::velocitiy(0));
+      const GDouble convUy = convergence<NDIM>(PV::velocitiy(1));
+      const GDouble convUz = (NDIM == 3) ? convergence<NDIM>(PV::velocitiy(2)) : NAN;
+      const GDouble convRho = convergence<NDIM>(PV::rho<NDIM>());
+
+      cerr0 << "u_x: " << convUx << " ";
+      cerr0 << "u_y: " << convUy << " ";
+      if(NDIM == 3) {
+        cerr0 << "u_z: " << convUz << " ";
+      }
+      cerr0 << "rho: " << convRho << " ";
+      cerr0 << std::endl;
+
+      logger << "u_x: " << convUx << " ";
+      logger << "u_y: " << convUy << " ";
+      if(NDIM == 3) {
+        logger << "u_z: " << convUz << " ";
+      }
+      logger << "rho: " << convRho << " ";
+      logger << std::endl;
     }
-    switch(m_dim) {
-      case 1:
-        timeStep<1>();
-        break;
-      case 2:
-        timeStep<2>();
-        break;
-      case 3:
-        timeStep<3>();
-        break;
-      case 4:
-        timeStep<4>();
-        break;
-      default:
-        TERMM(-1, "Invalid number of dimensions 1-4.");
-    }
+    timeStep<NDIM>();
     ++m_timeStep;
   }
 
@@ -286,6 +300,15 @@ constexpr auto LBMSolver<DEBUG_LEVEL>::isThermal() -> GBool {
   return false;
 }
 
+template <Debug_Level DEBUG_LEVEL>
+template <GInt NDIM>
+auto LBMSolver<DEBUG_LEVEL>::convergence(const GInt var) const -> GDouble {
+  GDouble conv = 0.0;
+  for(GInt cellId = 0; cellId < noCells(); ++cellId) {
+    conv += std::abs(m_vars[cellId * m_noVars + var] - m_varsold[cellId * m_noVars + var]);
+  }
+  return conv;
+}
 
 template class LBMSolver<Debug_Level::no_debug>;
 template class LBMSolver<Debug_Level::min_debug>;
