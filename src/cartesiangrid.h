@@ -101,7 +101,13 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       checkDir(dir);
+      if(m_diagonalNghbrs) {
+        return m_nghbrIds.at(id * cartesian::maxNoNghbrsDiag<NDIM>() + dir);
+      }
       return m_nghbrIds.at(id * cartesian::maxNoNghbrs<NDIM>() + dir);
+    }
+    if(m_diagonalNghbrs) {
+      return m_nghbrIds[id * cartesian::maxNoNghbrsDiag<NDIM>() + dir];
     }
     return m_nghbrIds[id * cartesian::maxNoNghbrs<NDIM>() + dir];
   }
@@ -110,7 +116,13 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       checkDir(dir);
+      if(m_diagonalNghbrs) {
+        return m_nghbrIds.at(id * cartesian::maxNoNghbrsDiag<NDIM>() + dir);
+      }
       return m_nghbrIds.at(id * cartesian::maxNoNghbrs<NDIM>() + dir);
+    }
+    if(m_diagonalNghbrs) {
+      return m_nghbrIds[id * cartesian::maxNoNghbrsDiag<NDIM>() + dir];
     }
     return m_nghbrIds[id * cartesian::maxNoNghbrs<NDIM>() + dir];
   }
@@ -119,9 +131,15 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       checkDir(dir);
-      return m_nghbrIds.at(id * cartesian::maxNoNghbrs<NDIM>() + dir) > -1;
+      if(m_diagonalNghbrs) {
+        return m_nghbrIds.at(id * cartesian::maxNoNghbrsDiag<NDIM>() + dir) != INVALID_CELLID;
+      }
+      return m_nghbrIds.at(id * cartesian::maxNoNghbrs<NDIM>() + dir) != INVALID_CELLID;
     }
-    return m_nghbrIds[id * cartesian::maxNoNghbrs<NDIM>() + dir] > -1;
+    if(m_diagonalNghbrs) {
+      return m_nghbrIds[id * cartesian::maxNoNghbrsDiag<NDIM>() + dir] != INVALID_CELLID;
+    }
+    return m_nghbrIds[id * cartesian::maxNoNghbrs<NDIM>() + dir] != INVALID_CELLID;
   }
 
   [[nodiscard]] inline auto hasAnyNeighbor(const GInt id, const GInt dir) const -> GBool {
@@ -190,7 +208,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       TERMM(-1, "Invalid operation tree already allocated.");
     }
     m_childIds.resize(_capacity * cartesian::maxNoChildren<NDIM>());
-    m_nghbrIds.resize(_capacity * cartesian::maxNoNghbrs<NDIM>());
+    m_nghbrIds.resize(_capacity * cartesian::maxNoNghbrsDiag<NDIM>());
     m_weight.resize(_capacity);
     m_noOffsprings.resize(_capacity);
     m_workload.resize(_capacity);
@@ -247,7 +265,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 #endif
 
     currentHighestLvl() = grid.currentHighestLvl();
-    partitionLvl() = grid.partitionLvl();
+    partitionLvl()      = grid.partitionLvl();
     setMaxLvl(grid.maxLvl());
     setBoundingBox(grid.boundingBox());
 
@@ -257,6 +275,45 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       setWorkload();
       calculateOffspringsAndWeights();
     }
+    addDiagonalNghbrs();
+  }
+
+  /// Add the diagonal(2D/3D) and/or tridiagonal (3D) to the neighbor connections of each cell.
+  void addDiagonalNghbrs() {
+    logger << "Adding diagonal/tridiagonal neighbors. (before:" << m_nghbrIds.size() << " / ";
+
+    m_diagonalNghbrs = true;
+
+    for(GInt cellId = 0; cellId < size(); ++cellId) {
+      // dirs 0=-x 1=+x 2=-y 3=+y
+      //  add diagonal nghbrs
+      if(NDIM > 1) {
+        const GInt nghbrmX = neighbor(cellId, 0);
+        const GInt nghbrpX = neighbor(cellId, 1);
+        GInt       off     = nghbrmX + cartesian::maxNoNghbrs<NDIM>();
+
+        // +x+y
+        const GInt nghbrpXpY = nghbrpX != INVALID_CELLID ? neighbor(nghbrpX, 3) : -1;
+        m_nghbrIds.insert(m_nghbrIds.begin() + off++, nghbrpXpY);
+        // +x-y
+        const GInt nghbrpXmY = nghbrpX != INVALID_CELLID ? neighbor(nghbrpX, 2) : -1;
+        m_nghbrIds.insert(m_nghbrIds.begin() + off++, nghbrpXmY);
+
+        // -x-y
+        const GInt nghbrmXmY = nghbrmX != INVALID_CELLID ? neighbor(nghbrmX, 2) : -1;
+        m_nghbrIds.insert(m_nghbrIds.begin() + off++, nghbrmXmY);
+
+        // -x+y
+        const GInt nghbrmXpY = nghbrmX != INVALID_CELLID ? neighbor(nghbrmX, 3) : -1;
+        m_nghbrIds.insert(m_nghbrIds.begin() + off++, nghbrmXpY);
+      }
+
+      // add tridiagonal nghbrs
+      if(NDIM > 2) {
+        TERMM(-1, "Not implemented!");
+      }
+    }
+    logger << "after:" << m_nghbrIds.size() << ")" <<std::endl;
   }
 
  private:
@@ -277,8 +334,12 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void invalidate(const GInt begin, const GInt end) {
     std::fill(&parent(begin), &parent(end), INVALID_CELLID);
-    std::fill(m_childIds.begin() + begin, m_childIds.begin() + end, INVALID_CELLID);
-    std::fill(m_nghbrIds.begin() + begin, m_nghbrIds.begin() + end, INVALID_CELLID);
+    std::fill(m_childIds.begin() + begin * cartesian::maxNoChildren<NDIM>(),
+              m_childIds.begin() + end * cartesian::maxNoChildren<NDIM>(),
+              INVALID_CELLID);
+    std::fill(m_nghbrIds.begin() + begin * cartesian::maxNoNghbrsDiag<NDIM>(),
+              m_nghbrIds.begin() + end * cartesian::maxNoNghbrsDiag<NDIM>(),
+              INVALID_CELLID);
     std::fill(&globalId(begin), &globalId(end), INVALID_CELLID);
     std::fill(&level(begin), &level(end), std::byte(-1));
     std::fill(&center(begin), center(end), NAN);
@@ -380,7 +441,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   //  cartesian::Tree<DEBUG_LEVEL, NDIM> m_tree{};
   std::shared_ptr<GeometryManager<DEBUG_LEVEL, NDIM>> m_geometry;
 
-  GBool m_loadBalancing = false;
+  GBool m_loadBalancing  = false;
+  GBool m_diagonalNghbrs = false;
 
   // Data containers
   std::vector<GInt> m_childIds{};

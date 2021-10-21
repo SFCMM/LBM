@@ -85,16 +85,19 @@ static inline auto piece_header(const GInt noOfPoints) -> GString {
 
 template <GInt DIM, GBool BINARY = false>
 static inline auto point_header() -> GString {
+  // todo: it seems that number of components is ignored by paraview
   // todo: allow change of float type
   if(BINARY) {
-    return "<Points>\n<DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"binary\"> \n";
+//    return "<Points>\n<DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"binary\"> \n";
+    return "<Points>\n<DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"3\" format=\"binary\"> \n";
   }
-  return "<Points>\n<DataArray type=\"Float64\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"ascii\"> \n";
+//  return "<Points>\n<DataArray type=\"Float64\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"ascii\"> \n";
+  return "<Points>\n<DataArray type=\"Float64\" Name=\"Points\" NumberOfComponents=\"3\" format=\"ascii\"> \n";
 }
 
 static constexpr auto point_footer() -> string_view {
   return "        </DataArray>\n"
-         "      </Points>";
+         "      </Points>\n";
 }
 
 template <GBool BINARY = false>
@@ -165,6 +168,11 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
         pointFile << " ";
       }
     }
+    if(DIM < 3){
+     for(GInt i = DIM; i < 3; ++i){
+       pointFile << " 0.0";
+     }
+    }
     pointFile << "\n";
   }
 
@@ -226,7 +234,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
 
   {
     GInt                actualValues = 0;
-    std::vector<GFloat> tmp_coords(noValues * DIM);
+    std::vector<GFloat> tmp_coords(noValues * 3);
 
     for(GInt id = 0; id < noValues; ++id) {
       if(!filter(id)) {
@@ -235,6 +243,11 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
       const auto& coord = coordinates[id];
       for(GInt i = 0; i < DIM; ++i) {
         tmp_coords[actualValues++] = coord[i];
+      }
+      if(DIM < 3){
+        for(GInt i = DIM; i < 3; ++i){
+          tmp_coords[actualValues++] = 0.0;
+        }
       }
     }
     const GInt header_coord_size = 4 * actualValues;

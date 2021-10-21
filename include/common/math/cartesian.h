@@ -28,6 +28,22 @@ static constexpr inline auto maxNoNghbrs() -> GInt {
   return 2 * NDIM;
 }
 
+/// Return maximum number of Neighbors including diagonals (2D/3D) and tridiagonals (3D) per cell
+/// \tparam NDIM Number of dimensions of the Cartesian grid
+/// \return The maximum number of same level neighbors at the given NDIM including diagonals.
+template <GInt NDIM>
+static constexpr inline auto maxNoNghbrsDiag() -> GInt {
+  if(NDIM == 1) {
+    return 2;
+  }
+  if(NDIM == 2) {
+    return 8;
+  }
+  if(NDIM == 3) {
+    return 26;
+  }
+}
+
 // todo: replace with constant expression function
 /// Given the childId gives the "direction" of this child relative to the center
 /// of a cell.
