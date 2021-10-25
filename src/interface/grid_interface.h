@@ -3,6 +3,7 @@
 
 #include <sfcmm_common.h>
 #include "geometry.h"
+#include "gridcell_properties.h"
 
 class GridInterface {
  public:
@@ -88,6 +89,9 @@ class GridInterface {
   /// Number of cells in this grid.
   /// \return Number of cells in this grid.
   [[nodiscard]] virtual inline auto neighbor(const GInt cellId, const GInt dir) const -> GInt = 0;
+
+
+  [[nodiscard]] virtual inline auto property(const GInt id, CellProperties p) const -> GBool = 0;
 
 
   //  //// Grid Generation specific

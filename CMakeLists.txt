@@ -28,7 +28,7 @@ add_executable(lbm
         src/interface/grid_interface.h src/gridgenerator/cartesiangrid_generation.h src/lbm_solver.h src/lbm_constants.h src/pv.h src/interface/lbm_interface.h)
 
 #TARGET_LINK_LIBRARIES(lbm PUBLIC mpi)
-target_link_libraries(lbm PUBLIC MPI::MPI_CXX)
+target_link_libraries(lbm PUBLIC MPI::MPI_CXX dl tinfo pthread)
 
 option(BUILD_DOC "Build documentation" OFF)
 # check if Doxygen is installed

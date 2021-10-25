@@ -100,7 +100,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   inline auto neighbor(const GInt id, const GInt dir) -> GInt& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
-      checkDir(dir);
+//      checkDir(dir);
       if(m_diagonalNghbrs) {
         return m_nghbrIds.at(id * cartesian::maxNoNghbrsDiag<NDIM>() + dir);
       }
@@ -115,7 +115,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   [[nodiscard]] inline auto neighbor(const GInt id, const GInt dir) const -> GInt {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
-      checkDir(dir);
+//      checkDir(dir);
       if(m_diagonalNghbrs) {
         return m_nghbrIds.at(id * cartesian::maxNoNghbrsDiag<NDIM>() + dir);
       }
@@ -237,6 +237,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     // grid.balance(); //todo: implement
     setCapacity(grid.capacity()); // todo: change for adaptation
     m_geometry = grid.geometry();
+    size() = grid.size();
 
 #ifdef _OPENMP
 #pragma omp parallel default(none) shared(grid)
@@ -270,12 +271,12 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     setBoundingBox(grid.boundingBox());
 
 
-    setProperties();
-    if(m_loadBalancing) {
-      setWorkload();
-      calculateOffspringsAndWeights();
-    }
-    addDiagonalNghbrs();
+//    setProperties();
+//    if(m_loadBalancing) {
+//      setWorkload();
+//      calculateOffspringsAndWeights();
+//    }
+//    addDiagonalNghbrs();
   }
 
   /// Add the diagonal(2D/3D) and/or tridiagonal (3D) to the neighbor connections of each cell.
@@ -317,13 +318,21 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
  private:
-  void setProperties() { determineBoundaryCells(); };
+  void setProperties() {
+    const GInt noCells = size();
+//    for(GInt cellId = 0; cellId < noCells; ++cellId) {
+//        property(cellId, CellProperties::leaf) = (noChildren(cellId) == 0);
+//    }
+//    determineBoundaryCells();
+  };
+
   void determineBoundaryCells() {
     const GInt noCells = size();
     for(GInt cellId = 0; cellId < noCells; ++cellId) {
       // is a partition cell determine for each if it can be a boundary cell (no existent parent)
       // parent has a cut with the boundary -> possible cut of child!
       if(parent(cellId) == -1 || property(parent(cellId), CellProperties::bndry)) {
+        cerr0 <<"bndry check" <<std::endl;//todo:remove
         const GDouble cellLength                = lengthOnLvl(std::to_integer<GInt>(level(cellId)));
         property(cellId, CellProperties::bndry) = m_geometry->cutWithCell(center(cellId), cellLength);
       }

@@ -96,9 +96,10 @@ class BaseCartesianGrid : public GridInterface {
   };
   [[nodiscard]] inline auto currentHighestLvl() const -> GInt override { return m_currentHighestLvl; }
   [[nodiscard]] inline auto dim() const -> GInt override { return NDIM; }
+
   inline auto               property(const GInt id, CellProperties p) -> auto {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
-      checkBounds(id);
+//      checkBounds(id);
       checkProperty(p);
       return m_properties.at(id)[grid::cell::p(p)];
     }
@@ -171,7 +172,7 @@ class BaseCartesianGrid : public GridInterface {
 
   inline auto property(const GInt id) -> PropertyBitsetType& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
-      checkBounds(id);
+//      checkBounds(id);
       return m_properties.at(id);
     }
     return m_properties[id];
@@ -193,8 +194,8 @@ class BaseCartesianGrid : public GridInterface {
   }
 
   void checkBounds(const GInt id) const {
-    if(id > this->size()) {
-      TERMM(-1, "Out of bounds.");
+    if(id > this->capacity()) {
+      TERMM(-1, "Out of bounds id: " + std::to_string(id) + "/" + std::to_string(this->capacity()));
     }
   }
 
@@ -226,7 +227,7 @@ class BaseCartesianGrid : public GridInterface {
 
   inline auto parent(const GInt id) -> GInt& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
-      checkBounds(id);
+//      checkBounds(id);
       return m_parentId.at(id);
     }
     // no bound checking
@@ -237,22 +238,22 @@ class BaseCartesianGrid : public GridInterface {
 
   inline auto center(const GInt id, const GInt dir) -> GDouble& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
-      checkBounds(id);
+//      checkBounds(id);
       checkDir(dir);
     }
     return m_center[id][dir];
   }
 
   [[nodiscard]] inline auto center(const GInt id) -> Point<NDIM>& {
-    if(DEBUG_LEVEL >= Debug_Level::debug) {
-      checkBounds(id);
-    }
+//    if(DEBUG_LEVEL >= Debug_Level::debug) {
+//      checkBounds(id);
+//    }
     return m_center[id];
   }
 
   inline auto globalId(const GInt id) -> GInt& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
-      checkBounds(id);
+//      checkBounds(id);
       return m_globalId.at(id);
     }
     return m_globalId[id];
@@ -260,7 +261,7 @@ class BaseCartesianGrid : public GridInterface {
 
   inline auto level(const GInt id) -> std::byte& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
-      checkBounds(id);
+//      checkBounds(id);
       return m_level.at(id);
     }
     return m_level[id];
@@ -310,14 +311,14 @@ class BaseCartesianGrid : public GridInterface {
 
   void checkDir(const GInt dir) const {
     if(dir > cartesian::maxNoNghbrs<NDIM>() || dir < 0) {
-      TERMM(-1, "Invalid direction");
+      TERMM(-1, "Invalid direction " + std::to_string(dir));
     }
   }
 
 
  private:
   void checkProperty(const Cell p) const {
-    if(p != Cell::NumProperties) {
+    if(p >= Cell::NumProperties) {
       TERMM(-1, "Invalid property!");
     }
   }

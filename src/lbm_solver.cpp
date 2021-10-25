@@ -27,7 +27,6 @@ void LBMSolver<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_file) {
   init(argc, argv);
   logger << "LBM Solver started ||>" << endl;
   cout << "LBM Solver started ||>" << endl;
-  loadConfiguration();
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
 }
 
@@ -50,6 +49,14 @@ void LBMSolver<DEBUG_LEVEL>::loadConfiguration() {
   m_noDists            = LBMethod::noDists.at(static_cast<GInt>(m_method));
   m_noVars             = m_dim + 1 + static_cast<GInt>(isThermal());
   m_outputInfoInterval = 10;
+
+  cerr0 << "<<<<<<<<<<<<>>>>>>>>>>>>>" << std::endl;
+  cerr0 << "LBM Type "
+        << "BGK" << std::endl;
+  cerr0 << "LBM Method "
+        << "D2Q9" << std::endl;
+  cerr0 << "No. of variables " << std::to_string(m_noVars) << std::endl;
+  cerr0 << "+++++++++++++++++++++++++" << std::endl;
 }
 
 
@@ -85,6 +92,9 @@ void LBMSolver<DEBUG_LEVEL>::setupMethod() {
 template <Debug_Level DEBUG_LEVEL>
 auto LBMSolver<DEBUG_LEVEL>::run() -> GInt {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMMainLoop]);
+  loadConfiguration();
+  finishInit();
+
   switch(m_dim) {
     case 1:
       return run<1>();
@@ -116,9 +126,9 @@ auto LBMSolver<DEBUG_LEVEL>::run() -> GInt {
       cerr0 << "Running LBM at " << m_timeStep << std::endl;
       logger << "Running LBM at " << m_timeStep << std::endl;
 
-      const GDouble convUx = convergence<NDIM>(PV::velocitiy(0));
-      const GDouble convUy = convergence<NDIM>(PV::velocitiy(1));
-      const GDouble convUz = (NDIM == 3) ? convergence<NDIM>(PV::velocitiy(2)) : NAN;
+      const GDouble convUx  = convergence<NDIM>(PV::velocitiy(0));
+      const GDouble convUy  = convergence<NDIM>(PV::velocitiy(1));
+      const GDouble convUz  = (NDIM == 3) ? convergence<NDIM>(PV::velocitiy(2)) : NAN;
       const GDouble convRho = convergence<NDIM>(PV::rho<NDIM>());
 
       cerr0 << "u_x: " << convUx << " ";
@@ -158,8 +168,8 @@ void LBMSolver<DEBUG_LEVEL>::initialCondition() {
     rho<NDIM>(cellId) = 1.0;
 
     // assuming initial zero velocity and density 1
-    for(GInt dist = 0; dist < m_noDists; dist++) {
-      m_feq[cellId * m_noDists + dist]  = m_weight[dist];
+    for(GInt dist = 0; dist < m_noDists; ++dist) {
+      m_feq[cellId * m_noDists + dist]  = m_weight.at(dist);
       m_f[cellId * m_noDists + dist]    = m_feq[cellId * m_noDists + dist];
       m_fold[cellId * m_noDists + dist] = m_feq[cellId * m_noDists + dist];
     }
@@ -193,7 +203,7 @@ template <Debug_Level DEBUG_LEVEL>
 template <GInt NDIM>
 void LBMSolver<DEBUG_LEVEL>::currToOldVars() {
   std::copy(m_vars.begin(), m_vars.end(), m_varsold.begin());
-  std::copy(m_f.begin(), m_f.end(), m_fold.end());
+  std::copy(m_f.begin(), m_f.end(), m_fold.begin());
 }
 
 template <Debug_Level DEBUG_LEVEL>
@@ -242,7 +252,7 @@ void LBMSolver<DEBUG_LEVEL>::propagationStep() {
     for(GInt dist = 0; dist < m_noDists; ++dist) {
       const GInt neighborId = m_grid->neighbor(cellId, dist);
       if(neighborId != INVALID_CELLID) {
-        m_fold[neighborId] = m_f[cellId];
+        m_fold[neighborId * m_noDists + dist] = m_f[cellId * m_noDists + dist];
       }
     }
   }
@@ -250,15 +260,23 @@ void LBMSolver<DEBUG_LEVEL>::propagationStep() {
 
 template <Debug_Level DEBUG_LEVEL>
 template <GInt NDIM>
-void LBMSolver<DEBUG_LEVEL>::boundaryCnd() {}
+void LBMSolver<DEBUG_LEVEL>::boundaryCnd() {
+  cerr0 << "bnd" << std::endl;
+  for(GInt cellId = 0; cellId < noCells(); ++cellId) {
+    if(grid().property(cellId, CellProperties::bndry) && grid().property(cellId, CellProperties::leaf)) {
+      cerr0 << grid<NDIM>()->center(cellId)[0] << " " << grid<NDIM>()->center(cellId)[1] << std::endl;
+    }
+  }
+}
 
 template <Debug_Level DEBUG_LEVEL>
 void LBMSolver<DEBUG_LEVEL>::transferGrid(const GridInterface& grid) {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
-  cerr0 << "Transferring Grid to LBM solver" << std::endl;
-  logger << "Transferring Grid to LBM solver" << std::endl;
-
   m_dim = grid.dim();
+
+  cerr0 << "Transferring " + std::to_string(m_dim) + "D Grid to LBM solver" << std::endl;
+  logger << "Transferring " + std::to_string(m_dim) + "D Grid to LBM solver" << std::endl;
+
 
   switch(m_dim) {
     case 1:
@@ -291,7 +309,6 @@ void LBMSolver<DEBUG_LEVEL>::transferGrid(const GridInterface& grid) {
       TERMM(-1, "Only dimensions 1,2 and 3 are supported.");
   }
 
-  finishInit();
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
 }
 

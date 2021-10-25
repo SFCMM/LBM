@@ -39,7 +39,7 @@ static constexpr GInt MAX_DIM = 4;
 //#define TIMER_SYNC
 
 // enable backtracing using LLVMSupport library
-//#define ENABLE_BACKTRACE
+#define ENABLE_BACKTRACE
 
 // enable the solver in the main routine
 #define SOLVER_AVAILABLE
@@ -47,7 +47,7 @@ static constexpr GInt MAX_DIM = 4;
 
 // clang-format off
 #define PROJECT_VER @PROJECT_VERSION@
-#define BUILD_NUM 43
+#define BUILD_NUM 48
 #define COMPILER_VER @CMAKE_CXX_COMPILER_VERSION@
 #define COMPILER_NAME @CMAKE_CXX_COMPILER_ID@
 #define BUILD_TYPE @CMAKE_BUILD_TYPE@

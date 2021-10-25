@@ -12,6 +12,10 @@ class LBMSolver : public AppInterface {
  public:
   LBMSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
   ~LBMSolver() override = default;
+  LBMSolver(const LBMSolver&) = delete;
+  LBMSolver(LBMSolver&&)      = delete;
+  auto operator=(const LBMSolver&) -> LBMSolver& = delete;
+  auto operator=(LBMSolver&&) -> LBMSolver& = delete;
 
   void init(int argc, GChar** argv, GString config_file) override;
 
@@ -23,6 +27,11 @@ class LBMSolver : public AppInterface {
 
   auto               run() -> GInt override;
   [[nodiscard]] auto grid() const -> const GridInterface& override { return *m_grid; };
+
+  template <GInt NDIM>
+  [[nodiscard]] auto grid() const -> const CartesianGrid<DEBUG_LEVEL, NDIM>* {
+    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get());
+  }
 
   void transferGrid(const GridInterface& grid) override;
 
@@ -37,7 +46,7 @@ class LBMSolver : public AppInterface {
   void finishInit();
 
   template <GInt NDIM>
-  auto               run() -> GInt;
+  auto run() -> GInt;
   template <GInt NDIM>
   void timeStep();
   template <GInt NDIM>
@@ -59,6 +68,12 @@ class LBMSolver : public AppInterface {
 
   template <GInt NDIM>
   auto inline rho(const GInt cellId) -> GDouble& {
+    if(DEBUG_LEVEL > Debug_Level::min_debug){
+      if(m_noVars < PV::rho<NDIM>()){
+        TERMM(-1, "Invalid number of variables (" + std::to_string(m_noVars) + ")");
+      }
+      return m_vars.at(cellId * m_noVars + PV::rho<NDIM>());
+    }
     return m_vars[cellId * m_noVars + PV::rho<NDIM>()];
   }
   template <GInt NDIM>
