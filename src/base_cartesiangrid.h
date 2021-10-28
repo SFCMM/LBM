@@ -138,6 +138,7 @@ class BaseCartesianGrid : public GridInterface {
   }
 
   [[nodiscard]] inline auto level() -> std::vector<std::byte>& { return m_level; }
+  [[nodiscard]] inline auto level() const -> const std::vector<std::byte>& { return m_level; }
 
   [[nodiscard]] inline auto globalId(const GInt id) const -> GInt {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
@@ -235,6 +236,7 @@ class BaseCartesianGrid : public GridInterface {
   }
 
   inline auto center() -> std::vector<Point<NDIM>>& { return m_center; }
+  inline auto center() const -> const std::vector<Point<NDIM>>& { return m_center; }
 
   inline auto center(const GInt id, const GInt dir) -> GDouble& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {

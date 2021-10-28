@@ -200,7 +200,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     return markedCells;
   }
 
-  void save(const GString& fileName, const json& gridOutConfig) override {
+  void save(const GString& fileName, const json& gridOutConfig) const override {
     // Grid output configuration
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     GString              filter    = config::opt_config_value(gridOutConfig, "cellFilter", GString("leafCells"));

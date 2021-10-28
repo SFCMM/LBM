@@ -13,7 +13,10 @@
 - run basic 2D navier-stokes case (couette)
 - implement bounce back boundary condition
 
-## Ongoing
+## Ongoing:
+- implement general Bounce Back boundary condition
+- implement general periodic boundary condition
+- implement output correctly
 
 ## Done:
 ### Features
@@ -23,6 +26,7 @@
 ### Buildsystem
 
 ### Testing
+- Added Couette flow testcase
 
 ### Usability
 

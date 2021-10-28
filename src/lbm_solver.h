@@ -29,7 +29,7 @@ class LBMSolver : public AppInterface {
   [[nodiscard]] auto grid() const -> const GridInterface& override { return *m_grid; };
 
   template <GInt NDIM>
-  [[nodiscard]] auto grid() const -> const CartesianGrid<DEBUG_LEVEL, NDIM>* {
+  [[nodiscard]] auto grid() const -> CartesianGrid<DEBUG_LEVEL, NDIM>* {
     return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get());
   }
 
@@ -41,16 +41,19 @@ class LBMSolver : public AppInterface {
   void init(int argc, GChar** argv);
   void initTimers();
 
-  void loadConfiguration();
   void setupMethod();
   void finishInit();
 
   template <GInt NDIM>
   auto run() -> GInt;
   template <GInt NDIM>
+  void loadConfiguration();
+  template <GInt NDIM>
   void timeStep();
   template <GInt NDIM>
   void initialCondition();
+  template <GInt NDIM>
+  void setupPeriodicConnection();
   template <GInt NDIM>
   void boundaryCnd();
   template <GInt NDIM>
@@ -97,6 +100,7 @@ class LBMSolver : public AppInterface {
   GInt   m_noSpecies          = 1;
   GInt   m_noDists            = 0;
   GInt   m_outputInfoInterval = 10;
+  GInt   m_outputSolutionInterval = 10;
   GInt   m_timeStep           = 0;
 
   LBMethodType         m_method     = LBMethodType::D2Q9;

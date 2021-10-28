@@ -117,7 +117,7 @@ class GridInterface {
   /// Save the grid to a file.
   /// \param fileName The filename(path) of the grid file to be saved.
   /// \param gridOutConfig Json configuration object containing the configuration options of the output format.
-  virtual void save(const GString& fileName, const json& gridOutConfig) = 0;
+  virtual void save(const GString& fileName, const json& gridOutConfig) const = 0;
 
  private:
 };

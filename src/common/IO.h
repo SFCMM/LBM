@@ -128,6 +128,14 @@ static inline auto point_data_int32(const GString& name) -> GString {
   return "<DataArray type=\"Int32\" Name=\"" + name + "\" format=\"ascii\">\n";
 }
 
+template <GBool binary = false>
+static inline auto point_data_float64(const GString& name) -> GString {
+  if(binary) {
+    return "<DataArray type=\"Float64\" Name=\"" + name + "\" format=\"binary\">\n";
+  }
+  return "<DataArray type=\"Float64\" Name=\"" + name + "\" format=\"ascii\">\n";
+}
+
 static constexpr auto point_data_footer() -> string_view { return "      </PointData> \n"; }
 
 
@@ -189,7 +197,13 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   pointFile << point_data_header();
   GInt i = 0;
   for(const auto& column : values) {
-    pointFile << point_data_int32(index[i++]);
+    //todo: temporary test
+    if(index[i] == "u"){
+      pointFile << point_data_float64(index[i]);
+    } else {
+      pointFile << point_data_int32(index[i]);
+    }
+    i++;
     for(GInt id = 0; id < noValues; ++id) {
       if(!filter(id)) {
         continue;

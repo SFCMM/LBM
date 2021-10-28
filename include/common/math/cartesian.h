@@ -42,6 +42,7 @@ static constexpr inline auto maxNoNghbrsDiag() -> GInt {
   if(NDIM == 3) {
     return 26;
   }
+  return 50;
 }
 
 // todo: replace with constant expression function

@@ -100,7 +100,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   inline auto neighbor(const GInt id, const GInt dir) -> GInt& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
-//      checkDir(dir);
+      //      checkDir(dir);
       if(m_diagonalNghbrs) {
         return m_nghbrIds.at(id * cartesian::maxNoNghbrsDiag<NDIM>() + dir);
       }
@@ -115,7 +115,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   [[nodiscard]] inline auto neighbor(const GInt id, const GInt dir) const -> GInt {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
-//      checkDir(dir);
+      //      checkDir(dir);
       if(m_diagonalNghbrs) {
         return m_nghbrIds.at(id * cartesian::maxNoNghbrsDiag<NDIM>() + dir);
       }
@@ -203,6 +203,10 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   /// Return number of properties defined for each node
   static constexpr auto noProperties() -> GInt { return grid::cell::p(Cell::NumProperties); }
 
+  [[nodiscard]] inline auto noLeafCells() const -> GInt { return m_noLeafCells; }
+
+  [[nodiscard]] inline auto noBndCells() const -> GInt { return m_noBndCells; }
+
   void setCapacity(const GInt _capacity) override {
     if(!empty()) {
       TERMM(-1, "Invalid operation tree already allocated.");
@@ -229,7 +233,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::reset();
   }
 
-  void save(const GString& fileName, const json& gridOutConfig) override { TERMM(-1, "Not implemented!"); }
+  void save(const GString& fileName, const json& gridOutConfig) const override { TERMM(-1, "Not implemented!"); }
 
   /// Load the generated grid in-memory and set additional properties
   /// \param grid Generated grid.
@@ -237,7 +241,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     // grid.balance(); //todo: implement
     setCapacity(grid.capacity()); // todo: change for adaptation
     m_geometry = grid.geometry();
-    size() = grid.size();
+    size()     = grid.size();
 
 #ifdef _OPENMP
 #pragma omp parallel default(none) shared(grid)
@@ -271,42 +275,50 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     setBoundingBox(grid.boundingBox());
 
 
-//    setProperties();
-//    if(m_loadBalancing) {
-//      setWorkload();
-//      calculateOffspringsAndWeights();
-//    }
-//    addDiagonalNghbrs();
+    setProperties();
+    //    if(m_loadBalancing) {
+    //      setWorkload();
+    //      calculateOffspringsAndWeights();
+    //    }
+    addDiagonalNghbrs();
   }
 
   /// Add the diagonal(2D/3D) and/or tridiagonal (3D) to the neighbor connections of each cell.
   void addDiagonalNghbrs() {
-    logger << "Adding diagonal/tridiagonal neighbors. (before:" << m_nghbrIds.size() << " / ";
-
     m_diagonalNghbrs = true;
+    auto tmpNghbr    = m_nghbrIds;
+
+    auto tmpN = [&](const GInt cellId, const GInt dir) { return tmpNghbr[cellId * cartesian::maxNoNghbrs<NDIM>() + dir]; };
+
 
     for(GInt cellId = 0; cellId < size(); ++cellId) {
       // dirs 0=-x 1=+x 2=-y 3=+y
+
+      // copy existing neighbor connections
+      for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
+        neighbor(cellId, dir) = tmpN(cellId, dir);
+      }
+
       //  add diagonal nghbrs
       if(NDIM > 1) {
-        const GInt nghbrmX = neighbor(cellId, 0);
-        const GInt nghbrpX = neighbor(cellId, 1);
-        GInt       off     = nghbrmX + cartesian::maxNoNghbrs<NDIM>();
+        const GInt nghbrmX = tmpN(cellId, 0);
+        const GInt nghbrpX = tmpN(cellId, 1);
 
         // +x+y
-        const GInt nghbrpXpY = nghbrpX != INVALID_CELLID ? neighbor(nghbrpX, 3) : -1;
-        m_nghbrIds.insert(m_nghbrIds.begin() + off++, nghbrpXpY);
+        const GInt nghbrpXpY                                 = nghbrpX != INVALID_CELLID ? tmpN(nghbrpX, 3) : -1;
+        neighbor(cellId, cartesian::maxNoNghbrs<NDIM>()) = nghbrpXpY;
+
         // +x-y
-        const GInt nghbrpXmY = nghbrpX != INVALID_CELLID ? neighbor(nghbrpX, 2) : -1;
-        m_nghbrIds.insert(m_nghbrIds.begin() + off++, nghbrpXmY);
+        const GInt nghbrpXmY                                 = nghbrpX != INVALID_CELLID ? tmpN(nghbrpX, 2) : -1;
+        neighbor(cellId, cartesian::maxNoNghbrs<NDIM>() + 1) = nghbrpXmY;
 
         // -x-y
-        const GInt nghbrmXmY = nghbrmX != INVALID_CELLID ? neighbor(nghbrmX, 2) : -1;
-        m_nghbrIds.insert(m_nghbrIds.begin() + off++, nghbrmXmY);
+        const GInt nghbrmXmY                                 = nghbrmX != INVALID_CELLID ? tmpN(nghbrmX, 2) : -1;
+        neighbor(cellId, cartesian::maxNoNghbrs<NDIM>() + 2) = nghbrmXmY;
 
         // -x+y
-        const GInt nghbrmXpY = nghbrmX != INVALID_CELLID ? neighbor(nghbrmX, 3) : -1;
-        m_nghbrIds.insert(m_nghbrIds.begin() + off++, nghbrmXpY);
+        const GInt nghbrmXpY                                 = nghbrmX != INVALID_CELLID ? tmpN(nghbrmX, 3) : -1;
+        neighbor(cellId, cartesian::maxNoNghbrs<NDIM>() + 3) = nghbrmXpY;
       }
 
       // add tridiagonal nghbrs
@@ -314,16 +326,17 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
         TERMM(-1, "Not implemented!");
       }
     }
-    logger << "after:" << m_nghbrIds.size() << ")" <<std::endl;
   }
 
  private:
   void setProperties() {
     const GInt noCells = size();
-//    for(GInt cellId = 0; cellId < noCells; ++cellId) {
-//        property(cellId, CellProperties::leaf) = (noChildren(cellId) == 0);
-//    }
-//    determineBoundaryCells();
+    for(GInt cellId = 0; cellId < noCells; ++cellId) {
+      const GBool isLeaf                     = noChildren(cellId) == 0;
+      property(cellId, CellProperties::leaf) = isLeaf;
+      m_noLeafCells += static_cast<GInt>(isLeaf);
+    }
+    determineBoundaryCells();
   };
 
   void determineBoundaryCells() {
@@ -332,10 +345,26 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       // is a partition cell determine for each if it can be a boundary cell (no existent parent)
       // parent has a cut with the boundary -> possible cut of child!
       if(parent(cellId) == -1 || property(parent(cellId), CellProperties::bndry)) {
-        cerr0 <<"bndry check" <<std::endl;//todo:remove
         const GDouble cellLength                = lengthOnLvl(std::to_integer<GInt>(level(cellId)));
         property(cellId, CellProperties::bndry) = m_geometry->cutWithCell(center(cellId), cellLength);
+        //        if(DEBUG_LEVEL > Debug_Level::min_debug && property(cellId, CellProperties::bndry)){
+        if(property(cellId, CellProperties::bndry)) {
+          GInt noNeighbors = 0;
+          for(GInt nghbrId = 0; nghbrId < cartesian::maxNoNghbrs<NDIM>(); ++nghbrId) {
+            if(neighbor(cellId, nghbrId) != INVALID_CELLID) {
+              ++noNeighbors;
+            }
+          }
+          if(cartesian::maxNoNghbrs<NDIM>() == noNeighbors) {
+            cerr0 << "Removed boundary property cellId: " << cellId << " (" << center(cellId)[0] << ", " << center(cellId)[1]
+                  << ") L:" << cellLength << std::endl;
+            property(cellId, CellProperties::bndry) = false;
+            logger << "Simplified bndry process!!!" << std::endl;
+            //            TERMM(-1, "Cell marked as boundary, but is not on a boundary!");
+          }
+        }
       }
+      m_noBndCells += static_cast<GInt>(property(cellId, CellProperties::bndry) && property(cellId, CellProperties::leaf));
     }
   }
   void setWorkload() { TERMM(-1, "Not implemented!"); };
@@ -449,6 +478,9 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   //  cartesian::Tree<DEBUG_LEVEL, NDIM> m_tree{};
   std::shared_ptr<GeometryManager<DEBUG_LEVEL, NDIM>> m_geometry;
+
+  GInt m_noLeafCells = 0;
+  GInt m_noBndCells  = 0;
 
   GBool m_loadBalancing  = false;
   GBool m_diagonalNghbrs = false;
