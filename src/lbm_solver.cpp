@@ -70,6 +70,7 @@ void LBMSolver<DEBUG_LEVEL>::loadConfiguration() {
 
   //todo: just for current testcase
   m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack, grid<NDIM>()->bndrySurface(static_cast<GInt>(LBMDir::mY)));
+  m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack_TangentialVelocity, grid<NDIM>()->bndrySurface(static_cast<GInt>(LBMDir::pY)));
 
 
 
@@ -338,48 +339,47 @@ void LBMSolver<DEBUG_LEVEL>::boundaryCnd() {
     using namespace  std::placeholders;
     std::function<GDouble&(GInt, GInt)> _fold = std::bind(&LBMSolver::fold, this, _1, _2);
     std::function<GDouble&(GInt, GInt)> _f = std::bind(&LBMSolver::f, this, _1, _2);
-//    std::function<GDouble&(GInt, GInt)> _fold = [this](auto && PH1, auto && PH2) { fold(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2)); };
 
     m_bndManager->apply(_f, _fold);
 
 
-  //  cerr0 << "bnd" << std::endl;
-  for(GInt cellId = 0; cellId < noCells(); ++cellId) {
-    //    cerr0 << "bnd " << grid().property(cellId, CellProperties::bndry) << std::endl;
-    //    cerr0 << "leaf " << grid().property(cellId, CellProperties::leaf) << std::endl;
-
-
-
-    if(grid().property(cellId, CellProperties::bndry) && grid().property(cellId, CellProperties::leaf)) {
-      //      // -X
-      //      if(grid().neighbor(cellId, 0) == INVALID_CELLID) {
-      //        m_fold[cellId * m_noDists + 1] = m_f[cellId * m_noDists + 0];
-      //        m_fold[cellId * m_noDists + 4] = m_f[cellId * m_noDists + 6];
-      //        m_fold[cellId * m_noDists + 5] = m_f[cellId * m_noDists + 7];
-      //      }
-      //      // +X
-      //      if(grid().neighbor(cellId, 1) == INVALID_CELLID) {
-      //        m_fold[cellId * m_noDists + 0] = m_f[cellId * m_noDists + 1];
-      //        m_fold[cellId * m_noDists + 6] = m_f[cellId * m_noDists + 4];
-      //        m_fold[cellId * m_noDists + 7] = m_f[cellId * m_noDists + 5];
-      //      }
-      // -y
-//      if(grid().neighbor(cellId, 2) == INVALID_CELLID) {
-//        m_fold[cellId * m_noDists + 3] = m_f[cellId * m_noDists + 2];
-//        m_fold[cellId * m_noDists + 4] = m_f[cellId * m_noDists + 6];
-//        m_fold[cellId * m_noDists + 7] = m_f[cellId * m_noDists + 5];
-//      }
-      // +y
-      if(grid().neighbor(cellId, 3) == INVALID_CELLID) {
-        //-y = +y
-        m_fold[cellId * m_noDists + 2] = m_f[cellId * m_noDists + 3];
-        // +x-y = -x+y
-        m_fold[cellId * m_noDists + 5] = m_f[cellId * m_noDists + 7] + 1.0 / 6.0 * (0.1); // todo:testing
-        // +x-y = -x+y
-        m_fold[cellId * m_noDists + 6] = m_f[cellId * m_noDists + 4] - 1.0 / 6.0 * (0.1); // todo:testing
-      }
-    }
-  }
+//  //  cerr0 << "bnd" << std::endl;
+//  for(GInt cellId = 0; cellId < noCells(); ++cellId) {
+//    //    cerr0 << "bnd " << grid().property(cellId, CellProperties::bndry) << std::endl;
+//    //    cerr0 << "leaf " << grid().property(cellId, CellProperties::leaf) << std::endl;
+//
+//
+//
+//    if(grid().property(cellId, CellProperties::bndry) && grid().property(cellId, CellProperties::leaf)) {
+//      //      // -X
+//      //      if(grid().neighbor(cellId, 0) == INVALID_CELLID) {
+//      //        m_fold[cellId * m_noDists + 1] = m_f[cellId * m_noDists + 0];
+//      //        m_fold[cellId * m_noDists + 4] = m_f[cellId * m_noDists + 6];
+//      //        m_fold[cellId * m_noDists + 5] = m_f[cellId * m_noDists + 7];
+//      //      }
+//      //      // +X
+//      //      if(grid().neighbor(cellId, 1) == INVALID_CELLID) {
+//      //        m_fold[cellId * m_noDists + 0] = m_f[cellId * m_noDists + 1];
+//      //        m_fold[cellId * m_noDists + 6] = m_f[cellId * m_noDists + 4];
+//      //        m_fold[cellId * m_noDists + 7] = m_f[cellId * m_noDists + 5];
+//      //      }
+//      // -y
+////      if(grid().neighbor(cellId, 2) == INVALID_CELLID) {
+////        m_fold[cellId * m_noDists + 3] = m_f[cellId * m_noDists + 2];
+////        m_fold[cellId * m_noDists + 4] = m_f[cellId * m_noDists + 6];
+////        m_fold[cellId * m_noDists + 7] = m_f[cellId * m_noDists + 5];
+////      }
+////      // +y
+////      if(grid().neighbor(cellId, 3) == INVALID_CELLID) {
+////        //-y = +y
+////        m_fold[cellId * m_noDists + 2] = m_f[cellId * m_noDists + 3];
+////        // +x-y = -x+y
+////        m_fold[cellId * m_noDists + 5] = m_f[cellId * m_noDists + 7] + 1.0 / 6.0 * (0.1); // todo:testing
+////        // +x-y = -x+y
+////        m_fold[cellId * m_noDists + 6] = m_f[cellId * m_noDists + 4] - 1.0 / 6.0 * (0.1); // todo:testing
+////      }
+//    }
+//  }
 }
 
 template <Debug_Level DEBUG_LEVEL>

@@ -128,7 +128,7 @@ class LBMethod<LBMethodType::D2Q9> {
       case 6:
         return 4;
       case 7:
-        return 6;
+        return 5;
       case 8:
         return 8;
       default:

@@ -16,7 +16,7 @@ class LBMBndInterface {
   auto operator=(const LBMBndInterface&) -> LBMBndInterface& = delete;
   auto operator=(LBMBndInterface&&) -> LBMBndInterface& = delete;
 
-  virtual void init()  = 0;
+  virtual void init()                                                                                               = 0;
   virtual void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) = 0;
 
  private:
@@ -74,8 +74,8 @@ class LBMBndManager {
     }
   }
 
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold){
-    for(const auto& bndry: m_bndrys){
+  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) {
+    for(const auto& bndry : m_bndrys) {
       bndry->apply(f, fold);
     }
   }
@@ -179,9 +179,19 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
 
   void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) {
     for(GInt id = 0; id < m_noSetDists; ++id) {
-      const GInt     dist          = m_bndIndex[id];
-      GInt oppositeDist  = LBMethod<LBTYPE>::oppositeDist(dist);
+      const GInt dist              = m_bndIndex[id];
+      GInt       oppositeDist      = LBMethod<LBTYPE>::oppositeDist(dist);
       fold(mapped(), oppositeDist) = f(mapped(), dist);
+
+      // todo: testing
+      if constexpr(TANGENTIALVELO) {
+        if(oppositeDist == 5) {
+          fold(mapped(), oppositeDist) += 1.0 / 6.0 * (0.1);
+        }
+        if(oppositeDist == 6) {
+          fold(mapped(), oppositeDist) -= 1.0 / 6.0 * (0.1);
+        }
+      }
     }
   }
 
