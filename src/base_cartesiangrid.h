@@ -105,7 +105,7 @@ class BaseCartesianGrid : public GridInterface {
     }
     return m_properties[id][static_cast<GInt>(p)];
   }
-  [[nodiscard]] inline auto property(const GInt id, CellProperties p) const -> GBool {
+  [[nodiscard]] inline auto property(const GInt id, CellProperties p) const -> GBool override {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       checkProperty(p);
@@ -201,8 +201,8 @@ class BaseCartesianGrid : public GridInterface {
   }
 
   [[nodiscard]] inline auto capacity() const -> GInt { return m_capacity; }
-  [[nodiscard]] inline auto size() const -> GInt { return m_size; }
-  [[nodiscard]] inline auto noCells() const -> GInt { return m_size; }
+  [[nodiscard]] inline auto size() const -> GInt override { return m_size; }
+  [[nodiscard]] inline auto noCells() const -> GInt override { return m_size; }
   [[nodiscard]] inline auto empty() const -> GBool { return m_size == 0; }
 
   [[nodiscard]] inline auto parent(const GInt id) const -> GInt {

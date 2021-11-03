@@ -5,6 +5,7 @@
 #include "interface/app_interface.h"
 #include "interface/lbm_interface.h"
 #include "lbm_constants.h"
+#include "lbm_bnd.h"
 #include "pv.h"
 
 template <Debug_Level DEBUG_LEVEL>
@@ -84,11 +85,19 @@ class LBMSolver : public AppInterface {
     return m_vars[cellId * m_noVars + PV::velocities<NDIM>()[dir]];
   }
 
+  auto inline f(const GInt cellId, const GInt dir) -> GDouble& {
+    return m_f[cellId * m_noDists + dir];
+  }
+
+  auto inline fold(const GInt cellId, const GInt dir) -> GDouble& {
+    return m_fold[cellId * m_noDists + dir];
+  }
 
   [[nodiscard]] auto inline noCells() const -> GInt { return m_grid->noCells(); }
 
   std::unique_ptr<GridInterface>     m_grid;
-  std::unique_ptr<LBMethodInterface> m_lbm;
+  std::unique_ptr<LBMethodInterface> m_lbm;//todo:implement
+  std::unique_ptr<LBMBndManager<DEBUG_LEVEL>> m_bndManager;//todo:implement
 
   GString m_exe;
   GString m_configurationFileName;

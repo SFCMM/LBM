@@ -49,7 +49,7 @@ template <GInt NDIM>
 void LBMSolver<DEBUG_LEVEL>::loadConfiguration() {
   m_solverType         = LBSolverType::BGK;  // todo: load from file
   m_method             = LBMethodType::D2Q9; // todo: load from file
-  m_noDists            = LBMethod::noDists.at(static_cast<GInt>(m_method));
+  m_noDists            = noDists(m_method);
   m_noVars             = m_dim + 1 + static_cast<GInt>(isThermal());
   // todo: make settable
   m_outputInfoInterval = 10;
@@ -66,11 +66,18 @@ void LBMSolver<DEBUG_LEVEL>::loadConfiguration() {
   m_nu        = (2.0 * m_relaxTime - 1) / 6.0; // default=0.133
   m_refU      = m_re * m_nu / m_refLength;     // default=1.3333
 
+  m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL>>(m_dim, m_noDists);
+
+  //todo: just for current testcase
+  m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack, grid<NDIM>()->bndrySurface(static_cast<GInt>(LBMDir::mY)));
+
+
+
   cerr0 << "<<<<<<<<<<<<>>>>>>>>>>>>>" << std::endl;
   cerr0 << "LBM Type "
-        << "BGK" << std::endl;
+        << "BGK" << std::endl;//todo: fix me
   cerr0 << "LBM Method "
-        << "D2Q9" << std::endl;
+        << "D2Q9" << std::endl;//todo: fix me
   cerr0 << "No. of variables " << std::to_string(m_noVars) << std::endl;
   cerr0 << "No. Leaf cells: " << grid<NDIM>()->noLeafCells() << std::endl;
   cerr0 << "No. Bnd cells: " << grid<NDIM>()->noBndCells() << std::endl;
@@ -328,10 +335,20 @@ void LBMSolver<DEBUG_LEVEL>::propagationStep() {
 template <Debug_Level DEBUG_LEVEL>
 template <GInt NDIM>
 void LBMSolver<DEBUG_LEVEL>::boundaryCnd() {
+    using namespace  std::placeholders;
+    std::function<GDouble&(GInt, GInt)> _fold = std::bind(&LBMSolver::fold, this, _1, _2);
+    std::function<GDouble&(GInt, GInt)> _f = std::bind(&LBMSolver::f, this, _1, _2);
+//    std::function<GDouble&(GInt, GInt)> _fold = [this](auto && PH1, auto && PH2) { fold(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2)); };
+
+    m_bndManager->apply(_f, _fold);
+
+
   //  cerr0 << "bnd" << std::endl;
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     //    cerr0 << "bnd " << grid().property(cellId, CellProperties::bndry) << std::endl;
     //    cerr0 << "leaf " << grid().property(cellId, CellProperties::leaf) << std::endl;
+
+
 
     if(grid().property(cellId, CellProperties::bndry) && grid().property(cellId, CellProperties::leaf)) {
       //      // -X
@@ -347,11 +364,11 @@ void LBMSolver<DEBUG_LEVEL>::boundaryCnd() {
       //        m_fold[cellId * m_noDists + 7] = m_f[cellId * m_noDists + 5];
       //      }
       // -y
-      if(grid().neighbor(cellId, 2) == INVALID_CELLID) {
-        m_fold[cellId * m_noDists + 3] = m_f[cellId * m_noDists + 2];
-        m_fold[cellId * m_noDists + 4] = m_f[cellId * m_noDists + 6];
-        m_fold[cellId * m_noDists + 7] = m_f[cellId * m_noDists + 5];
-      }
+//      if(grid().neighbor(cellId, 2) == INVALID_CELLID) {
+//        m_fold[cellId * m_noDists + 3] = m_f[cellId * m_noDists + 2];
+//        m_fold[cellId * m_noDists + 4] = m_f[cellId * m_noDists + 6];
+//        m_fold[cellId * m_noDists + 7] = m_f[cellId * m_noDists + 5];
+//      }
       // +y
       if(grid().neighbor(cellId, 3) == INVALID_CELLID) {
         //-y = +y

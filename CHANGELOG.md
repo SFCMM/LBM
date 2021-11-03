@@ -20,8 +20,8 @@
 
 ## Done:
 ### Features
--load grid generated from the generator
--setup diagonal neighbor connection for D2Q9 and similar methods
+- load grid generated from the generator
+- setup diagonal neighbor connection for D2Q9 and similar methods
 
 ### Buildsystem
 

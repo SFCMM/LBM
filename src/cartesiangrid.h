@@ -3,6 +3,7 @@
 
 #include <gcem.hpp>
 
+#include <common/surface.h>
 #include <sfcmm_common.h>
 #include "base_cartesiangrid.h"
 //#include "celltree.h"
@@ -112,7 +113,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     return m_nghbrIds[id * cartesian::maxNoNghbrs<NDIM>() + dir];
   }
 
-  [[nodiscard]] inline auto neighbor(const GInt id, const GInt dir) const -> GInt {
+  [[nodiscard]] inline auto neighbor(const GInt id, const GInt dir) const -> GInt override {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       //      checkDir(dir);
@@ -235,6 +236,11 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void save(const GString& fileName, const json& gridOutConfig) const override { TERMM(-1, "Not implemented!"); }
 
+  auto bndrySurface(const GInt id) const -> const Surface<NDIM>& {
+    return m_bndrySurfaces[id];
+  }
+
+
   /// Load the generated grid in-memory and set additional properties
   /// \param grid Generated grid.
   void loadGridInplace(const CartesianGridGen<DEBUG_LEVEL, NDIM>& grid) {
@@ -281,6 +287,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     //      calculateOffspringsAndWeights();
     //    }
     addDiagonalNghbrs();
+    identifyBndrySurfaces();
+    // createPeriodicConnection();
   }
 
   /// Add the diagonal(2D/3D) and/or tridiagonal (3D) to the neighbor connections of each cell.
@@ -305,7 +313,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
         const GInt nghbrpX = tmpN(cellId, 1);
 
         // +x+y
-        const GInt nghbrpXpY                                 = nghbrpX != INVALID_CELLID ? tmpN(nghbrpX, 3) : -1;
+        const GInt nghbrpXpY                             = nghbrpX != INVALID_CELLID ? tmpN(nghbrpX, 3) : -1;
         neighbor(cellId, cartesian::maxNoNghbrs<NDIM>()) = nghbrpXpY;
 
         // +x-y
@@ -367,6 +375,27 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       m_noBndCells += static_cast<GInt>(property(cellId, CellProperties::bndry) && property(cellId, CellProperties::leaf));
     }
   }
+
+  void identifyBndrySurfaces() {
+    // todo: make settable
+    const GBool axisAligned = true;
+    if(axisAligned) {
+      m_bndrySurfaces.resize(cartesian::maxNoNghbrs<NDIM>());
+
+      for(GInt cellId = 0; cellId < size(); ++cellId){
+        if(property(cellId, Cell::bndry)){
+          for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir){
+            if(!hasNeighbor(cellId, dir)){
+              m_bndrySurfaces[dir].addCell(cellId, dir);
+            }
+          }
+        }
+      }
+    } else {
+      TERMM(-1, "Not implemented");
+    }
+  }
+
   void setWorkload() { TERMM(-1, "Not implemented!"); };
   void calculateOffspringsAndWeights() { TERMM(-1, "Not implemented!"); };
 
@@ -484,6 +513,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   GBool m_loadBalancing  = false;
   GBool m_diagonalNghbrs = false;
+
+  std::vector<Surface<NDIM>> m_bndrySurfaces;
 
   // Data containers
   std::vector<GInt> m_childIds{};
