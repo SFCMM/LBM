@@ -15,13 +15,13 @@
 
 ## Ongoing:
 - implement general Bounce Back boundary condition
-- implement general periodic boundary condition
 - implement output correctly
 
 ## Done:
 ### Features
 - load grid generated from the generator
 - setup diagonal neighbor connection for D2Q9 and similar methods
+- periodic boundaries
 
 ### Buildsystem
 

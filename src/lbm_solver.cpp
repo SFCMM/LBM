@@ -337,6 +337,7 @@ void LBMSolver<DEBUG_LEVEL>::propagationStep() {
 template <Debug_Level DEBUG_LEVEL>
 template <GInt NDIM>
 void LBMSolver<DEBUG_LEVEL>::boundaryCnd() {
+    //todo: replace by lambda function
     using namespace  std::placeholders;
     std::function<GDouble&(GInt, GInt)> _fold = std::bind(&LBMSolver::fold, this, _1, _2);
     std::function<GDouble&(GInt, GInt)> _f = std::bind(&LBMSolver::f, this, _1, _2);

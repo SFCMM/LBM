@@ -17,6 +17,7 @@
 #include "cartesiangrid_generation.h"
 #endif
 #include "interface/grid_interface.h"
+#include "lbm_constants.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
@@ -286,12 +287,12 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     identifyBndrySurfaces();
     setupPeriodicConnections();
     addDiagonalNghbrs();
-//    setupPeriodicConnections();//works
+    //    setupPeriodicConnections();//works
     //    if(m_loadBalancing) {
     //      setWorkload();
     //      calculateOffspringsAndWeights();
     //    }
-//    TERMM(-1, "testing");
+    //    TERMM(-1, "testing");
   }
 
   /// Add the diagonal(2D/3D) and/or tridiagonal (3D) to the neighbor connections of each cell.
@@ -401,40 +402,61 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   void setupPeriodicConnections() {
     logger << "Setting up periodic connections!" << std::endl;
     // todo: make settable
-    std::unordered_multimap<GDouble, GInt> coordToCellIds;
-    std::set<GDouble>                      keys;
-    std::set<GInt>                         cellList;
+    addPeriodicConnection(bndrySurface(static_cast<GInt>(LBMDir::mX)), bndrySurface(static_cast<GInt>(LBMDir::pX)));
+  }
 
-    // find cells to be connected by a periodic connection.
-    for(GInt cellId = 0; cellId < size(); ++cellId) {
-      if(property(cellId, CellProperties::bndry) && property(cellId, CellProperties::leaf)) {
-        if(neighbor(cellId, 0) == INVALID_CELLID || neighbor(cellId, 1) == INVALID_CELLID) {
-          coordToCellIds.emplace(center(cellId, 1), cellId);
-          keys.emplace(center(cellId, 1));
-          cellList.emplace(cellId);
-        }
-      }
-    }
+  // todo: fix for refinement level changes
+  // todo: simplify
+  void addPeriodicConnection(const Surface<NDIM>& surfA, const Surface<NDIM>& surfB) {
+    // connect cells of surfA and surfB
+    for(const GInt cellIdA : surfA.getCellList()) {
+      for(const GInt cellIdB : surfB.getCellList()) {
+        GInt        notMatchingDir = -1;
+        const auto& centerA        = center(cellIdA);
+        const auto& centerB        = center(cellIdB);
 
-    //set additional neighbor connections for periodic boundaries
-    for(const auto& p : keys) {
-      if(coordToCellIds.count(p) == 2) {
-        auto search = coordToCellIds.equal_range(p);
-        for(auto it = search.first; it != search.second; ++it) {
-          if(neighbor(it->second, 0) == INVALID_CELLID) {
-            const GInt neighborA                 = it->second;
-            const GInt neighborB                 = (++it)->second;
-            neighbor(neighborA, 0) = neighborB;
-            neighbor(neighborB, 1) = neighborA;
-          } else {
-            const GInt neighborA                 = it->second;
-            const GInt neighborB                 = (++it)->second;
-            neighbor(neighborA, 1) = neighborB;
-            neighbor(neighborB, 0) = neighborA;
+        // find cells of surfA and surfB to connect
+        for(GInt dir = 0; dir < NDIM; ++dir) {
+          // connect cells that have one direction which is identical
+          if(std::abs(centerA[dir] - centerB[dir]) > GDoubleEps) {
+            if(notMatchingDir >= 0) {
+              // periodic connection not possible since two directions don't match (3D)
+              notMatchingDir = -1;
+              break;
+            }
+            notMatchingDir = dir;
+            continue;
           }
         }
-      } else {
-        TERMM(-1, "Invalid result!" + std::to_string(p));
+
+        // cells need to be connected
+        if(notMatchingDir >= 0) {
+          // identify periodic direction for each cell
+          const GInt nghbrDir = 2 * notMatchingDir;
+          if(centerA[notMatchingDir] > centerB[notMatchingDir]) {
+            if constexpr(DEBUG_LEVEL > Debug_Level::min_debug) {
+              if(neighbor(cellIdB, nghbrDir) != INVALID_CELLID) {
+                TERMM(-1, "Invalid set periodic connection! cellIdB:" + std::to_string(cellIdB) + " dir:" + std::to_string(nghbrDir));
+              }
+              if(neighbor(cellIdA, nghbrDir + 1) != INVALID_CELLID) {
+                TERMM(-1, "Invalid set periodic connection! cellIdA:" + std::to_string(cellIdA) + " dir:" + std::to_string(nghbrDir + 1));
+              }
+            }
+            neighbor(cellIdB, nghbrDir)     = cellIdA;
+            neighbor(cellIdA, nghbrDir + 1) = cellIdB;
+          } else {
+            if constexpr(DEBUG_LEVEL > Debug_Level::min_debug) {
+              if(neighbor(cellIdA, nghbrDir) != INVALID_CELLID) {
+                TERMM(-1, "Invalid set periodic connection! cellIdA:" + std::to_string(cellIdA) + " dir:" + std::to_string(nghbrDir));
+              }
+              if(neighbor(cellIdB, nghbrDir + 1) != INVALID_CELLID) {
+                TERMM(-1, "Invalid set periodic connection! cellIdB:" + std::to_string(cellIdB) + " dir:" + std::to_string(nghbrDir+1));
+              }
+            }
+            neighbor(cellIdA, nghbrDir)     = cellIdB;
+            neighbor(cellIdB, nghbrDir + 1) = cellIdA;
+          }
+        }
       }
     }
   }
