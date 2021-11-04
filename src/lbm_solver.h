@@ -54,8 +54,6 @@ class LBMSolver : public AppInterface {
   template <GInt NDIM>
   void initialCondition();
   template <GInt NDIM>
-  void setupPeriodicConnection();
-  template <GInt NDIM>
   void boundaryCnd();
   template <GInt NDIM>
   void propagationStep();

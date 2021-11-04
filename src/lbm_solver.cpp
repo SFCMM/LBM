@@ -52,7 +52,7 @@ void LBMSolver<DEBUG_LEVEL>::loadConfiguration() {
   m_noDists            = noDists(m_method);
   m_noVars             = m_dim + 1 + static_cast<GInt>(isThermal());
   // todo: make settable
-  m_outputInfoInterval = 10;
+  m_outputInfoInterval = 100;
   m_outputSolutionInterval = 100;
 
 
@@ -149,7 +149,7 @@ auto LBMSolver<DEBUG_LEVEL>::run() -> GInt {
   loadConfiguration<NDIM>();
   finishInit();
   initialCondition<NDIM>();
-  setupPeriodicConnection<NDIM>();
+//  setupPeriodicConnection<NDIM>();
 
   // todo: make settable
   const GInt noTimesteps = 20000;
@@ -181,6 +181,7 @@ auto LBMSolver<DEBUG_LEVEL>::run() -> GInt {
       logger << std::endl;
 
       // todo: make settable
+      // todo: make independent of output
       const GDouble maxConv = std::max(std::max(std::max(convUx, convUy), convUz), convRho);
       if(m_timeStep > 1 && maxConv < 1E-12){
         logger << "Reached convergence to: " << maxConv <<std::endl;
@@ -341,45 +342,6 @@ void LBMSolver<DEBUG_LEVEL>::boundaryCnd() {
     std::function<GDouble&(GInt, GInt)> _f = std::bind(&LBMSolver::f, this, _1, _2);
 
     m_bndManager->apply(_f, _fold);
-
-
-//  //  cerr0 << "bnd" << std::endl;
-//  for(GInt cellId = 0; cellId < noCells(); ++cellId) {
-//    //    cerr0 << "bnd " << grid().property(cellId, CellProperties::bndry) << std::endl;
-//    //    cerr0 << "leaf " << grid().property(cellId, CellProperties::leaf) << std::endl;
-//
-//
-//
-//    if(grid().property(cellId, CellProperties::bndry) && grid().property(cellId, CellProperties::leaf)) {
-//      //      // -X
-//      //      if(grid().neighbor(cellId, 0) == INVALID_CELLID) {
-//      //        m_fold[cellId * m_noDists + 1] = m_f[cellId * m_noDists + 0];
-//      //        m_fold[cellId * m_noDists + 4] = m_f[cellId * m_noDists + 6];
-//      //        m_fold[cellId * m_noDists + 5] = m_f[cellId * m_noDists + 7];
-//      //      }
-//      //      // +X
-//      //      if(grid().neighbor(cellId, 1) == INVALID_CELLID) {
-//      //        m_fold[cellId * m_noDists + 0] = m_f[cellId * m_noDists + 1];
-//      //        m_fold[cellId * m_noDists + 6] = m_f[cellId * m_noDists + 4];
-//      //        m_fold[cellId * m_noDists + 7] = m_f[cellId * m_noDists + 5];
-//      //      }
-//      // -y
-////      if(grid().neighbor(cellId, 2) == INVALID_CELLID) {
-////        m_fold[cellId * m_noDists + 3] = m_f[cellId * m_noDists + 2];
-////        m_fold[cellId * m_noDists + 4] = m_f[cellId * m_noDists + 6];
-////        m_fold[cellId * m_noDists + 7] = m_f[cellId * m_noDists + 5];
-////      }
-////      // +y
-////      if(grid().neighbor(cellId, 3) == INVALID_CELLID) {
-////        //-y = +y
-////        m_fold[cellId * m_noDists + 2] = m_f[cellId * m_noDists + 3];
-////        // +x-y = -x+y
-////        m_fold[cellId * m_noDists + 5] = m_f[cellId * m_noDists + 7] + 1.0 / 6.0 * (0.1); // todo:testing
-////        // +x-y = -x+y
-////        m_fold[cellId * m_noDists + 6] = m_f[cellId * m_noDists + 4] - 1.0 / 6.0 * (0.1); // todo:testing
-////      }
-//    }
-//  }
 }
 
 template <Debug_Level DEBUG_LEVEL>
@@ -438,67 +400,6 @@ auto LBMSolver<DEBUG_LEVEL>::convergence(const GInt var) const -> GDouble {
     conv += std::abs(m_vars[cellId * m_noVars + var] - m_varsold[cellId * m_noVars + var]);
   }
   return conv;
-}
-
-template <Debug_Level DEBUG_LEVEL>
-template <GInt NDIM>
-void LBMSolver<DEBUG_LEVEL>::setupPeriodicConnection() {
-  std::unordered_multimap<GDouble, GInt> coordToCellIds;
-  std::set<GDouble>                      keys;
-  std::set<GInt>                      cellList;
-
-  for(GInt cellId = 0; cellId < noCells(); ++cellId) {
-    if(grid().property(cellId, CellProperties::bndry) && grid().property(cellId, CellProperties::leaf)) {
-      if(grid().neighbor(cellId, 0) == INVALID_CELLID || grid().neighbor(cellId, 1) == INVALID_CELLID) {
-        coordToCellIds.emplace(grid<NDIM>()->center(cellId, 1), cellId);
-        keys.emplace(grid<NDIM>()->center(cellId, 1));
-        cellList.emplace(cellId);
-      }
-    }
-  }
-  for(const auto& p : keys) {
-    if(coordToCellIds.count(p) == 2) {
-      auto search = coordToCellIds.equal_range(p);
-      for(auto it = search.first; it != search.second; ++it) {
-        if(grid().neighbor(it->second, 0) == INVALID_CELLID) {
-          const GInt neighborA                 = it->second;
-          const GInt neighborB                 = (++it)->second;
-          grid<NDIM>()->neighbor(neighborA, 0) = neighborB;
-          grid<NDIM>()->neighbor(neighborB, 1) = neighborA;
-        } else {
-          const GInt neighborA                 = it->second;
-          const GInt neighborB                 = (++it)->second;
-          grid<NDIM>()->neighbor(neighborA, 1) = neighborB;
-          grid<NDIM>()->neighbor(neighborB, 0) = neighborA;
-        }
-
-      }
-    } else {
-      TERMM(-1, "Invalid result!" + std::to_string(p));
-    }
-  }
-
-  //todo: move this periodic code before diagonal detection
-  for(const auto cellId:cellList){
-    const GInt nghbrmX = grid<NDIM>()->neighbor(cellId, 0);
-    const GInt nghbrpX = grid<NDIM>()->neighbor(cellId, 1);
-
-    // +x+y
-    const GInt nghbrpXpY                                 = nghbrpX != INVALID_CELLID ? grid<NDIM>()->neighbor(nghbrpX, 3) : -1;
-    grid<NDIM>()->neighbor(cellId, cartesian::maxNoNghbrs<NDIM>()) = nghbrpXpY;
-
-    // +x-y
-    const GInt nghbrpXmY                                 = nghbrpX != INVALID_CELLID ? grid<NDIM>()->neighbor(nghbrpX, 2) : -1;
-    grid<NDIM>()->neighbor(cellId, cartesian::maxNoNghbrs<NDIM>() + 1) = nghbrpXmY;
-
-    // -x-y
-    const GInt nghbrmXmY                                 = nghbrmX != INVALID_CELLID ? grid<NDIM>()->neighbor(nghbrmX, 2) : -1;
-    grid<NDIM>()->neighbor(cellId, cartesian::maxNoNghbrs<NDIM>() + 2) = nghbrmXmY;
-
-    // -x+y
-    const GInt nghbrmXpY                                 = nghbrmX != INVALID_CELLID ? grid<NDIM>()->neighbor(nghbrmX, 3) : -1;
-    grid<NDIM>()->neighbor(cellId, cartesian::maxNoNghbrs<NDIM>() + 3) = nghbrmXpY;
-  }
 }
 
 template class LBMSolver<Debug_Level::no_debug>;

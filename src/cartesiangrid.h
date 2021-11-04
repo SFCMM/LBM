@@ -4,6 +4,7 @@
 #include <gcem.hpp>
 
 #include <common/surface.h>
+#include <set>
 #include <sfcmm_common.h>
 #include "base_cartesiangrid.h"
 //#include "celltree.h"
@@ -236,9 +237,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void save(const GString& fileName, const json& gridOutConfig) const override { TERMM(-1, "Not implemented!"); }
 
-  auto bndrySurface(const GInt id) const -> const Surface<NDIM>& {
-    return m_bndrySurfaces[id];
-  }
+  auto bndrySurface(const GInt id) const -> const Surface<NDIM>& { return m_bndrySurfaces[id]; }
 
 
   /// Load the generated grid in-memory and set additional properties
@@ -282,13 +281,17 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
 
     setProperties();
+
+    determineBoundaryCells();
+    identifyBndrySurfaces();
+    setupPeriodicConnections();
+    addDiagonalNghbrs();
+//    setupPeriodicConnections();//works
     //    if(m_loadBalancing) {
     //      setWorkload();
     //      calculateOffspringsAndWeights();
     //    }
-    addDiagonalNghbrs();
-    identifyBndrySurfaces();
-    // createPeriodicConnection();
+//    TERMM(-1, "testing");
   }
 
   /// Add the diagonal(2D/3D) and/or tridiagonal (3D) to the neighbor connections of each cell.
@@ -344,7 +347,6 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       property(cellId, CellProperties::leaf) = isLeaf;
       m_noLeafCells += static_cast<GInt>(isLeaf);
     }
-    determineBoundaryCells();
   };
 
   void determineBoundaryCells() {
@@ -382,10 +384,10 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     if(axisAligned) {
       m_bndrySurfaces.resize(cartesian::maxNoNghbrs<NDIM>());
 
-      for(GInt cellId = 0; cellId < size(); ++cellId){
-        if(property(cellId, Cell::bndry)){
-          for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir){
-            if(!hasNeighbor(cellId, dir)){
+      for(GInt cellId = 0; cellId < size(); ++cellId) {
+        if(property(cellId, Cell::bndry)) {
+          for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
+            if(!hasNeighbor(cellId, dir)) {
               m_bndrySurfaces[dir].addCell(cellId, dir);
             }
           }
@@ -395,6 +397,48 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       TERMM(-1, "Not implemented");
     }
   }
+
+  void setupPeriodicConnections() {
+    logger << "Setting up periodic connections!" << std::endl;
+    // todo: make settable
+    std::unordered_multimap<GDouble, GInt> coordToCellIds;
+    std::set<GDouble>                      keys;
+    std::set<GInt>                         cellList;
+
+    // find cells to be connected by a periodic connection.
+    for(GInt cellId = 0; cellId < size(); ++cellId) {
+      if(property(cellId, CellProperties::bndry) && property(cellId, CellProperties::leaf)) {
+        if(neighbor(cellId, 0) == INVALID_CELLID || neighbor(cellId, 1) == INVALID_CELLID) {
+          coordToCellIds.emplace(center(cellId, 1), cellId);
+          keys.emplace(center(cellId, 1));
+          cellList.emplace(cellId);
+        }
+      }
+    }
+
+    //set additional neighbor connections for periodic boundaries
+    for(const auto& p : keys) {
+      if(coordToCellIds.count(p) == 2) {
+        auto search = coordToCellIds.equal_range(p);
+        for(auto it = search.first; it != search.second; ++it) {
+          if(neighbor(it->second, 0) == INVALID_CELLID) {
+            const GInt neighborA                 = it->second;
+            const GInt neighborB                 = (++it)->second;
+            neighbor(neighborA, 0) = neighborB;
+            neighbor(neighborB, 1) = neighborA;
+          } else {
+            const GInt neighborA                 = it->second;
+            const GInt neighborB                 = (++it)->second;
+            neighbor(neighborA, 1) = neighborB;
+            neighbor(neighborB, 0) = neighborA;
+          }
+        }
+      } else {
+        TERMM(-1, "Invalid result!" + std::to_string(p));
+      }
+    }
+  }
+
 
   void setWorkload() { TERMM(-1, "Not implemented!"); };
   void calculateOffspringsAndWeights() { TERMM(-1, "Not implemented!"); };
