@@ -1,6 +1,18 @@
 #ifndef LBM_LBM_CONSTANTS_H
 #define LBM_LBM_CONSTANTS_H
 
+// default environment properties
+static constexpr GDouble defaultT20C       = 293.15;
+static constexpr GDouble defaultMachNumber = 0.2;
+
+// default numerical properties
+static constexpr GDouble defaultRelaxT = 0.9;
+
+// default solver setting
+static constexpr GInt defaultInfoOutInterval  = 10;
+static constexpr GInt defaultSolutionInterval = 100;
+static constexpr GInt maxNumberDistributions = 30;
+
 enum class LBInitialConditions {
   MEI06 // as per https://doi.org/10.1016/j.compfluid.2005.08.008
 };
@@ -42,6 +54,8 @@ enum class BndryType {
 
 enum class LBMethodType { D1Q3, D2Q5, D2Q9, D3Q15, D4Q20, INVALID };
 
+
+
 template <GInt NDIM, GInt NDIST>
 static constexpr auto getLBMethodType() -> LBMethodType {
   switch(NDIM) {
@@ -62,6 +76,28 @@ static constexpr auto getLBMethodType() -> LBMethodType {
       //      return LBMethodType::INVALID;
     case 4:
       return LBMethodType::D4Q20;
+  }
+}
+
+static constexpr auto getLBMethodType(const GInt noDims, const GInt noDistributions) -> LBMethodType {
+  switch(noDims) {
+    case 1:
+      return getLBMethodType<1, 3>();
+    case 2:
+      switch(noDistributions) {
+        case 5:
+          return getLBMethodType<2, 5>();
+        case 9:
+          return getLBMethodType<2, 9>();
+          //        default:
+          //          return LBMethodType::INVALID;
+      }
+    case 3:
+      return getLBMethodType<3, 15>();
+      //    default:
+      //      return LBMethodType::INVALID;
+    case 4:
+      return getLBMethodType<4, 20>();
   }
 }
 
@@ -100,8 +136,7 @@ template <LBMethodType LBTYPE>
 class LBMethod {
  public:
   static constexpr std::array<std::array<GDouble, dim(LBTYPE)>, noDists(LBTYPE)> m_dirs{};
-  static constexpr auto oppositeDist(const GInt dist) -> GInt { return 0;}
-
+  static constexpr auto                                                          oppositeDist(const GInt dist) -> GInt { return 0; }
 };
 
 
@@ -111,30 +146,14 @@ class LBMethod<LBMethodType::D2Q9> {
   static constexpr std::array<std::array<GDouble, 2>, 9> m_dirs = {
       {{{-1, 0}}, {{1, 0}}, {{0, -1}}, {{0, 1}}, {{1, 1}}, {{1, -1}}, {{-1, -1}}, {{-1, 1}}, {{0, 0}}}};
 
+  static constexpr std::array<GInt, 9> m_oppositeDist = {1, 0, 3, 2, 6, 7, 4, 5, 8};
+
+  /// look-up table for opposite direction
   static constexpr auto oppositeDist(const GInt dist) -> GInt {
-    switch(dist) {
-      case 0:
-        return 1;
-      case 1:
-        return 0;
-      case 2:
-        return 3;
-      case 3:
-        return 2;
-      case 4:
-        return 6;
-      case 5:
-        return 7;
-      case 6:
-        return 4;
-      case 7:
-        return 5;
-      case 8:
-        return 8;
-      default:
-        TERMM(-1, "Invalid dist!");
-    }
+    return m_oppositeDist[dist];
   }
+
+  static constexpr std::array<GDouble, 9> m_weights = {1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 4.0 / 9.0};
 };
 
 

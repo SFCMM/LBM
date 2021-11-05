@@ -9,13 +9,13 @@
 #include "geometry.h"
 #include "globaltimers.h"
 #include "gridcell_properties.h"
-#include "interface/app_interface.h"
+#include "interface/solver_interface.h"
 #include "WeightMethod.h"
 
 using json = nlohmann::json;
 
 template <Debug_Level DEBUG_LEVEL>
-class GridGenerator : public AppInterface {
+class GridGenerator : public SolverInterface {
  public:
   GridGenerator(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
   ~GridGenerator() override           = default;

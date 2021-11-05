@@ -3,9 +3,9 @@
 
 #include "interface/grid_interface.h"
 
-class AppInterface {
+class SolverInterface {
  public:
-  virtual ~AppInterface() = default;
+  virtual ~SolverInterface() = default;
 
   virtual void init(int argc, GChar** argv, GString config_file) = 0;
   virtual void initBenchmark(int argc, GChar** argv)             = 0;

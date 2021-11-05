@@ -3,10 +3,10 @@
 
 #include <sfcmm_common.h>
 #include "config.h"
-#include "interface/app_interface.h"
+#include "interface/solver_interface.h"
 #ifdef SOLVER_AVAILABLE
 #include "gridgenerator/gridGenerator.h"
-#include "lbm_solver.h"
+#include "lbm_solverExe.h"
 #else
 #include "gridGenerator.h"
 #endif
@@ -78,7 +78,7 @@ class AppConfiguration {
     switch(Solver) {
 #ifdef SOLVER_AVAILABLE
       case SolverType::LBM:
-        m_app = std::make_unique<LBMSolver<DEBUG>>(m_domainId, m_noDomains);
+        m_app = std::make_unique<LBMSolverExecutor<DEBUG>>(m_domainId, m_noDomains);
 #endif
         break;
       case SolverType::NONE:
@@ -98,7 +98,7 @@ class AppConfiguration {
   int     m_argc{};
   GChar** m_argv{};
 
-  std::unique_ptr<AppInterface> m_app;
+  std::unique_ptr<SolverInterface> m_app;
   GString                       m_configurationFile = "grid.json";
   GBool                         m_benchmark         = false;
   GBool                         m_init              = false;
