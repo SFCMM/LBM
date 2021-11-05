@@ -143,6 +143,7 @@ class LBMethod {
   static constexpr GInt                                                          m_dim     = 0;
   static constexpr GInt                                                          m_noDists = 0;
   static constexpr std::array<GDouble, 1> m_weights = {0};
+  static constexpr GBool m_isThermal = false;
 };
 
 
@@ -162,6 +163,7 @@ class LBMethod<LBMethodType::D2Q9> {
 
   static constexpr GInt m_dim     = 2;
   static constexpr GInt m_noDists = 9;
+  static constexpr GBool m_isThermal = false;
 };
 
 

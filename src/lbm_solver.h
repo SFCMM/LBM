@@ -40,8 +40,9 @@ class LBMSolver : public SolverInterface {
  private:
   using method = LBMethod<LBTYPE>;
 
-  static constexpr GInt NDIM                     = LBMethod<LBTYPE>::m_dim;
-  static constexpr GInt NDIST                    = LBMethod<LBTYPE>::m_noDists;
+  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
+  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+  static constexpr GInt NVARS = NDIM + 1 + static_cast<GInt>(LBMethod<LBTYPE>::m_isThermal);
 
   void init(int argc, GChar** argv);
   void initTimers();
@@ -50,30 +51,30 @@ class LBMSolver : public SolverInterface {
   void finishInit();
 
 
-  void loadConfiguration();
-  void timeStep();
-  void initialCondition();
-  void boundaryCnd();
-  void propagationStep();
-  void currToOldVars();
-  void updateMacroscopicValues();
-  void calcEquilibriumMoments();
-  void collisionStep();
+  void               loadConfiguration();
+  void               timeStep();
+  void               initialCondition();
+  void               boundaryCnd();
+  void               propagationStep();
+  void               currToOldVars();
+  void               updateMacroscopicValues();
+  void               calcEquilibriumMoments();
+  void               collisionStep();
   [[nodiscard]] auto convergence(const GInt var) const -> GDouble;
 
   template <GInt NDIM>
   auto inline rho(const GInt cellId) -> GDouble& {
     if(DEBUG_LEVEL > Debug_Level::min_debug) {
-      if(m_noVars < PV::rho<NDIM>()) {
-        TERMM(-1, "Invalid number of variables (" + std::to_string(m_noVars) + ")");
+      if(NVARS < PV::rho<NDIM>()) {
+        TERMM(-1, "Invalid number of variables (" + std::to_string(NVARS) + ")");
       }
-      return m_vars.at(cellId * m_noVars + PV::rho<NDIM>());
+      return m_vars.at(cellId * NVARS + PV::rho<NDIM>());
     }
-    return m_vars[cellId * m_noVars + PV::rho<NDIM>()];
+    return m_vars[cellId * NVARS + PV::rho<NDIM>()];
   }
   template <GInt NDIM>
   auto inline velocity(const GInt cellId, const GInt dir) -> GDouble& {
-    return m_vars[cellId * m_noVars + PV::velocities<NDIM>()[dir]];
+    return m_vars[cellId * NVARS + PV::velocities<NDIM>()[dir]];
   }
 
   auto inline f(const GInt cellId, const GInt dir) -> GDouble& { return m_f[cellId * NDIST + dir]; }
@@ -89,18 +90,17 @@ class LBMSolver : public SolverInterface {
   GString m_exe;
   GString m_configurationFileName;
 
-  GInt32                m_domainId               = -1;
-  GInt32                m_noDomains              = -1;
+  GInt32 m_domainId  = -1;
+  GInt32 m_noDomains = -1;
 
-  GInt                  m_noVars                 = 1;
-  GInt                  m_noSpecies              = 1;
-  GInt                  m_outputInfoInterval     = defaultInfoOutInterval;
-  GInt                  m_outputSolutionInterval = defaultSolutionInterval;
-  GInt                  m_timeStep               = 0;
+  GInt m_noSpecies              = 1;
+  GInt m_outputInfoInterval     = defaultInfoOutInterval;
+  GInt m_outputSolutionInterval = defaultSolutionInterval;
+  GInt m_timeStep               = 0;
 
   //  LBMethodType         m_method     = LBMethodType::D2Q9;
-  LBSolverType         m_solverType = LBSolverType::BGK;
-//  std::vector<GDouble> m_weight;
+  LBSolverType m_solverType = LBSolverType::BGK;
+  //  std::vector<GDouble> m_weight;
   std::vector<GDouble> m_f;
   std::vector<GDouble> m_feq;
   std::vector<GDouble> m_fold;

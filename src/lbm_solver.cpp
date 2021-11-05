@@ -47,8 +47,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::initTimers() {
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   m_solverType = LBSolverType::BGK; // todo: load from file
-                                    //  m_method             = LBMethodType::D2Q9; // todo: load from file
-  m_noVars = NDIM + 1 + static_cast<GInt>(isThermal());
 
   // todo: make settable
   m_outputInfoInterval     = 100;
@@ -78,7 +76,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
         << "BGK" << std::endl; // todo: fix me
   cerr0 << "LBM Method "
         << "D2Q9" << std::endl; // todo: fix me
-  cerr0 << "No. of variables " << std::to_string(m_noVars) << std::endl;
+  cerr0 << "No. of variables " << std::to_string(NVARS) << std::endl;
   cerr0 << "No. Leaf cells: " << grid<NDIM>()->noLeafCells() << std::endl;
   cerr0 << "No. Bnd cells: " << grid<NDIM>()->noBndCells() << std::endl;
   cerr0 << "Relaxation Time: " << m_relaxTime << std::endl;
@@ -95,8 +93,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::finishInit() {
   m_f.resize(grid().size() * NDIST);
   m_feq.resize(grid().size() * NDIST);
   m_fold.resize(grid().size() * NDIST);
-  m_vars.resize(grid().size() * m_noVars);
-  m_varsold.resize(grid().size() * m_noVars);
+  m_vars.resize(grid().size() * NVARS);
+  m_varsold.resize(grid().size() * NVARS);
   setupMethod();
 }
 
@@ -215,8 +213,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::initialCondition() {
   // init to zero:
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     for(const auto dir : PV::velocities<NDIM>()) {
-      m_vars[cellId * m_noVars + dir]    = 0;
-      m_varsold[cellId * m_noVars + dir] = 0;
+      m_vars[cellId * NVARS + dir]    = 0;
+      m_varsold[cellId * NVARS + dir] = 0;
     }
     rho<NDIM>(cellId) = 1.0;
 
@@ -360,7 +358,7 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE>::convergence(const GInt var) const -> GDouble {
   GDouble conv = 0.0;
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
-    conv += std::abs(m_vars[cellId * m_noVars + var] - m_varsold[cellId * m_noVars + var]);
+    conv += std::abs(m_vars[cellId * NVARS + var] - m_varsold[cellId * NVARS + var]);
   }
   return conv;
 }
