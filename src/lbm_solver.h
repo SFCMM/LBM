@@ -9,11 +9,6 @@
 #include "pv.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-class LBMSolver;
-
-
-
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMSolver : public SolverInterface {
  public:
   LBMSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
@@ -24,14 +19,13 @@ class LBMSolver : public SolverInterface {
   auto operator=(LBMSolver&&) -> LBMSolver& = delete;
 
   void init(int argc, GChar** argv, GString config_file) override;
-
+  auto run() -> GInt override;
 
   void initBenchmark(int argc, GChar** argv) override {
     init(argc, argv);
     TERMM(-1, "Not implemented!");
   };
 
-  auto               run() -> GInt override;
   [[nodiscard]] auto grid() const -> const GridInterface& override { return *m_grid; };
 
   template <GInt NDIM>
@@ -44,33 +38,27 @@ class LBMSolver : public SolverInterface {
   constexpr auto isThermal() -> GBool;
 
  private:
+  using method = LBMethod<LBTYPE>;
+
+  static constexpr GInt NDIM                     = LBMethod<LBTYPE>::m_dim;
+  static constexpr GInt NDIST                    = LBMethod<LBTYPE>::m_noDists;
+
   void init(int argc, GChar** argv);
   void initTimers();
 
   void setupMethod();
   void finishInit();
 
-  template <GInt NDIM>
-  auto run() -> GInt;
-  template <GInt NDIM>
+
   void loadConfiguration();
-  template <GInt NDIM>
   void timeStep();
-  template <GInt NDIM>
   void initialCondition();
-  template <GInt NDIM>
   void boundaryCnd();
-  template <GInt NDIM>
   void propagationStep();
-  template <GInt NDIM>
   void currToOldVars();
-  template <GInt NDIM>
   void updateMacroscopicValues();
-  template <GInt NDIM>
   void calcEquilibriumMoments();
-  template <GInt NDIM>
   void collisionStep();
-  template <GInt NDIM>
   [[nodiscard]] auto convergence(const GInt var) const -> GDouble;
 
   template <GInt NDIM>
@@ -88,9 +76,9 @@ class LBMSolver : public SolverInterface {
     return m_vars[cellId * m_noVars + PV::velocities<NDIM>()[dir]];
   }
 
-  auto inline f(const GInt cellId, const GInt dir) -> GDouble& { return m_f[cellId * m_noDists + dir]; }
+  auto inline f(const GInt cellId, const GInt dir) -> GDouble& { return m_f[cellId * NDIST + dir]; }
 
-  auto inline fold(const GInt cellId, const GInt dir) -> GDouble& { return m_fold[cellId * m_noDists + dir]; }
+  auto inline fold(const GInt cellId, const GInt dir) -> GDouble& { return m_fold[cellId * NDIST + dir]; }
 
   [[nodiscard]] auto inline noCells() const -> GInt { return m_grid->noCells(); }
 
@@ -101,20 +89,18 @@ class LBMSolver : public SolverInterface {
   GString m_exe;
   GString m_configurationFileName;
 
-  GInt32 m_domainId               = -1;
-  GInt32 m_noDomains              = -1;
-  GInt   m_dim                    = 0;
-  GInt   m_noVars                 = 1;
-  GInt   m_noSpecies              = 1;
-  GInt   m_noDists                = 0;
-  GInt   m_outputInfoInterval     = defaultInfoOutInterval;
-  GInt   m_outputSolutionInterval = defaultSolutionInterval;
-  GInt   m_timeStep               = 0;
+  GInt32                m_domainId               = -1;
+  GInt32                m_noDomains              = -1;
 
-  LBMethodType         m_method     = LBMethodType::D2Q9;
+  GInt                  m_noVars                 = 1;
+  GInt                  m_noSpecies              = 1;
+  GInt                  m_outputInfoInterval     = defaultInfoOutInterval;
+  GInt                  m_outputSolutionInterval = defaultSolutionInterval;
+  GInt                  m_timeStep               = 0;
+
+  //  LBMethodType         m_method     = LBMethodType::D2Q9;
   LBSolverType         m_solverType = LBSolverType::BGK;
-  std::vector<GDouble> m_weight;
-
+//  std::vector<GDouble> m_weight;
   std::vector<GDouble> m_f;
   std::vector<GDouble> m_feq;
   std::vector<GDouble> m_fold;

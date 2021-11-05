@@ -45,14 +45,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::initTimers() {
 
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-template <GInt NDIM>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
-  m_solverType         = LBSolverType::BGK;  // todo: load from file
-  m_method             = LBMethodType::D2Q9; // todo: load from file
-  m_noDists            = noDists(m_method);
-  m_noVars             = m_dim + 1 + static_cast<GInt>(isThermal());
+  m_solverType = LBSolverType::BGK; // todo: load from file
+                                    //  m_method             = LBMethodType::D2Q9; // todo: load from file
+  m_noVars = NDIM + 1 + static_cast<GInt>(isThermal());
+
   // todo: make settable
-  m_outputInfoInterval = 100;
+  m_outputInfoInterval     = 100;
   m_outputSolutionInterval = 100;
 
 
@@ -66,19 +65,19 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   m_nu        = (2.0 * m_relaxTime - 1) / 6.0; // default=0.133
   m_refU      = m_re * m_nu / m_refLength;     // default=1.3333
 
-  m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL>>(m_dim, m_noDists);
+  m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL>>(NDIM, NDIST);
 
-  //todo: just for current testcase
+  // todo: just for current testcase
   m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack, grid<NDIM>()->bndrySurface(static_cast<GInt>(LBMDir::mY)));
-  m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack_TangentialVelocity, grid<NDIM>()->bndrySurface(static_cast<GInt>(LBMDir::pY)));
-
+  m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack_TangentialVelocity,
+                                        grid<NDIM>()->bndrySurface(static_cast<GInt>(LBMDir::pY)));
 
 
   cerr0 << "<<<<<<<<<<<<>>>>>>>>>>>>>" << std::endl;
   cerr0 << "LBM Type "
-        << "BGK" << std::endl;//todo: fix me
+        << "BGK" << std::endl; // todo: fix me
   cerr0 << "LBM Method "
-        << "D2Q9" << std::endl;//todo: fix me
+        << "D2Q9" << std::endl; // todo: fix me
   cerr0 << "No. of variables " << std::to_string(m_noVars) << std::endl;
   cerr0 << "No. Leaf cells: " << grid<NDIM>()->noLeafCells() << std::endl;
   cerr0 << "No. Bnd cells: " << grid<NDIM>()->noBndCells() << std::endl;
@@ -93,9 +92,9 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::finishInit() {
   // allocate memory
-  m_f.resize(grid().size() * m_noDists);
-  m_feq.resize(grid().size() * m_noDists);
-  m_fold.resize(grid().size() * m_noDists);
+  m_f.resize(grid().size() * NDIST);
+  m_feq.resize(grid().size() * NDIST);
+  m_fold.resize(grid().size() * NDIST);
   m_vars.resize(grid().size() * m_noVars);
   m_varsold.resize(grid().size() * m_noVars);
   setupMethod();
@@ -104,64 +103,40 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::finishInit() {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::setupMethod() {
-  switch(m_method) {
-    case LBMethodType::D1Q3:
-      m_weight = {1.0 / 6.0, 1.0 / 6.0, 2.0 / 3.0};
-      break;
-    case LBMethodType::D2Q5:
-      m_weight = {1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 3.0};
-      break;
-    case LBMethodType::D2Q9:
-      m_weight = {1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 4.0 / 9.0};
-      break;
-    default:
-      TERMM(-1, "Invalid LBM method type");
-  }
+  //  switch(m_method) {
+  //    case LBMethodType::D1Q3:
+  //      m_weight = {1.0 / 6.0, 1.0 / 6.0, 2.0 / 3.0};
+  //      break;
+  //    case LBMethodType::D2Q5:
+  //      m_weight = {1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 3.0};
+  //      break;
+  //    case LBMethodType::D2Q9:
+  //      m_weight = {1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 4.0 / 9.0};
+  //      break;
+  //    default:
+  //      TERMM(-1, "Invalid LBM method type");
+  //  }
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMMainLoop]);
-
-  switch(m_dim) {
-    case 1:
-      return run<1>();
-      break;
-    case 2:
-      return run<2>();
-      break;
-    case 3:
-      return run<3>();
-      break;
-    case 4:
-      return run<4>();
-      break;
-    default:
-      TERMM(-1, "Invalid number of dimensions 1-4.");
-  }
-  return -1;
-}
-
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-template <GInt NDIM>
-auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
-  RECORD_TIMER_START(TimeKeeper[Timers::LBMMainLoop]);
-  loadConfiguration<NDIM>();
+  loadConfiguration();
   finishInit();
-  initialCondition<NDIM>();
+  initialCondition();
 
   // todo: make settable
   const GInt noTimesteps = 20000;
-  GBool converged = false;
+  GBool      converged   = false;
   for(GInt ts = 0; ts < noTimesteps && !converged; ++ts) {
     if(m_timeStep > 0 && m_timeStep % m_outputInfoInterval == 0) {
       cerr0 << "Running LBM at " << m_timeStep << std::endl;
       logger << "Running LBM at " << m_timeStep << std::endl;
 
-      const GDouble convUx  = convergence<NDIM>(PV::velocitiy(0));
-      const GDouble convUy  = convergence<NDIM>(PV::velocitiy(1));
-      const GDouble convUz  = (NDIM == 3) ? convergence<NDIM>(PV::velocitiy(2)) : NAN;
-      const GDouble convRho = convergence<NDIM>(PV::rho<NDIM>());
+      const GDouble convUx  = convergence(PV::velocitiy(0));
+      const GDouble convUy  = convergence(PV::velocitiy(1));
+      const GDouble convUz  = (NDIM == 3) ? convergence(PV::velocitiy(2)) : NAN;
+      const GDouble convRho = convergence(PV::rho<NDIM>());
 
       cerr0 << "u_x: " << convUx << " ";
       cerr0 << "u_y: " << convUy << " ";
@@ -182,19 +157,19 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
       // todo: make settable
       // todo: make independent of output
       const GDouble maxConv = std::max(std::max(std::max(convUx, convUy), convUz), convRho);
-      if(m_timeStep > 1 && maxConv < 1E-12){
-        logger << "Reached convergence to: " << maxConv <<std::endl;
-        cerr0 << "Reached convergence to: " << maxConv <<std::endl;
+      if(m_timeStep > 1 && maxConv < 1E-12) {
+        logger << "Reached convergence to: " << maxConv << std::endl;
+        cerr0 << "Reached convergence to: " << maxConv << std::endl;
         converged = true;
       }
     }
-    timeStep<NDIM>();
+    timeStep();
 
     std::vector<GDouble>              tmp;
     std::vector<GString>              index;
     std::vector<std::vector<GString>> values;
 
-    if((m_timeStep > 0 && m_timeStep%m_outputSolutionInterval==0) || m_timeStep == noTimesteps || converged) {
+    if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || m_timeStep == noTimesteps || converged) {
       // only output leaf cells (i.e. cells without children)
       std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return grid<NDIM>()->noChildren(cellId) == 0; };
 
@@ -214,22 +189,20 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
   }
 
   const GDouble couette_channelHeight = 5.0;
-  auto analytical = [&](const GDouble y){
-    return m_refU/couette_channelHeight * y;
-  };
+  auto          analytical            = [&](const GDouble y) { return m_refU / couette_channelHeight * y; };
 
-  GDouble maxError = 0;
+  GDouble              maxError = 0;
   std::vector<GDouble> error;
-  for(GInt cellId = 0; cellId < grid().size(); ++cellId){
+  for(GInt cellId = 0; cellId < grid().size(); ++cellId) {
     const GDouble solution = analytical(grid<NDIM>()->center(cellId, 1));
-    const GDouble delta = velocity<NDIM>(cellId, 0) - solution;
-    maxError = std::max(std::abs(delta), maxError);
-    error.emplace_back(std::sqrt(delta*delta/(solution * solution)));
+    const GDouble delta    = velocity<NDIM>(cellId, 0) - solution;
+    maxError               = std::max(std::abs(delta), maxError);
+    error.emplace_back(std::sqrt(delta * delta / (solution * solution)));
   }
-  const GDouble L2error = 1.0/grid().size() * std::accumulate(error.begin(), error.end(), 0.0);
+  const GDouble L2error = 1.0 / grid().size() * std::accumulate(error.begin(), error.end(), 0.0);
 
-  cerr0 << "max. Error: " << maxError <<std::endl;
-  cerr0 << "avg. L2: " << L2error <<std::endl;
+  cerr0 << "max. Error: " << maxError << std::endl;
+  cerr0 << "avg. L2: " << L2error << std::endl;
 
   logger << "LBM Solver finished <||" << endl;
   cout << "LBM Solver finished <||" << endl;
@@ -238,7 +211,6 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-template <GInt NDIM>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::initialCondition() {
   // init to zero:
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
@@ -249,70 +221,66 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::initialCondition() {
     rho<NDIM>(cellId) = 1.0;
 
     // assuming initial zero velocity and density 1
-    for(GInt dist = 0; dist < m_noDists; ++dist) {
-      m_feq[cellId * m_noDists + dist]  = m_weight.at(dist);
-      m_f[cellId * m_noDists + dist]    = m_feq[cellId * m_noDists + dist];
-      m_fold[cellId * m_noDists + dist] = m_feq[cellId * m_noDists + dist];
+    for(GInt dist = 0; dist < NDIST; ++dist) {
+      m_feq[cellId * NDIST + dist]  = LBMethod<LBTYPE>::m_weights[dist];
+      m_f[cellId * NDIST + dist]    = m_feq[cellId * NDIST + dist];
+      m_fold[cellId * NDIST + dist] = m_feq[cellId * NDIST + dist];
     }
   }
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-template <GInt NDIM>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::timeStep() {
-  currToOldVars<NDIM>();
-  updateMacroscopicValues<NDIM>();
-  calcEquilibriumMoments<NDIM>();
-  collisionStep<NDIM>();
+  currToOldVars();
+  updateMacroscopicValues();
+  calcEquilibriumMoments();
+  collisionStep();
   //  m_lbm->collisionStep();
   //  boundaryCnd<NDIM>();
-  propagationStep<NDIM>();
-  boundaryCnd<NDIM>();
+  propagationStep();
+  boundaryCnd();
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-template <GInt NDIM>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::currToOldVars() {
   std::copy(m_vars.begin(), m_vars.end(), m_varsold.begin());
   //  std::copy(m_f.begin(), m_f.end(), m_fold.begin());
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-template <GInt NDIM>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::updateMacroscopicValues() {
   static constexpr std::array<std::array<GInt, 6>, 2> moment = {{{{1, 4, 5, 0, 6, 7}}, {{3, 4, 7, 2, 5, 6}}}};
 
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     // todo:skip non-leaf cells!
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      velocity<NDIM>(cellId, dir) = m_fold[cellId * m_noDists + moment[dir][0]] + m_fold[cellId * m_noDists + moment[dir][1]]
-                                    + m_fold[cellId * m_noDists + moment[dir][2]] - m_fold[cellId * m_noDists + moment[dir][3]]
-                                    - m_fold[cellId * m_noDists + moment[dir][4]] - m_fold[cellId * m_noDists + moment[dir][5]];
+      velocity<NDIM>(cellId, dir) = m_fold[cellId * NDIST + moment[dir][0]] + m_fold[cellId * NDIST + moment[dir][1]]
+                                    + m_fold[cellId * NDIST + moment[dir][2]] - m_fold[cellId * NDIST + moment[dir][3]]
+                                    - m_fold[cellId * NDIST + moment[dir][4]] - m_fold[cellId * NDIST + moment[dir][5]];
     }
-//    cerr0 << "cellId: " << cellId << " (" << velocity<NDIM>(cellId, 0) << ", " << velocity<NDIM>(cellId, 1) << ")" << std::endl;
-    rho<NDIM>(cellId) = std::accumulate((m_fold.begin() + cellId * m_noDists), (m_fold.begin() + (cellId + 1) * m_noDists), 0.0);
+    //    cerr0 << "cellId: " << cellId << " (" << velocity<NDIM>(cellId, 0) << ", " << velocity<NDIM>(cellId, 1) << ")" << std::endl;
+    rho<NDIM>(cellId) = std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST), 0.0);
   }
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-template <GInt NDIM>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::calcEquilibriumMoments() {
   static constexpr std::array<GDouble, 9> cx = {-1, 1, 0, 0, 1, 1, -1, -1, 0};
   static constexpr std::array<GDouble, 9> cy = {0, 0, -1, 1, 1, -1, -1, 1, 0};
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
-    for(GInt dist = 0; dist < m_noDists; ++dist) {
-      m_feq[cellId * m_noDists + dist] =
-          m_weight[dist] * (rho<NDIM>(cellId) + 3 * (velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist]));
+    for(GInt dist = 0; dist < NDIST; ++dist) {
+      m_feq[cellId * NDIST + dist] =
+          LBMethod<LBTYPE>::m_weights[dist]
+          * (rho<NDIM>(cellId) + 3 * (velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist]));
     }
   }
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-template <GInt NDIM>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::collisionStep() {
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
-    for(GInt dist = 0; dist < m_noDists; ++dist) {
-      m_f[cellId * m_noDists + dist] = (1 - m_omega) * m_fold[cellId * m_noDists + dist] + m_omega * m_feq[cellId * m_noDists + dist];
+    for(GInt dist = 0; dist < NDIST; ++dist) {
+      m_f[cellId * NDIST + dist] = (1 - m_omega) * m_fold[cellId * NDIST + dist] + m_omega * m_feq[cellId * NDIST + dist];
       //      cerr0<< m_f[cellId * m_noDists + dist] << " m_omega " << m_omega << " m_fold " << m_fold[cellId * m_noDists + dist] << " m_feq
       //      " <<
       //          m_feq[cellId * m_noDists + dist] <<std::endl;
@@ -321,39 +289,35 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::collisionStep() {
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-template <GInt NDIM>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::propagationStep() {
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
-    for(GInt dist = 0; dist < m_noDists - 1; ++dist) {
+    for(GInt dist = 0; dist < NDIST - 1; ++dist) {
       const GInt neighborId = m_grid->neighbor(cellId, dist);
       if(neighborId != INVALID_CELLID) {
-        m_fold[neighborId * m_noDists + dist] = m_f[cellId * m_noDists + dist];
+        m_fold[neighborId * NDIST + dist] = m_f[cellId * NDIST + dist];
       }
     }
   }
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-template <GInt NDIM>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::boundaryCnd() {
-    //todo: replace by lambda function
-    using namespace  std::placeholders;
-    std::function<GDouble&(GInt, GInt)> _fold = std::bind(&LBMSolver::fold, this, _1, _2);
-    std::function<GDouble&(GInt, GInt)> _f = std::bind(&LBMSolver::f, this, _1, _2);
+  // todo: replace by lambda function
+  using namespace std::placeholders;
+  std::function<GDouble&(GInt, GInt)> _fold = std::bind(&LBMSolver::fold, this, _1, _2);
+  std::function<GDouble&(GInt, GInt)> _f    = std::bind(&LBMSolver::f, this, _1, _2);
 
-    m_bndManager->apply(_f, _fold);
+  m_bndManager->apply(_f, _fold);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::transferGrid(const GridInterface& grid) {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
-  m_dim = grid.dim();
-
-  cerr0 << "Transferring " + std::to_string(m_dim) + "D Grid to LBM solver" << std::endl;
-  logger << "Transferring " + std::to_string(m_dim) + "D Grid to LBM solver" << std::endl;
+  cerr0 << "Transferring " + std::to_string(NDIM) + "D Grid to LBM solver" << std::endl;
+  logger << "Transferring " + std::to_string(NDIM) + "D Grid to LBM solver" << std::endl;
 
 
-  switch(m_dim) {
+  switch(NDIM) {
     case 1:
       m_grid = std::make_unique<CartesianGrid<DEBUG_LEVEL, 1>>();
       break;
@@ -367,7 +331,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::transferGrid(const GridInterface& grid) {
       TERMM(-1, "Only dimensions 1,2 and 3 are supported.");
   }
 
-  switch(m_dim) {
+  switch(NDIM) {
     case 1:
       static_cast<CartesianGrid<DEBUG_LEVEL, 1>*>(m_grid.get())
           ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 1>*>(static_cast<const void*>(&grid)));
@@ -393,7 +357,6 @@ constexpr auto LBMSolver<DEBUG_LEVEL, LBTYPE>::isThermal() -> GBool {
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-template <GInt NDIM>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE>::convergence(const GInt var) const -> GDouble {
   GDouble conv = 0.0;
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
