@@ -66,9 +66,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL>>(NDIM, NDIST);
 
   // todo: just for current testcase
-  m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack, grid<NDIM>()->bndrySurface(static_cast<GInt>(LBMDir::mY)));
-  m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack_TangentialVelocity,
-                                        grid<NDIM>()->bndrySurface(static_cast<GInt>(LBMDir::pY)));
+  m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack, bndrySurface(static_cast<GInt>(LBMDir::mY)));
+  m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack_TangentialVelocity, bndrySurface(static_cast<GInt>(LBMDir::pY)));
 
 
   cerr0 << "<<<<<<<<<<<<>>>>>>>>>>>>>" << std::endl;
@@ -77,8 +76,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   cerr0 << "LBM Method "
         << "D2Q9" << std::endl; // todo: fix me
   cerr0 << "No. of variables " << std::to_string(NVARS) << std::endl;
-  cerr0 << "No. Leaf cells: " << grid<NDIM>()->noLeafCells() << std::endl;
-  cerr0 << "No. Bnd cells: " << grid<NDIM>()->noBndCells() << std::endl;
+  cerr0 << "No. Leaf cells: " << noLeafCells() << std::endl;
+  cerr0 << "No. Bnd cells: " << noBndCells() << std::endl;
   cerr0 << "Relaxation Time: " << m_relaxTime << std::endl;
   cerr0 << "Reynolds Number: " << m_re << std::endl;
   cerr0 << "Viscosity: " << m_nu << std::endl;
@@ -169,17 +168,17 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
 
     if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || m_timeStep == noTimesteps || converged) {
       // only output leaf cells (i.e. cells without children)
-      std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return grid<NDIM>()->noChildren(cellId) == 0; };
+      std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return noChildren(cellId) == 0; };
 
-      tmp.resize(grid<NDIM>()->size());
-      for(GInt cellId = 0; cellId < grid<NDIM>()->size(); ++cellId) {
+      tmp.resize(size());
+      for(GInt cellId = 0; cellId < size(); ++cellId) {
         tmp[cellId] = velocity<NDIM>(cellId, 0);
       }
 
       index.emplace_back("u");
-      values.emplace_back(toStringVector(tmp, grid<NDIM>()->size()));
+      values.emplace_back(toStringVector(tmp, size()));
 
-      VTK::ASCII::writePoints<NDIM>("test_" + std::to_string(m_timeStep), grid<NDIM>()->size(), grid<NDIM>()->center(), index, values,
+      VTK::ASCII::writePoints<NDIM>("test_" + std::to_string(m_timeStep), size(), center(), index, values,
                                     isLeaf);
     }
 
@@ -192,7 +191,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
   GDouble              maxError = 0;
   std::vector<GDouble> error;
   for(GInt cellId = 0; cellId < grid().size(); ++cellId) {
-    const GDouble solution = analytical(grid<NDIM>()->center(cellId, 1));
+    const GDouble solution = analytical(center(cellId, 1));
     const GDouble delta    = velocity<NDIM>(cellId, 0) - solution;
     maxError               = std::max(std::abs(delta), maxError);
     error.emplace_back(std::sqrt(delta * delta / (solution * solution)));
@@ -234,7 +233,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::timeStep() {
   calcEquilibriumMoments();
   collisionStep();
   //  m_lbm->collisionStep();
-  //  boundaryCnd<NDIM>();
+  //  boundaryCnd();
   propagationStep();
   boundaryCnd();
 }
@@ -279,9 +278,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::collisionStep() {
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST; ++dist) {
       m_f[cellId * NDIST + dist] = (1 - m_omega) * m_fold[cellId * NDIST + dist] + m_omega * m_feq[cellId * NDIST + dist];
-      //      cerr0<< m_f[cellId * m_noDists + dist] << " m_omega " << m_omega << " m_fold " << m_fold[cellId * m_noDists + dist] << " m_feq
-      //      " <<
-      //          m_feq[cellId * m_noDists + dist] <<std::endl;
     }
   }
 }

@@ -7,7 +7,9 @@
 #include <iostream>
 #include <sstream>
 #include "common/compiler_config.h"
+#if __has_include("config.h")
 #include "config.h"
+#endif
 
 // todo: activate
 

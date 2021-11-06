@@ -28,6 +28,11 @@
 
 #define __FUNCTION_LOCATION__ std::string(__FILE__) + ": " + std::string(SHORT_FUN_)
 
+#ifndef USE_ASSERTS
+#define ASSERT(condition, message)                                                                                                         \
+  do {                                                                                                                                     \
+  } while(false && (condition))
+#endif
 
 #ifdef CLANG_COMPILER
 #pragma clang diagnostic pop

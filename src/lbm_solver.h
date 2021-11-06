@@ -28,11 +28,6 @@ class LBMSolver : public SolverInterface {
 
   [[nodiscard]] auto grid() const -> const GridInterface& override { return *m_grid; };
 
-  template <GInt NDIM>
-  [[nodiscard]] auto grid() const -> CartesianGrid<DEBUG_LEVEL, NDIM>* {
-    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get());
-  }
-
   void transferGrid(const GridInterface& grid) override;
 
   constexpr auto isThermal() -> GBool;
@@ -50,16 +45,42 @@ class LBMSolver : public SolverInterface {
   void setupMethod();
   void finishInit();
 
+  //  [[nodiscard]] auto grid() const -> CartesianGrid<DEBUG_LEVEL, LBMethod<LBTYPE>::m_dim>* {
+  //    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get());
+  //  }
 
-  void               loadConfiguration();
-  void               timeStep();
-  void               initialCondition();
-  void               boundaryCnd();
-  void               propagationStep();
-  void               currToOldVars();
-  void               updateMacroscopicValues();
-  void               calcEquilibriumMoments();
-  void               collisionStep();
+  [[nodiscard]] auto size() const -> GInt { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->size(); }
+
+  [[nodiscard]] auto noLeafCells() const -> GInt { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->noLeafCells(); }
+
+  [[nodiscard]] auto noBndCells() const -> GInt { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->noBndCells(); }
+
+  [[nodiscard]] auto noChildren(const GInt cellId) const -> GInt {
+    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->noChildren(cellId);
+  }
+
+  inline auto center(const GInt id, const GInt dir) const -> GDouble { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())
+                                                                      ->center(id, dir); }
+
+  inline auto center() const -> const std::vector<Point<NDIM>>& { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())
+                                                                      ->center(); }
+
+  auto bndrySurface(const GInt id) const -> const Surface<NDIM>& {
+    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->bndrySurface(id);
+  }
+
+
+  void loadConfiguration();
+  void timeStep();
+  void initialCondition();
+  void boundaryCnd();
+  void propagationStep();
+  void currToOldVars();
+  void updateMacroscopicValues();
+  void calcEquilibriumMoments();
+  void collisionStep();
+
+
   [[nodiscard]] auto convergence(const GInt var) const -> GDouble;
 
   template <GInt NDIM>
