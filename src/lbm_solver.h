@@ -33,11 +33,11 @@ class LBMSolver : public SolverInterface {
   constexpr auto isThermal() -> GBool;
 
  private:
-  using method = LBMethod<LBTYPE>;
-
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
   static constexpr GInt NVARS = NDIM + 1 + static_cast<GInt>(LBMethod<LBTYPE>::m_isThermal);
+
+  using method = LBMethod<LBTYPE>;
 
   void init(int argc, GChar** argv);
   void initTimers();
@@ -59,7 +59,7 @@ class LBMSolver : public SolverInterface {
     return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->noChildren(cellId);
   }
 
-  inline auto center(const GInt id, const GInt dir) const -> GDouble { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())
+  [[nodiscard]] inline auto center(const GInt id, const GInt dir) const -> GDouble { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())
                                                                       ->center(id, dir); }
 
   inline auto center() const -> const std::vector<Point<NDIM>>& { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())
@@ -72,7 +72,9 @@ class LBMSolver : public SolverInterface {
 
   void loadConfiguration();
   void timeStep();
+  void output(const GBool forced = false);
   void initialCondition();
+  auto convergenceCondition() -> GBool;
   void boundaryCnd();
   void propagationStep();
   void currToOldVars();
@@ -81,7 +83,7 @@ class LBMSolver : public SolverInterface {
   void collisionStep();
 
 
-  [[nodiscard]] auto convergence(const GInt var) const -> GDouble;
+  [[nodiscard]] auto sumAbsDiff(const GInt var) const -> GDouble;
 
   template <GInt NDIM>
   auto inline rho(const GInt cellId) -> GDouble& {

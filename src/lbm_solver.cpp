@@ -127,63 +127,14 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
   // todo: make settable
   const GInt noTimesteps = 20000;
   GBool      converged   = false;
-  for(GInt ts = 0; ts < noTimesteps && !converged; ++ts) {
-    if(m_timeStep > 0 && m_timeStep % m_outputInfoInterval == 0) {
-      cerr0 << "Running LBM at " << m_timeStep << std::endl;
-      logger << "Running LBM at " << m_timeStep << std::endl;
 
-      const GDouble convUx  = convergence(PV::velocitiy(0));
-      const GDouble convUy  = convergence(PV::velocitiy(1));
-      const GDouble convUz  = (NDIM == 3) ? convergence(PV::velocitiy(2)) : NAN;
-      const GDouble convRho = convergence(PV::rho<NDIM>());
+  for(m_timeStep = 0; m_timeStep < noTimesteps && !converged; ++m_timeStep) {
 
-      cerr0 << "u_x: " << convUx << " ";
-      cerr0 << "u_y: " << convUy << " ";
-      if(NDIM == 3) {
-        cerr0 << "u_z: " << convUz << " ";
-      }
-      cerr0 << "rho: " << convRho << " ";
-      cerr0 << std::endl;
-
-      logger << "u_x: " << convUx << " ";
-      logger << "u_y: " << convUy << " ";
-      if(NDIM == 3) {
-        logger << "u_z: " << convUz << " ";
-      }
-      logger << "rho: " << convRho << " ";
-      logger << std::endl;
-
-      // todo: make settable
-      // todo: make independent of output
-      const GDouble maxConv = std::max(std::max(std::max(convUx, convUy), convUz), convRho);
-      if(m_timeStep > 1 && maxConv < 1E-12) {
-        logger << "Reached convergence to: " << maxConv << std::endl;
-        cerr0 << "Reached convergence to: " << maxConv << std::endl;
-        converged = true;
-      }
-    }
+    converged = convergenceCondition();
     timeStep();
 
-    std::vector<GDouble>              tmp;
-    std::vector<GString>              index;
-    std::vector<std::vector<GString>> values;
-
-    if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || m_timeStep == noTimesteps || converged) {
-      // only output leaf cells (i.e. cells without children)
-      std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return noChildren(cellId) == 0; };
-
-      tmp.resize(size());
-      for(GInt cellId = 0; cellId < size(); ++cellId) {
-        tmp[cellId] = velocity<NDIM>(cellId, 0);
-      }
-
-      index.emplace_back("u");
-      values.emplace_back(toStringVector(tmp, size()));
-
-      VTK::ASCII::writePoints<NDIM>("test_" + std::to_string(m_timeStep), size(), center(), index, values, isLeaf);
-    }
-
-    ++m_timeStep;
+    const GBool lastTimeStep = m_timeStep == noTimesteps || converged;
+    output(lastTimeStep);
   }
 
   const GDouble couette_channelHeight = 5.0;
@@ -207,6 +158,46 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMMainLoop]);
   return 0;
 }
+
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+auto LBMSolver<DEBUG_LEVEL, LBTYPE>::convergenceCondition() -> GBool{
+  if(m_timeStep > 0 && m_timeStep % m_outputInfoInterval == 0) {
+    cerr0 << "Running LBM at " << m_timeStep << std::endl;
+    logger << "Running LBM at " << m_timeStep << std::endl;
+
+    const GDouble convUx  = sumAbsDiff(PV::velocitiy(0));
+    const GDouble convUy  = sumAbsDiff(PV::velocitiy(1));
+    const GDouble convUz  = (NDIM == 3) ? sumAbsDiff(PV::velocitiy(2)) : NAN;
+    const GDouble convRho = sumAbsDiff(PV::rho<NDIM>());
+
+    cerr0 << "u_x: " << convUx << " ";
+    cerr0 << "u_y: " << convUy << " ";
+    if(NDIM == 3) {
+      cerr0 << "u_z: " << convUz << " ";
+    }
+    cerr0 << "rho: " << convRho << " ";
+    cerr0 << std::endl;
+
+    logger << "u_x: " << convUx << " ";
+    logger << "u_y: " << convUy << " ";
+    if(NDIM == 3) {
+      logger << "u_z: " << convUz << " ";
+    }
+    logger << "rho: " << convRho << " ";
+    logger << std::endl;
+
+    // todo: make settable
+    // todo: make independent of output
+    const GDouble maxConv = std::max(std::max(std::max(convUx, convUy), convUz), convRho);
+    if(m_timeStep > 1 && maxConv < 1E-12) {
+      logger << "Reached convergence to: " << maxConv << std::endl;
+      cerr0 << "Reached convergence to: " << maxConv << std::endl;
+      return true;
+    }
+  }
+  return false;
+}
+
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::initialCondition() {
@@ -237,6 +228,30 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::timeStep() {
   //  boundaryCnd();
   propagationStep();
   boundaryCnd();
+}
+
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced) {
+
+  if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || forced) {
+    std::vector<GDouble>              tmp;
+    std::vector<GString>              index;
+    std::vector<std::vector<GString>> values;
+
+    // only output leaf cells (i.e. cells without children)
+    std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return noChildren(cellId) == 0; };
+
+    tmp.resize(size());
+    for(GInt cellId = 0; cellId < size(); ++cellId) {
+      tmp[cellId] = velocity<NDIM>(cellId, 0);
+    }
+
+    index.emplace_back("u");
+    values.emplace_back(toStringVector(tmp, size()));
+
+    VTK::ASCII::writePoints<NDIM>("test_" + std::to_string(m_timeStep), size(), center(), index, values, isLeaf);
+  }
+
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
@@ -352,7 +367,7 @@ constexpr auto LBMSolver<DEBUG_LEVEL, LBTYPE>::isThermal() -> GBool {
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-auto LBMSolver<DEBUG_LEVEL, LBTYPE>::convergence(const GInt var) const -> GDouble {
+auto LBMSolver<DEBUG_LEVEL, LBTYPE>::sumAbsDiff(const GInt var) const -> GDouble {
   GDouble conv = 0.0;
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     conv += std::abs(m_vars[cellId * NVARS + var] - m_varsold[cellId * NVARS + var]);

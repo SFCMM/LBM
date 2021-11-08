@@ -7,16 +7,18 @@
 - run basic 2D NS Case
 - load grid from disk
 - Couette in 3D 
+- Poiseuille flow in 3D
 
 # V0.0.1
 ## Planned:
 - implement toRun()
 - run basic 2D navier-stokes case (couette)
-- implement bounce back boundary condition
+- load bcs from input file
 
 ## Ongoing:
-- implement general Bounce Back boundary condition
 - implement output correctly
+- inflow pressure bc
+- outflow pressure bc
 
 ## Done:
 ### Features
