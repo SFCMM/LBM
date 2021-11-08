@@ -121,7 +121,7 @@ class LBMSolver : public SolverInterface {
 
   //  LBMethodType         m_method     = LBMethodType::D2Q9;
   LBSolverType m_solverType = LBSolverType::BGK;
-  //  std::vector<GDouble> m_weight;
+  //  std::vector<GDouble> m_tangentialVelo;
   std::vector<GDouble> m_f;
   std::vector<GDouble> m_feq;
   std::vector<GDouble> m_fold;

@@ -66,8 +66,10 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL>>(NDIM, NDIST);
 
   // todo: just for current testcase
-  m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack, bndrySurface(static_cast<GInt>(LBMDir::mY)));
-  m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack_TangentialVelocity, bndrySurface(static_cast<GInt>(LBMDir::pY)));
+  json properties;
+  m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack, bndrySurface(static_cast<GInt>(LBMDir::mY)), properties);
+  m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack_TangentialVelocity, bndrySurface(static_cast<GInt>(LBMDir::pY)),
+                                        properties);
 
 
   cerr0 << "<<<<<<<<<<<<>>>>>>>>>>>>>" << std::endl;
@@ -102,13 +104,13 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::setupMethod() {
   //  switch(m_method) {
   //    case LBMethodType::D1Q3:
-  //      m_weight = {1.0 / 6.0, 1.0 / 6.0, 2.0 / 3.0};
+  //      m_tangentialVelo = {1.0 / 6.0, 1.0 / 6.0, 2.0 / 3.0};
   //      break;
   //    case LBMethodType::D2Q5:
-  //      m_weight = {1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 3.0};
+  //      m_tangentialVelo = {1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 3.0};
   //      break;
   //    case LBMethodType::D2Q9:
-  //      m_weight = {1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 4.0 / 9.0};
+  //      m_tangentialVelo = {1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 4.0 / 9.0};
   //      break;
   //    default:
   //      TERMM(-1, "Invalid LBM method type");
@@ -178,8 +180,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
       index.emplace_back("u");
       values.emplace_back(toStringVector(tmp, size()));
 
-      VTK::ASCII::writePoints<NDIM>("test_" + std::to_string(m_timeStep), size(), center(), index, values,
-                                    isLeaf);
+      VTK::ASCII::writePoints<NDIM>("test_" + std::to_string(m_timeStep), size(), center(), index, values, isLeaf);
     }
 
     ++m_timeStep;

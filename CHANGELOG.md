@@ -6,6 +6,7 @@
 ## Planned
 - run basic 2D NS Case
 - load grid from disk
+- Couette in 3D 
 
 # V0.0.1
 ## Planned:
@@ -22,6 +23,8 @@
 - load grid generated from the generator
 - setup diagonal neighbor connection for D2Q9 and similar methods
 - periodic boundaries
+- general bounce back "no-slip" wall boundary condition
+- general bounce back "no-slip" wall boundary condition with tangential velocity
 
 ### Buildsystem
 

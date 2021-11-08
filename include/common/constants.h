@@ -12,6 +12,8 @@ static constexpr GInt    BASE2          = 2;
 static constexpr GDouble HALF           = 0.5;
 static constexpr GInt    INVALID_CELLID = -1;
 
+static constexpr GDouble PI = 3.141592653589793238462643383279;
+
 /// Generate invalid list for init of arrays
 /// \tparam LENGTH Length of the invalid list
 /// \return Invalid list of LENGTH

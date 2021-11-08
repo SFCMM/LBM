@@ -38,7 +38,7 @@ class LBMBndManager {
   auto operator=(LBMBndManager&&) -> LBMBndManager& = delete;
 
   template <GInt NDIM>
-  void addBndry(const BndryType bnd, const Surface<NDIM>& surf) {
+  void addBndry(const BndryType bnd, const Surface<NDIM>& surf, const json& properties) {
     if constexpr(NDIM == 1) {
       if(m_ndist == 3) {
         addBndry<NDIM, 3>(bnd, surf);
@@ -49,10 +49,10 @@ class LBMBndManager {
     if constexpr(NDIM == 2) {
       switch(m_ndist) {
         case 5:
-          addBndry<NDIM, 5>(bnd, surf);
+          addBndry<NDIM, 5>(bnd, surf, properties);
           break;
         case 9:
-          addBndry<NDIM, 9>(bnd, surf);
+          addBndry<NDIM, 9>(bnd, surf, properties);
           break;
         default:
           TERMM(-1, "Invalid number of distributions");
@@ -61,13 +61,13 @@ class LBMBndManager {
   }
 
   template <GInt NDIM, GInt NDIST>
-  void addBndry(const BndryType bnd, const Surface<NDIM>& surf) {
+  void addBndry(const BndryType bnd, const Surface<NDIM>& surf, const json& properties) {
     switch(bnd) {
       case BndryType::Wall_BounceBack:
-        m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<getLBMethodType<NDIM, NDIST>(), false>>(surf));
+        m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<getLBMethodType<NDIM, NDIST>(), false>>(surf, properties));
         break;
       case BndryType::Wall_BounceBack_TangentialVelocity:
-        m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<getLBMethodType<NDIM, NDIST>(), true>>(surf));
+        m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<getLBMethodType<NDIM, NDIST>(), true>>(surf, properties));
         break;
       default:
         TERMM(-1, "Invalid bndry Type!");
@@ -120,12 +120,15 @@ class LBMBndCell_wallBB;
 template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
 class LBMBnd_wallBB : public LBMBndInterface {
  public:
-  LBMBnd_wallBB(const Surface<dim(LBTYPE)>& surf) {
+  LBMBnd_wallBB(const Surface<dim(LBTYPE)>& surf, const json& properties) {
     GInt surfId = 0;
     // todo: assign the surfaces to each bndry cell
     for(const GInt cellId : surf.getCellList()) {
       m_bndCells.emplace_back(cellId, surf.normal(surfId));
       ++surfId;
+    }
+    if constexpr(TANGENTIALVELO) {
+      m_tangentialVelo = 0.1; // todo: properties...
     }
     LBMBnd_wallBB<LBTYPE, TANGENTIALVELO>::init();
   }
@@ -140,6 +143,7 @@ class LBMBnd_wallBB : public LBMBndInterface {
   void init() override {
     for(auto& bndCell : m_bndCells) {
       bndCell.init();
+      bndCell.setTangentialVelocity(m_tangentialVelo);
     }
   }
 
@@ -150,7 +154,7 @@ class LBMBnd_wallBB : public LBMBndInterface {
   }
 
  private:
-  VectorD<dim(LBTYPE)>                                   m_velocity;
+  GDouble                                                m_tangentialVelo = 0.1;
   std::vector<LBMBndCell_wallBB<LBTYPE, TANGENTIALVELO>> m_bndCells;
 };
 
@@ -174,22 +178,56 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
         ++m_noSetDists;
       }
     }
-    //    m_weight
   }
 
   void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) {
+    // iterate over the distributions that need to be set
     for(GInt id = 0; id < m_noSetDists; ++id) {
-      const GInt dist              = m_bndIndex[id];
-      GInt       oppositeDist      = LBMethod<LBTYPE>::oppositeDist(dist);
-      fold(mapped(), oppositeDist) = f(mapped(), dist);
+      const GInt dist         = m_bndIndex[id];
+      GInt       oppositeDist = LBMethod<LBTYPE>::oppositeDist(dist);
 
-      // todo: testing
-      if constexpr(TANGENTIALVELO) {
-        if(oppositeDist == 5) {
-          fold(mapped(), oppositeDist) += 1.0 / 6.0 * (0.1);
+      // standard bounceback i.e. distribution that hits the wall is reflected to the opposite distribution direction
+      fold(mapped(), oppositeDist) = f(mapped(), dist);
+    }
+
+    // todo: testing
+    if constexpr(TANGENTIALVELO) {
+      for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
+        fold(mapped(), dist) += m_tangentialVelo[dist];
+      }
+    }
+  }
+
+  void setTangentialVelocity(const GDouble tangentialVelo) {
+    if constexpr(TANGENTIALVELO) {
+      static constexpr GDouble parallelRequirement = 10 * GDoubleEps;
+
+      m_tangentialVelo.fill(0);
+      const auto& _normal = normal();
+      for(GInt id = 0; id < m_noSetDists; ++id) {
+        const GInt           dist = LBMethod<LBTYPE>::oppositeDist(m_bndIndex[id]);
+        VectorD<dim(LBTYPE)> dir;
+        for(GInt n = 0; n < dim(LBTYPE); ++n) {
+          dir[n] = LBMethod<LBTYPE>::m_dirs[dist][n];
         }
-        if(oppositeDist == 6) {
-          fold(mapped(), oppositeDist) -= 1.0 / 6.0 * (0.1);
+
+        VectorD<dim(LBTYPE)> tangentialVec;
+        if(dim(LBTYPE) == 2){
+          tangentialVec[0] = _normal[1];
+          tangentialVec[1] = _normal[0];
+        } else {
+          TERMM(-1, "Not implemented");
+        }
+
+
+        const GDouble            normalDotDir        = _normal.dot(dir);
+        const GDouble            tangentialDotDir    = tangentialVec.dot(dir);
+        const GDouble            angle               = gcem::acos(normalDotDir / dir.norm());
+        const GBool              parallel            = std::abs(angle - PI) < parallelRequirement;
+
+        // vector is parallel to the normal vector -> velocity = 0
+        if(!parallel) {
+          m_tangentialVelo[dist] = tangentialDotDir * 1.0 / 6.0 * tangentialVelo;
         }
       }
     }
@@ -206,9 +244,9 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
   using LBMBndCell<LBTYPE>::mapped;
   using LBMBndCell<LBTYPE>::normal;
 
-  std::array<GDouble, noDists(LBTYPE)> m_weight;
-  std::array<GInt, noDists(LBTYPE)>    m_bndIndex;
-  GInt                                 m_noSetDists = 0;
+  std::array<GDouble, noDists(LBTYPE) * static_cast<GInt>(TANGENTIALVELO)> m_tangentialVelo;
+  std::array<GInt, noDists(LBTYPE)>                                        m_bndIndex;
+  GInt                                                                     m_noSetDists = 0;
 };
 
 #endif // LBM_LBM_BND_H
