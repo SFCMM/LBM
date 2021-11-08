@@ -73,6 +73,7 @@ class LBMSolver : public SolverInterface {
   void loadConfiguration();
   void timeStep();
   void output(const GBool forced = false);
+  void compareToAnalyticalResult();
   void initialCondition();
   auto convergenceCondition() -> GBool;
   void boundaryCnd();

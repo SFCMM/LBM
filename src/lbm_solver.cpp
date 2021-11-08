@@ -1,5 +1,6 @@
 #include "lbm_solver.h"
 #include "pv.h"
+#include "analytical_solutions.h"
 
 #include <set>
 
@@ -61,7 +62,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   m_omega     = 1.0 / m_relaxTime;
   m_re        = 0.75;
   m_nu        = (2.0 * m_relaxTime - 1) / 6.0; // default=0.133
-  m_refU      = m_re * m_nu / m_refLength;     // default=1.3333
+  m_refU      = m_re * m_nu / m_refLength;     // default=0.1
 
   m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL>>(NDIM, NDIST);
 
@@ -137,21 +138,11 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
     output(lastTimeStep);
   }
 
-  const GDouble couette_channelHeight = 5.0;
-  auto          analytical            = [&](const GDouble y) { return m_refU / couette_channelHeight * y; };
+  static constexpr GBool analyticalTest = true;
 
-  GDouble              maxError = 0;
-  std::vector<GDouble> error;
-  for(GInt cellId = 0; cellId < grid().size(); ++cellId) {
-    const GDouble solution = analytical(center(cellId, 1));
-    const GDouble delta    = velocity<NDIM>(cellId, 0) - solution;
-    maxError               = std::max(std::abs(delta), maxError);
-    error.emplace_back(std::sqrt(delta * delta / (solution * solution)));
+  if(analyticalTest) {
+    compareToAnalyticalResult();
   }
-  const GDouble L2error = 1.0 / grid().size() * std::accumulate(error.begin(), error.end(), 0.0);
-
-  cerr0 << "max. Error: " << maxError << std::endl;
-  cerr0 << "avg. L2: " << L2error << std::endl;
 
   logger << "LBM Solver finished <||" << endl;
   cout << "LBM Solver finished <||" << endl;
@@ -252,6 +243,22 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced) {
     VTK::ASCII::writePoints<NDIM>("test_" + std::to_string(m_timeStep), size(), center(), index, values, isLeaf);
   }
 
+}
+
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+void LBMSolver<DEBUG_LEVEL, LBTYPE>::compareToAnalyticalResult() {
+  GDouble              maxError = 0;
+  std::vector<GDouble> error;
+  for(GInt cellId = 0; cellId < grid().size(); ++cellId) {
+    const GDouble solution = analytical::ns::couette2D_1_5(center(cellId, 1));
+    const GDouble delta    = velocity<NDIM>(cellId, 0) - solution;
+    maxError               = std::max(std::abs(delta), maxError);
+    error.emplace_back(std::sqrt(delta * delta / (solution * solution)));
+  }
+  const GDouble L2error = 1.0 / grid().size() * std::accumulate(error.begin(), error.end(), 0.0);
+
+  cerr0 << "max. Error: " << maxError << std::endl;
+  cerr0 << "avg. L2: " << L2error << std::endl;
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
