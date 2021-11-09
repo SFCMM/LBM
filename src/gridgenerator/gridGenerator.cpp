@@ -35,14 +35,14 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv) {
 
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_file) {
-  m_configurationFileName = std::move(config_file);
+  setConfiguration(config_file);
+//  m_configurationFileName = std::move(config_file);
   init(argc, argv);
 }
 
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::initBenchmark(int argc, GChar** argv) {
   m_benchmark             = true;
-  m_configurationFileName = "";
 
   m_dim              = 3;
   m_maxNoCells       = 100000;
@@ -110,20 +110,9 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
   RECORD_TIMER_START(TimeKeeper[Timers::GridIo]);
 
   if(!m_benchmark) {
-    logger << "Loading configuration file [" << m_configurationFileName << "]" << endl;
+    configuration::loadConfiguration();
   } else {
     logger << "Setting up benchmarking!" << endl;
-  }
-
-  // 1. open configuration file on root process
-  if(MPI::isRoot() && isFile(m_configurationFileName)) {
-    std::ifstream configFileStream(m_configurationFileName);
-    configFileStream >> m_config;
-    // put all available keys in map to keep track of usage
-    for(const auto& element : m_config.items()) {
-      m_configKeys.emplace(element.key(), false);
-    }
-    configFileStream.close();
   }
 
   // 2. communicate configuration file to all other processes
@@ -285,46 +274,6 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
 
   RECORD_TIMER_STOP(TimeKeeper[Timers::IO]);
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridIo]);
-}
-
-template <Debug_Level DEBUG_LEVEL>
-template <typename T>
-auto GridGenerator<DEBUG_LEVEL>::required_config_value(const GString& key) -> T {
-  // todo: check for types
-  if(m_config.template contains(key)) {
-    m_configKeys[key] = true;
-    return static_cast<T>(m_config[key]);
-  }
-  TERMM(-1, "The required configuration value is missing: " + key);
-}
-
-template <Debug_Level DEBUG_LEVEL>
-template <typename T>
-auto GridGenerator<DEBUG_LEVEL>::opt_config_value(const GString& key, const T& defaultValue) -> T {
-  // todo: check for types
-  if(m_config.template contains(key)) {
-    m_configKeys[key] = true;
-    return static_cast<T>(m_config[key]);
-  }
-  return defaultValue;
-}
-
-template <Debug_Level DEBUG_LEVEL>
-auto GridGenerator<DEBUG_LEVEL>::has_config_value(const GString& key) -> GBool {
-  return m_config.template contains(key);
-}
-
-
-template <Debug_Level DEBUG_LEVEL>
-void GridGenerator<DEBUG_LEVEL>::unusedConfigValues() {
-  GInt i = 0;
-  logger << "The following values in the configuration file are unused:" << endl;
-  for(const auto& configKey : m_configKeys) {
-    if(!configKey.second) {
-      logger << "[" << ++i << "] " << configKey.first << "\n";
-    }
-  }
-  logger << endl;
 }
 
 template <Debug_Level DEBUG_LEVEL>

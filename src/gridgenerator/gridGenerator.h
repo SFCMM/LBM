@@ -6,6 +6,7 @@
 
 #include <sfcmm_common.h>
 #include "cartesiangrid.h"
+#include "configuration.h"
 #include "geometry.h"
 #include "globaltimers.h"
 #include "gridcell_properties.h"
@@ -15,7 +16,7 @@
 using json = nlohmann::json;
 
 template <Debug_Level DEBUG_LEVEL>
-class GridGenerator : public SolverInterface {
+class GridGenerator : public SolverInterface, private configuration {
  public:
   GridGenerator(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
   ~GridGenerator() override           = default;
@@ -36,16 +37,12 @@ class GridGenerator : public SolverInterface {
   int m_domainId  = -1;
   int m_noDomains = -1;
 
-  GString m_configurationFileName = "grid.json";
   GString m_exe;
-
-  json                               m_config;
   json                               m_geometryConfig;
   json                               m_gridOutConfig;
-  std::unordered_map<GString, GBool> m_configKeys{};
 
   void initTimers();
-  void loadConfiguration();
+  void loadConfiguration() override;
   template <GInt nDim>
   void loadGridDefinition();
   template <GInt nDim>
@@ -61,15 +58,6 @@ class GridGenerator : public SolverInterface {
   //  static std::shared_ptr<GeometryManager<DEBUG_LEVEL, NDIM>> gm(){
   //      std::shared_ptr<GeometryManager<DEBUG_LEVEL, NDIM>>(m_comm);
   //  };
-
-
-  template <typename T>
-  auto required_config_value(const GString& key) -> T;
-  template <typename T>
-  auto opt_config_value(const GString& key, const T& defaultValue) -> T;
-  auto has_config_value(const GString& key) -> GBool;
-  void unusedConfigValues();
-
 
   GInt m_dim        = -1;
   GInt m_maxNoCells = -1;
