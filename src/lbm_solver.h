@@ -2,6 +2,7 @@
 #define LBM_LBM_SOLVER_H
 #include <sfcmm_common.h>
 #include "cartesiangrid.h"
+#include "configuration.h"
 #include "interface/lbm_interface.h"
 #include "interface/solver_interface.h"
 #include "lbm_bnd.h"
@@ -9,7 +10,7 @@
 #include "pv.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-class LBMSolver : public SolverInterface {
+class LBMSolver : public SolverInterface, private configuration {
  public:
   LBMSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
   ~LBMSolver() override       = default;
@@ -22,6 +23,8 @@ class LBMSolver : public SolverInterface {
   auto run() -> GInt override;
 
   void initBenchmark(int argc, GChar** argv) override {
+    m_benchmark             = true;
+
     init(argc, argv);
     TERMM(-1, "Not implemented!");
   };
@@ -113,6 +116,7 @@ class LBMSolver : public SolverInterface {
 
   GString m_exe;
   GString m_configurationFileName;
+  GBool m_benchmark = false;
 
   GInt32 m_domainId  = -1;
   GInt32 m_noDomains = -1;

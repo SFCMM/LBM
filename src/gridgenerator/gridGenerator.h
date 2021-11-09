@@ -42,7 +42,7 @@ class GridGenerator : public SolverInterface, private configuration {
   json                               m_gridOutConfig;
 
   void initTimers();
-  void loadConfiguration() override;
+  void loadConfiguration();
   template <GInt nDim>
   void loadGridDefinition();
   template <GInt nDim>

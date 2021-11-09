@@ -14,6 +14,7 @@
 - implement toRun()
 - run basic 2D navier-stokes case (couette)
 - load bcs from input file
+- additional timers 
 
 ## Ongoing:
 - implement output correctly

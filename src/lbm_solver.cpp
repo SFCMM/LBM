@@ -26,7 +26,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::init(int argc, GChar** argv) {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::init(int argc, GChar** argv, GString config_file) {
-  m_configurationFileName = std::move(config_file);
+  setConfiguration(config_file);
   init(argc, argv);
   logger << "LBM Solver started ||>" << endl;
   cout << "LBM Solver started ||>" << endl;
@@ -47,22 +47,29 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::initTimers() {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
+
+  if(!m_benchmark) {
+    configuration::loadConfiguration("solver");
+  } else {
+    logger << "Setting up benchmarking!" << endl;
+  }
+
   m_solverType = LBSolverType::BGK; // todo: load from file
 
-  // todo: make settable
-  m_outputInfoInterval     = 100;
-  m_outputSolutionInterval = 100;
+  m_outputInfoInterval     = opt_config_value<GInt>("info_interval", m_outputInfoInterval);
+  m_outputSolutionInterval = opt_config_value<GInt>("solution_interval", m_outputSolutionInterval);
 
 
   // Re = rho * u * L/nu
   // u = ma * sqrt(gamma * R * T)
   //  m_nu = m_ma / gcem::sqrt(3) / m_re * m_refLength;
-  // todo: make settable
-  m_relaxTime = 0.9;
+  //todo: add option to define nu
+  m_relaxTime = opt_config_value<GDouble>("relaxation", m_relaxTime);
+  m_re        = required_config_value<GDouble>("reynoldsnumber");
+
   m_omega     = 1.0 / m_relaxTime;
-  m_re        = 0.75;
-  m_nu        = (2.0 * m_relaxTime - 1) / 6.0; // default=0.133
-  m_refU      = m_re * m_nu / m_refLength;     // default=0.1
+  m_nu        = (2.0 * m_relaxTime - 1) / 6.0;
+  m_refU      = m_re * m_nu / m_refLength;
 
   m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL>>(NDIM, NDIST);
 
@@ -120,11 +127,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::setupMethod() {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
-  RECORD_TIMER_START(TimeKeeper[Timers::LBMMainLoop]);
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
   loadConfiguration();
   finishInit();
   initialCondition();
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
 
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMMainLoop]);
   // todo: make settable
   const GInt noTimesteps = 20000;
   GBool      converged   = false;
@@ -153,8 +162,8 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE>::convergenceCondition() -> GBool{
   if(m_timeStep > 0 && m_timeStep % m_outputInfoInterval == 0) {
-    cerr0 << "Running LBM at " << m_timeStep << std::endl;
-    logger << "Running LBM at " << m_timeStep << std::endl;
+    cerr0 <<  m_timeStep << ": ";
+    logger << m_timeStep << ": ";
 
     const GDouble convUx  = sumAbsDiff(PV::velocitiy(0));
     const GDouble convUy  = sumAbsDiff(PV::velocitiy(1));

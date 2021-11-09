@@ -10,13 +10,16 @@ class configuration{
     m_configFileName = configFileName;
   }
 
-  virtual void loadConfiguration(){
+  void loadConfiguration(const GString& section=""){
     logger << "Loading configuration file [" << configFile() << "]" << std::endl;
 
     // 1. open configuration file on root process
     if(MPI::isRoot() && isFile(configFile())) {
       std::ifstream configFileStream(configFile());
       configFileStream >> m_config;
+      if(!section.empty()){
+        m_config = m_config[section];
+      }
       // put all available keys in map to keep track of usage
       for(const auto& element : m_config.items()) {
         m_configKeys.emplace(element.key(), false);

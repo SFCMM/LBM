@@ -36,7 +36,6 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv) {
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_file) {
   setConfiguration(config_file);
-//  m_configurationFileName = std::move(config_file);
   init(argc, argv);
 }
 
