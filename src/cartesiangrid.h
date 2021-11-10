@@ -282,7 +282,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private confi
 #endif
 
     m_axisAlignedBnd = opt_config_value<GBool>("assumeAxisAligned", m_axisAlignedBnd);
-//    m_periodic       = has_any_key_value("type", "periodic");
+    m_periodic       = has_any_key_value("type", "periodic");
 
     currentHighestLvl() = grid.currentHighestLvl();
     partitionLvl()      = grid.partitionLvl();
@@ -405,9 +405,11 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private confi
   }
 
   void setupPeriodicConnections() {
-    logger << "Setting up periodic connections!" << std::endl;
-    // todo: make settable
-    addPeriodicConnection(bndrySurface(static_cast<GInt>(LBMDir::mX)), bndrySurface(static_cast<GInt>(LBMDir::pX)));
+    if(m_periodic) {
+      logger << "Setting up periodic connections!" << std::endl;
+      // todo: make settable
+      addPeriodicConnection(bndrySurface(static_cast<GInt>(LBMDir::mX)), bndrySurface(static_cast<GInt>(LBMDir::pX)));
+    }
   }
 
   // todo: fix for refinement level changes

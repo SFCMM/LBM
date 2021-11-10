@@ -60,6 +60,37 @@ class configuration{
     return m_config.template contains(key);
   }
 
+  auto has_any_key_value(const GString& key, const GString& value) const -> GBool {
+    auto has_config_value_key = [=](const json& cc, const GString& key, const GString& val){
+      // entry exists
+      if(cc.contains(key)){
+        // value matches
+        if(cc[key] == val){
+          return true;
+        }
+      }
+      return false;
+    };
+
+    std::stack<json> stack;
+    stack.emplace(m_config);
+
+    do {
+      json tmp = stack.top();
+      stack.pop();
+
+      if(has_config_value_key(tmp, key, value)) {
+        return true;
+      }
+      for(const auto& item : tmp){
+        if(item.is_object()) {
+          stack.emplace(item);
+        }
+      }
+    } while(!stack.empty());
+
+    return false;
+  }
 
   void unusedConfigValues() {
     GInt i = 0;
