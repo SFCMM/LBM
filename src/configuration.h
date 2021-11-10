@@ -10,7 +10,18 @@ class configuration{
     m_configFileName = configFileName;
   }
 
+  void setConfiguration(const json& config){
+    m_config = config;
+    setupUnusedTracking();
+  }
+
+
+
   void loadConfiguration(const GString& section=""){
+    if(!m_config.empty()){
+      logger << "Warning loading configuration, but configuration already loaded!" << std::endl;
+      TERMM(-1, "Invalid operation!");
+    }
     logger << "Loading configuration file [" << configFile() << "]" << std::endl;
 
     // 1. open configuration file on root process
@@ -20,10 +31,7 @@ class configuration{
       if(!section.empty()){
         m_config = m_config[section];
       }
-      // put all available keys in map to keep track of usage
-      for(const auto& element : m_config.items()) {
-        m_configKeys.emplace(element.key(), false);
-      }
+      setupUnusedTracking();
       configFileStream.close();
     }
   }
@@ -55,7 +63,7 @@ class configuration{
 
   void unusedConfigValues() {
     GInt i = 0;
-    logger << "The following values in the configuration file are unused:" << std::endl;
+    logger << "The following values in the configuration file are unused: \n";
     for(const auto& configKey : m_configKeys) {
       if(!configKey.second) {
         logger << "[" << ++i << "] " << configKey.first << "\n";
@@ -73,6 +81,13 @@ class configuration{
   }
 
  private:
+  void setupUnusedTracking(){
+    // put all available keys in map to keep track of usage
+    for(const auto& element : m_config.items()) {
+      m_configKeys.emplace(element.key(), false);
+    }
+  }
+
   GString                            m_configFileName = "grid.json";
   json                               m_config{};
   std::unordered_map<GString, GBool> m_configKeys{};

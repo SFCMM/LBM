@@ -7,8 +7,8 @@
 #include <set>
 #include <sfcmm_common.h>
 #include "base_cartesiangrid.h"
-//#include "celltree.h"
 #include "common/IO.h"
+#include "configuration.h"
 #include "geometry.h"
 #include "globaltimers.h"
 #ifdef SOLVER_AVAILABLE
@@ -20,7 +20,7 @@
 #include "interface/grid_interface.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
-class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
+class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private configuration {
  public:
   /// Underlying enum type for property access
   using Cell = CellProperties;
@@ -249,6 +249,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   /// Load the generated grid in-memory and set additional properties
   /// \param grid Generated grid.
   void loadGridInplace(const CartesianGridGen<DEBUG_LEVEL, NDIM>& grid, const json& properties) {
+    setConfiguration(properties);
     // grid.balance(); //todo: implement
     setCapacity(grid.capacity()); // todo: change for adaptation
     m_geometry = grid.geometry();
@@ -280,7 +281,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
 #endif
 
-    m_axisAlignedBnd = properties["assumeAxisAligned"];
+    m_axisAlignedBnd = opt_config_value<GBool>("assumeAxisAligned", m_axisAlignedBnd);
+//    m_periodic       = has_any_key_value("type", "periodic");
 
     currentHighestLvl() = grid.currentHighestLvl();
     partitionLvl()      = grid.partitionLvl();
@@ -294,12 +296,10 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     identifyBndrySurfaces();
     setupPeriodicConnections();
     addDiagonalNghbrs();
-    //    setupPeriodicConnections();//works
     //    if(m_loadBalancing) {
     //      setWorkload();
     //      calculateOffspringsAndWeights();
     //    }
-    //    TERMM(-1, "testing");
   }
 
   /// Add the diagonal(2D/3D) and/or tridiagonal (3D) to the neighbor connections of each cell.
@@ -374,8 +374,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
             }
           }
           if(cartesian::maxNoNghbrs<NDIM>() == noNeighbors) {
-//            cerr0 << "Removed boundary property cellId: " << cellId << " (" << center(cellId)[0] << ", " << center(cellId)[1]
-//                  << ") L:" << cellLength << std::endl;
+            //            cerr0 << "Removed boundary property cellId: " << cellId << " (" << center(cellId)[0] << ", " << center(cellId)[1]
+            //                  << ") L:" << cellLength << std::endl;
             property(cellId, CellProperties::bndry) = false;
             logger << "Simplified bndry process!!!" << std::endl;
             //            TERMM(-1, "Cell marked as boundary, but is not on a boundary!");
@@ -585,6 +585,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   GBool m_loadBalancing  = false;
   GBool m_diagonalNghbrs = false;
   GBool m_axisAlignedBnd = false;
+  GBool m_periodic       = false;
 
   std::vector<Surface<NDIM>> m_bndrySurfaces;
 

@@ -159,6 +159,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
 
   logger << "LBM Solver finished <||" << endl;
   cout << "LBM Solver finished <||" << endl;
+  unusedConfigValues();
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMMainLoop]);
   return 0;
 }
