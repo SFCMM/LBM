@@ -112,7 +112,7 @@ class LBMSolver : public SolverInterface, private configuration {
 
   std::unique_ptr<GridInterface>              m_grid;
   std::unique_ptr<LBMethodInterface>          m_lbm;        // todo:implement
-  std::unique_ptr<LBMBndManager<DEBUG_LEVEL>> m_bndManager; // todo:implement
+  std::unique_ptr<LBMBndManager<DEBUG_LEVEL, LBTYPE>> m_bndManager; // todo:implement
 
   GString m_exe;
   GString m_configurationFileName;

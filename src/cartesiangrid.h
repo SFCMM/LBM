@@ -238,7 +238,12 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   void save(const GString& fileName, const json& gridOutConfig) const override { TERMM(-1, "Not implemented!"); }
 
-  auto bndrySurface(const GInt id) const -> const Surface<NDIM>& { return m_bndrySurfaces[id]; }
+  auto bndrySurface(const GInt id) const -> const Surface<NDIM>& {
+    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+      return m_bndrySurfaces.at(id);
+    }
+    return m_bndrySurfaces[id];
+  }
 
 
   /// Load the generated grid in-memory and set additional properties
@@ -450,7 +455,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
                 TERMM(-1, "Invalid set periodic connection! cellIdA:" + std::to_string(cellIdA) + " dir:" + std::to_string(nghbrDir));
               }
               if(neighbor(cellIdB, nghbrDir + 1) != INVALID_CELLID) {
-                TERMM(-1, "Invalid set periodic connection! cellIdB:" + std::to_string(cellIdB) + " dir:" + std::to_string(nghbrDir+1));
+                TERMM(-1, "Invalid set periodic connection! cellIdB:" + std::to_string(cellIdB) + " dir:" + std::to_string(nghbrDir + 1));
               }
             }
             neighbor(cellIdA, nghbrDir)     = cellIdB;

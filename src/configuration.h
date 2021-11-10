@@ -68,6 +68,10 @@ class configuration{
     return m_configFileName;
   }
 
+  auto config() const -> const json&{
+    return m_config;
+  }
+
  private:
   GString                            m_configFileName = "grid.json";
   json                               m_config{};

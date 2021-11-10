@@ -3,6 +3,7 @@
 
 #include <sfcmm_common.h>
 #include "common/surface.h"
+#include "configuration.h"
 
 
 class LBMBndInterface {
@@ -25,10 +26,10 @@ class LBMBndInterface {
 template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
 class LBMBnd_wallBB;
 
-template <Debug_Level DEBUG_LEVEL>
-class LBMBndManager {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+class LBMBndManager : private configuration {
  public:
-  LBMBndManager(const GInt dim, const GInt ndist) : m_dim(dim), m_ndist(ndist) {}
+  LBMBndManager() = default;
   virtual ~LBMBndManager() = default;
 
   // deleted constructors not needed
@@ -37,37 +38,20 @@ class LBMBndManager {
   auto operator=(const LBMBndManager&) -> LBMBndManager& = delete;
   auto operator=(LBMBndManager&&) -> LBMBndManager& = delete;
 
-  template <GInt NDIM>
-  void addBndry(const BndryType bnd, const Surface<NDIM>& surf, const json& properties) {
-    if constexpr(NDIM == 1) {
-      if(m_ndist == 3) {
-        addBndry<NDIM, 3>(bnd, surf);
-      } else {
-        TERMM(-1, "Invalid no of distributions!");
-      }
-    }
-    if constexpr(NDIM == 2) {
-      switch(m_ndist) {
-        case 5:
-          addBndry<NDIM, 5>(bnd, surf, properties);
-          break;
-        case 9:
-          addBndry<NDIM, 9>(bnd, surf, properties);
-          break;
-        default:
-          TERMM(-1, "Invalid number of distributions");
-      }
-    }
+  void setupBndryCnds(const json& bndConfig, std::function<const Surface<dim(LBTYPE)>&(GInt)>& bndrySurface) {
+    json properties;
+    addBndry(BndryType::Wall_BounceBack, bndrySurface(static_cast<GInt>(LBMDir::mY)), properties);
+    addBndry(BndryType::Wall_BounceBack_TangentialVelocity, bndrySurface(static_cast<GInt>(LBMDir::pY)), properties);
   }
 
-  template <GInt NDIM, GInt NDIST>
-  void addBndry(const BndryType bnd, const Surface<NDIM>& surf, const json& properties) {
+  void addBndry(const BndryType bnd, const Surface<dim(LBTYPE)>& surf, const json& properties) {
+    ASSERT(surf.size() > 0, "Invalid surface");
     switch(bnd) {
       case BndryType::Wall_BounceBack:
-        m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<getLBMethodType<NDIM, NDIST>(), false>>(surf, properties));
+        m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<LBTYPE, false>>(surf, properties));
         break;
       case BndryType::Wall_BounceBack_TangentialVelocity:
-        m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<getLBMethodType<NDIM, NDIST>(), true>>(surf, properties));
+        m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<LBTYPE, true>>(surf, properties));
         break;
       default:
         TERMM(-1, "Invalid bndry Type!");
@@ -81,10 +65,11 @@ class LBMBndManager {
   }
 
  private:
-  std::vector<std::unique_ptr<LBMBndInterface>> m_bndrys;
+  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
+  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+  static constexpr GInt NVARS = NDIM + 1 + static_cast<GInt>(LBMethod<LBTYPE>::m_isThermal);
 
-  GInt m_dim   = -1;
-  GInt m_ndist = -1;
+  std::vector<std::unique_ptr<LBMBndInterface>> m_bndrys;
 };
 
 template <LBMethodType LBTYPE>
@@ -212,7 +197,7 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
         }
 
         VectorD<dim(LBTYPE)> tangentialVec;
-        if(dim(LBTYPE) == 2){
+        if(dim(LBTYPE) == 2) {
           tangentialVec[0] = _normal[1];
           tangentialVec[1] = _normal[0];
         } else {
@@ -220,10 +205,10 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
         }
 
 
-        const GDouble            normalDotDir        = _normal.dot(dir);
-        const GDouble            tangentialDotDir    = tangentialVec.dot(dir);
-        const GDouble            angle               = gcem::acos(normalDotDir / dir.norm());
-        const GBool              parallel            = std::abs(angle - PI) < parallelRequirement;
+        const GDouble normalDotDir     = _normal.dot(dir);
+        const GDouble tangentialDotDir = tangentialVec.dot(dir);
+        const GDouble angle            = gcem::acos(normalDotDir / dir.norm());
+        const GBool   parallel         = std::abs(angle - PI) < parallelRequirement;
 
         // vector is parallel to the normal vector -> velocity = 0
         if(!parallel) {

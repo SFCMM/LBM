@@ -71,13 +71,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   m_nu        = (2.0 * m_relaxTime - 1) / 6.0;
   m_refU      = m_re * m_nu / m_refLength;
 
-  m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL>>(NDIM, NDIST);
+  m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL, LBTYPE>>();
 
-  // todo: just for current testcase
-  json properties;
-  m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack, bndrySurface(static_cast<GInt>(LBMDir::mY)), properties);
-  m_bndManager->template addBndry<NDIM>(BndryType::Wall_BounceBack_TangentialVelocity, bndrySurface(static_cast<GInt>(LBMDir::pY)),
-                                        properties);
+  //todo: doesn't work??
+//  std::function<const Surface<NDIM>&(GInt)> _bndrySurface = [this](const GInt id) { return bndrySurface(id); };
+  using namespace placeholders;
+  std::function<const Surface<NDIM>&(GInt)> _bndrySurface = std::bind(&LBMSolver::bndrySurface, this, _1);
+  m_bndManager->setupBndryCnds(config()["boundary"], _bndrySurface);
 
 
   cerr0 << "<<<<<<<<<<<<>>>>>>>>>>>>>" << std::endl;
@@ -391,17 +391,17 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::sumAbsDiff(const GInt var) const -> GDouble
   return conv;
 }
 
-template class LBMSolver<Debug_Level::no_debug, LBMethodType::D1Q3>;
-template class LBMSolver<Debug_Level::min_debug, LBMethodType::D1Q3>;
-template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3>;
-template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3>;
-template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3>;
-
-template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q5>;
-template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q5>;
-template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q5>;
-template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q5>;
-template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q5>;
+//template class LBMSolver<Debug_Level::no_debug, LBMethodType::D1Q3>;
+//template class LBMSolver<Debug_Level::min_debug, LBMethodType::D1Q3>;
+//template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3>;
+//template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3>;
+//template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3>;
+//
+//template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q5>;
+//template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q5>;
+//template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q5>;
+//template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q5>;
+//template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q5>;
 
 template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q9>;
 template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q9>;
@@ -409,14 +409,14 @@ template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q9>;
 template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q9>;
 template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q9>;
 
-template class LBMSolver<Debug_Level::no_debug, LBMethodType::D3Q15>;
-template class LBMSolver<Debug_Level::min_debug, LBMethodType::D3Q15>;
-template class LBMSolver<Debug_Level::debug, LBMethodType::D3Q15>;
-template class LBMSolver<Debug_Level::more_debug, LBMethodType::D3Q15>;
-template class LBMSolver<Debug_Level::max_debug, LBMethodType::D3Q15>;
-
-template class LBMSolver<Debug_Level::no_debug, LBMethodType::D4Q20>;
-template class LBMSolver<Debug_Level::min_debug, LBMethodType::D4Q20>;
-template class LBMSolver<Debug_Level::debug, LBMethodType::D4Q20>;
-template class LBMSolver<Debug_Level::more_debug, LBMethodType::D4Q20>;
-template class LBMSolver<Debug_Level::max_debug, LBMethodType::D4Q20>;
+//template class LBMSolver<Debug_Level::no_debug, LBMethodType::D3Q15>;
+//template class LBMSolver<Debug_Level::min_debug, LBMethodType::D3Q15>;
+//template class LBMSolver<Debug_Level::debug, LBMethodType::D3Q15>;
+//template class LBMSolver<Debug_Level::more_debug, LBMethodType::D3Q15>;
+//template class LBMSolver<Debug_Level::max_debug, LBMethodType::D3Q15>;
+//
+//template class LBMSolver<Debug_Level::no_debug, LBMethodType::D4Q20>;
+//template class LBMSolver<Debug_Level::min_debug, LBMethodType::D4Q20>;
+//template class LBMSolver<Debug_Level::debug, LBMethodType::D4Q20>;
+//template class LBMSolver<Debug_Level::more_debug, LBMethodType::D4Q20>;
+//template class LBMSolver<Debug_Level::max_debug, LBMethodType::D4Q20>;

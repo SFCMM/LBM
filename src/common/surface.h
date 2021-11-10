@@ -15,6 +15,16 @@ class SurfaceInterface {
 template <GInt NDIM>
 class Surface : public SurfaceInterface {
  public:
+  Surface() = default;
+  ~Surface() = default;
+
+  //todo:fix
+//  Surface(const Surface&) = delete;
+//  Surface(Surface&&)      = delete;
+//  auto operator=(const Surface&) -> Surface& = delete;
+//  auto operator=(Surface&&) -> Surface& = delete;
+
+
   [[nodiscard]] auto getCellList() const -> const std::vector<GInt>& override { return m_cellId; }
 
   void setCellList(const std::vector<GInt>& cellList) override {
@@ -31,6 +41,11 @@ class Surface : public SurfaceInterface {
 
   auto normal(const GInt surfId) const -> const VectorD<NDIM>&{
     return m_normal[surfId];
+  }
+
+  [[nodiscard]] auto size() const -> GInt {
+    ASSERT(!m_cellId.empty(), "Not inited!");
+    return m_cellId.size();
   }
 
  private:
