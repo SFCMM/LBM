@@ -406,9 +406,22 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private confi
 
   void setupPeriodicConnections() {
     if(m_periodic) {
+      std::vector<json>                    periodicBnds = get_all_items_with_value("periodic");
+      std::unordered_map<GString, GString> periodicConnections;
+      for(const auto& bnd : periodicBnds) {
+        for(const auto& [surfName, props] : bnd.items()) {
+          periodicConnections.emplace(surfName, config::required_config_value<GString>(props, "connection"));
+        }
+      }
       logger << "Setting up periodic connections!" << std::endl;
-      // todo: make settable
-      addPeriodicConnection(bndrySurface(static_cast<GInt>(LBMDir::mX)), bndrySurface(static_cast<GInt>(LBMDir::pX)));
+      for(const auto& connection : periodicConnections) {
+        if(periodicConnections.count(connection.second) != 0) {
+          periodicConnections.erase(connection.second);
+          GInt srfA = std::find(LBMDirString.begin(), LBMDirString.end(), connection.first) - LBMDirString.begin();
+          GInt srfB = std::find(LBMDirString.begin(), LBMDirString.end(), connection.second) - LBMDirString.begin();
+          addPeriodicConnection(bndrySurface(srfA), bndrySurface(srfB));
+        }
+      }
     }
   }
 

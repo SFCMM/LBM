@@ -92,6 +92,47 @@ class configuration{
     return false;
   }
 
+  auto get_all_items_with_value(const GString& value) const -> std::vector<json>{
+    auto has_config_value = [=](const json& cc, const GString& val){
+      // entry exists
+      for(const auto& item: cc){
+        if(item == val){
+          return true;
+        }
+      }
+      return false;
+    };
+
+    std::vector<json> found;
+    std::stack<json> stack;
+    std::stack<GString> keyStack;
+    stack.emplace(m_config);
+    keyStack.emplace("default");
+
+
+    do {
+      json tmp = stack.top();
+      stack.pop();
+      GString tmpK = keyStack.top();
+      keyStack.pop();
+
+      if(has_config_value(tmp, value)) {
+        json hit;
+        hit[tmpK] = tmp;
+        found.emplace_back(hit);
+        continue;
+      }
+      for(const auto& [key, v] : tmp.items()){
+        if(v.is_object()) {
+          stack.emplace(v);
+          keyStack.emplace(key);
+        }
+      }
+    } while(!stack.empty());
+
+    return found;
+  }
+
   void unusedConfigValues() {
     GInt i = 0;
     logger << "The following values in the configuration file are unused: \n";
