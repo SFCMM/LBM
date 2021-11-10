@@ -20,17 +20,10 @@ class LBMSolver : public SolverInterface, private configuration {
   auto operator=(LBMSolver&&) -> LBMSolver& = delete;
 
   void init(int argc, GChar** argv, GString config_file) override;
+  void initBenchmark(int argc, GChar** argv) override;
   auto run() -> GInt override;
 
-  void initBenchmark(int argc, GChar** argv) override {
-    m_benchmark             = true;
-
-    init(argc, argv);
-    TERMM(-1, "Not implemented!");
-  };
-
   [[nodiscard]] auto grid() const -> const GridInterface& override { return *m_grid; };
-
   void transferGrid(const GridInterface& grid) override;
 
   constexpr auto isThermal() -> GBool;

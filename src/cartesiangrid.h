@@ -13,11 +13,11 @@
 #include "globaltimers.h"
 #ifdef SOLVER_AVAILABLE
 #include "gridgenerator/cartesiangrid_generation.h"
+#include "lbm_constants.h"
 #else
 #include "cartesiangrid_generation.h"
 #endif
 #include "interface/grid_interface.h"
-#include "lbm_constants.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
@@ -248,7 +248,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   /// Load the generated grid in-memory and set additional properties
   /// \param grid Generated grid.
-  void loadGridInplace(const CartesianGridGen<DEBUG_LEVEL, NDIM>& grid) {
+  void loadGridInplace(const CartesianGridGen<DEBUG_LEVEL, NDIM>& grid, const json& properties) {
     // grid.balance(); //todo: implement
     setCapacity(grid.capacity()); // todo: change for adaptation
     m_geometry = grid.geometry();
@@ -279,6 +279,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 #ifdef _OPENMP
     }
 #endif
+
+    m_axisAlignedBnd = properties["assumeAxisAligned"];
 
     currentHighestLvl() = grid.currentHighestLvl();
     partitionLvl()      = grid.partitionLvl();
@@ -372,8 +374,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
             }
           }
           if(cartesian::maxNoNghbrs<NDIM>() == noNeighbors) {
-            cerr0 << "Removed boundary property cellId: " << cellId << " (" << center(cellId)[0] << ", " << center(cellId)[1]
-                  << ") L:" << cellLength << std::endl;
+//            cerr0 << "Removed boundary property cellId: " << cellId << " (" << center(cellId)[0] << ", " << center(cellId)[1]
+//                  << ") L:" << cellLength << std::endl;
             property(cellId, CellProperties::bndry) = false;
             logger << "Simplified bndry process!!!" << std::endl;
             //            TERMM(-1, "Cell marked as boundary, but is not on a boundary!");
@@ -385,9 +387,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void identifyBndrySurfaces() {
-    // todo: make settable
-    const GBool axisAligned = true;
-    if(axisAligned) {
+    if(m_axisAlignedBnd) {
       m_bndrySurfaces.resize(cartesian::maxNoNghbrs<NDIM>());
 
       for(GInt cellId = 0; cellId < size(); ++cellId) {
@@ -584,6 +584,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   GBool m_loadBalancing  = false;
   GBool m_diagonalNghbrs = false;
+  GBool m_axisAlignedBnd = false;
 
   std::vector<Surface<NDIM>> m_bndrySurfaces;
 

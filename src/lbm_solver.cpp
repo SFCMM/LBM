@@ -30,7 +30,18 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::init(int argc, GChar** argv, GString config
   init(argc, argv);
   logger << "LBM Solver started ||>" << endl;
   cout << "LBM Solver started ||>" << endl;
+  configuration::loadConfiguration("solver");
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
+}
+
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+void LBMSolver<DEBUG_LEVEL, LBTYPE>::initBenchmark(int argc, GChar** argv) {
+  m_benchmark             = true;
+  init(argc, argv);
+
+  logger << "Setting up benchmarking!" << endl;
+
+  TERMM(-1, "Not implemented!");
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
@@ -47,13 +58,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::initTimers() {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
-
-  if(!m_benchmark) {
-    configuration::loadConfiguration("solver");
-  } else {
-    logger << "Setting up benchmarking!" << endl;
-  }
-
   m_solverType = LBSolverType::BGK; // todo: load from file
 
   m_outputInfoInterval     = opt_config_value<GInt>("info_interval", m_outputInfoInterval);
@@ -336,6 +340,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::boundaryCnd() {
   m_bndManager->apply(_f, _fold);
 }
 
+//todo: simplify (move somewhere else?!)
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::transferGrid(const GridInterface& grid) {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
@@ -360,15 +365,15 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::transferGrid(const GridInterface& grid) {
   switch(NDIM) {
     case 1:
       static_cast<CartesianGrid<DEBUG_LEVEL, 1>*>(m_grid.get())
-          ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 1>*>(static_cast<const void*>(&grid)));
+          ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 1>*>(static_cast<const void*>(&grid)), config());
       break;
     case 2:
       static_cast<CartesianGrid<DEBUG_LEVEL, 2>*>(m_grid.get())
-          ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 2>*>(static_cast<const void*>(&grid)));
+          ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 2>*>(static_cast<const void*>(&grid)), config());
       break;
     case 3:
       static_cast<CartesianGrid<DEBUG_LEVEL, 3>*>(m_grid.get())
-          ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 3>*>(static_cast<const void*>(&grid)));
+          ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 3>*>(static_cast<const void*>(&grid)), config());
       break;
     default:
       TERMM(-1, "Only dimensions 1,2 and 3 are supported.");
@@ -414,9 +419,3 @@ template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q9>;
 //template class LBMSolver<Debug_Level::debug, LBMethodType::D3Q15>;
 //template class LBMSolver<Debug_Level::more_debug, LBMethodType::D3Q15>;
 //template class LBMSolver<Debug_Level::max_debug, LBMethodType::D3Q15>;
-//
-//template class LBMSolver<Debug_Level::no_debug, LBMethodType::D4Q20>;
-//template class LBMSolver<Debug_Level::min_debug, LBMethodType::D4Q20>;
-//template class LBMSolver<Debug_Level::debug, LBMethodType::D4Q20>;
-//template class LBMSolver<Debug_Level::more_debug, LBMethodType::D4Q20>;
-//template class LBMSolver<Debug_Level::max_debug, LBMethodType::D4Q20>;

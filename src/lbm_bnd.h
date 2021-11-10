@@ -39,9 +39,16 @@ class LBMBndManager : private configuration {
   auto operator=(LBMBndManager&&) -> LBMBndManager& = delete;
 
   void setupBndryCnds(const json& bndConfig, std::function<const Surface<dim(LBTYPE)>&(GInt)>& bndrySurface) {
-    json properties;
-    addBndry(BndryType::Wall_BounceBack, bndrySurface(static_cast<GInt>(LBMDir::mY)), properties);
-    addBndry(BndryType::Wall_BounceBack_TangentialVelocity, bndrySurface(static_cast<GInt>(LBMDir::pY)), properties);
+    for(const auto& [geometry, geomBndConfig] : bndConfig.items()){
+      //todo: check that geometry exists
+      //todo: access only bndrySurfaces of this geometry!
+      cerr0 << geomBndConfig <<std::endl;
+
+    }
+
+//    TERMM(-1, "test");
+    addBndry(BndryType::Wall_BounceBack, bndrySurface(static_cast<GInt>(LBMDir::mY)), bndConfig);
+    addBndry(BndryType::Wall_BounceBack_TangentialVelocity, bndrySurface(static_cast<GInt>(LBMDir::pY)), bndConfig);
   }
 
   void addBndry(const BndryType bnd, const Surface<dim(LBTYPE)>& surf, const json& properties) {

@@ -30,6 +30,7 @@
     }
   },
   "solver": {
+    "assumeAxisAligned": true,
     "type": "lbm",
     "method": "bgk",
     "relaxation": 0.9,

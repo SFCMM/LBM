@@ -1,6 +1,7 @@
 # V0.0.3
 ## Planned
 - run basic 3D NS Case
+- restart
 
 # V0.0.2
 ## Planned
@@ -8,6 +9,7 @@
 - load grid from disk
 - Couette in 3D 
 - Poiseuille flow in 3D
+- add simple LPT solver
 
 # V0.0.1
 ## Planned:
@@ -15,6 +17,8 @@
 - run basic 2D navier-stokes case (couette)
 - load bcs from input file
 - additional timers 
+- switch analytical solution over to vector results!
+- solve 2D poisson equation
 
 ## Ongoing:
 - implement output correctly
