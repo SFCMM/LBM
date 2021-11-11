@@ -40,6 +40,7 @@
     "convergence": 1E-12,
     "errorL2": 3E-11,
     "errorMax": 2E-12,
+    "assumeAxisAligned": true,
     "boundary": {
       "cube": {
         "+x": {

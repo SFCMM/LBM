@@ -37,9 +37,7 @@ class LBMSolver : public SolverInterface, private configuration {
 
   void init(int argc, GChar** argv);
   void initTimers();
-
-  void setupMethod();
-  void finishInit();
+  void allocateMemory();
 
   //  [[nodiscard]] auto grid() const -> CartesianGrid<DEBUG_LEVEL, LBMethod<LBTYPE>::m_dim>* {
   //    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get());

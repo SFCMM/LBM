@@ -30,7 +30,6 @@
     }
   },
   "solver": {
-    "assumeAxisAligned": true,
     "type": "lbm",
     "method": "bgk",
     "relaxation": 0.9,
@@ -39,9 +38,10 @@
     "info_interval": 100,
     "solution_interval": 500,
     "convergence": 1E-12,
-    "analyticalsolution": "couette2D_1_5",
+    "analyticalSolution": "couette2D_1_5",
     "errorL2": 3E-11,
     "errorMax": 2E-12,
+    "assumeAxisAligned": true,
     "boundary": {
       "cube": {
         "+x": {

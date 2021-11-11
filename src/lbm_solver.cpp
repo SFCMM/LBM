@@ -78,7 +78,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL, LBTYPE>>();
 
   //todo: doesn't work??
-//  std::function<const Surface<NDIM>&(GInt)> _bndrySurface = [this](const GInt id) { return bndrySurface(id); };
+  //  std::function<const Surface<NDIM>&(GInt)> _bndrySurface = [this](const GInt id) { return bndrySurface(id); };
   using namespace placeholders;
   std::function<const Surface<NDIM>&(GString)> _bndrySurface = std::bind(&LBMSolver::bndrySurface, this, _1);
   m_bndManager->setupBndryCnds(config()["boundary"], _bndrySurface);
@@ -101,45 +101,44 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
 
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::finishInit() {
+void LBMSolver<DEBUG_LEVEL, LBTYPE>::allocateMemory() {
   // allocate memory
   m_f.resize(grid().size() * NDIST);
   m_feq.resize(grid().size() * NDIST);
   m_fold.resize(grid().size() * NDIST);
   m_vars.resize(grid().size() * NVARS);
   m_varsold.resize(grid().size() * NVARS);
-  setupMethod();
 }
 
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::setupMethod() {
-  //  switch(m_method) {
-  //    case LBMethodType::D1Q3:
-  //      m_tangentialVelo = {1.0 / 6.0, 1.0 / 6.0, 2.0 / 3.0};
-  //      break;
-  //    case LBMethodType::D2Q5:
-  //      m_tangentialVelo = {1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 3.0};
-  //      break;
-  //    case LBMethodType::D2Q9:
-  //      m_tangentialVelo = {1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 4.0 / 9.0};
-  //      break;
-  //    default:
-  //      TERMM(-1, "Invalid LBM method type");
-  //  }
-}
+//template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+//void LBMSolver<DEBUG_LEVEL, LBTYPE>::setupMethod() {
+//  //  switch(m_method) {
+//  //    case LBMethodType::D1Q3:
+//  //      m_tangentialVelo = {1.0 / 6.0, 1.0 / 6.0, 2.0 / 3.0};
+//  //      break;
+//  //    case LBMethodType::D2Q5:
+//  //      m_tangentialVelo = {1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 3.0};
+//  //      break;
+//  //    case LBMethodType::D2Q9:
+//  //      m_tangentialVelo = {1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 4.0 / 9.0};
+//  //      break;
+//  //    default:
+//  //      TERMM(-1, "Invalid LBM method type");
+//  //  }
+//}
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
   loadConfiguration();
-  finishInit();
+  allocateMemory();
   initialCondition();
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
 
   RECORD_TIMER_START(TimeKeeper[Timers::LBMMainLoop]);
   // todo: make settable
-  const GInt noTimesteps = 20000;
+  const GInt noTimesteps = required_config_value<GInt>("maxSteps");
   GBool      converged   = false;
 
   for(m_timeStep = 0; m_timeStep < noTimesteps && !converged; ++m_timeStep) {
@@ -147,12 +146,12 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
     converged = convergenceCondition();
     timeStep();
 
-    const GBool lastTimeStep = m_timeStep == noTimesteps || converged;
-    output(lastTimeStep);
+    // also write an output if its the last time step or if the solution has converged
+    output( m_timeStep == noTimesteps || converged);
   }
 
+  //todo: make settable
   static constexpr GBool analyticalTest = true;
-
   if(analyticalTest) {
     compareToAnalyticalResult();
   }
@@ -261,18 +260,43 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced) {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::compareToAnalyticalResult() {
+  const GString analyticalSolutionName = required_config_value<GString>("analyticalSolution");
+  const auto anaSolution = analytical::ns::getAnalyticalSolution(analyticalSolutionName);
   GDouble              maxError = 0;
   std::vector<GDouble> error;
   for(GInt cellId = 0; cellId < grid().size(); ++cellId) {
-    const GDouble solution = analytical::ns::couette2D_1_5(center(cellId, 1));
+    const GDouble solution = anaSolution(center(cellId, 1));
     const GDouble delta    = velocity<NDIM>(cellId, 0) - solution;
     maxError               = std::max(std::abs(delta), maxError);
     error.emplace_back(std::sqrt(delta * delta / (solution * solution)));
   }
   const GDouble L2error = 1.0 / grid().size() * std::accumulate(error.begin(), error.end(), 0.0);
 
+  const GDouble maximumExpectedError = opt_config_value("errorMax", 1.0);
+  const GDouble maximumExpectedErrorL2 = opt_config_value("errorL2", 1.0);
+
+  cerr0 << "Comparing to analytical result:" << std::endl;
+  logger << "Comparing to analytical result:" << std::endl;
   cerr0 << "max. Error: " << maxError << std::endl;
+  logger << "max. Error: " << maxError << std::endl;
   cerr0 << "avg. L2: " << L2error << std::endl;
+  logger << "avg. L2: " << L2error << std::endl;
+
+  GBool failedErrorCheck = false;
+  if(maximumExpectedError < maxError){
+    failedErrorCheck = true;
+    cerr0<< "Error bounds for the maximum error have failed!!! ( < " << maximumExpectedError << ")"<< std::endl;
+    logger<< "Error bounds for the maximum error have failed!!! ( < " << maximumExpectedError << ")"<< std::endl;
+  }
+  if(maximumExpectedErrorL2 < L2error){
+    failedErrorCheck = true;
+    cerr0<< "Error bounds for the L2 error have failed!!! ( < " << maximumExpectedErrorL2 << ")"<< std::endl;
+    logger<< "Error bounds for the L2 error have failed!!! ( < " << maximumExpectedErrorL2 << ")"<< std::endl;
+  }
+
+  if(failedErrorCheck){
+    TERMM(-1, "Analytical testcase failed");
+  }
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>

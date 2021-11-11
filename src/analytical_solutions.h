@@ -38,6 +38,13 @@ static constexpr auto poiseuille2D_1(const GDouble y) -> GDouble {
   constexpr GDouble refV = reynoldsNum * dynViscosity / refL;
   return poiseuille2D(1, 0, y, refV);
 }
+
+std::function<GDouble(GDouble)> getAnalyticalSolution(const GString& name){
+  if(name == "couette2D_1_5"){
+    return &couette2D_1_5;
+  }
+}
+
 } // namespace ns
 
 namespace euler {}
