@@ -50,7 +50,8 @@ inline auto inDirection(const VectorD<NDIM>& normal, const std::array<GDouble, N
 
 enum class BndryType {
   Wall_BounceBack,                   // BounceBack Boundary condition 1st order accurate
-  Wall_BounceBack_TangentialVelocity // BounceBack Boundary condition 1st order accurate with tangential velocity
+  Wall_BounceBack_TangentialVelocity, // BounceBack Boundary condition 1st order accurate with tangential velocity
+  Periodic
 };
 
 enum class LBMethodType { D1Q3, D2Q5, D2Q9, D3Q15, D4Q20, INVALID };

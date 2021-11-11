@@ -26,10 +26,12 @@ class LBMBndInterface {
 template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
 class LBMBnd_wallBB;
 
+class LBMBnd_dummy;
+
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBndManager : private configuration {
  public:
-  LBMBndManager() = default;
+  LBMBndManager()          = default;
   virtual ~LBMBndManager() = default;
 
   // deleted constructors not needed
@@ -39,17 +41,32 @@ class LBMBndManager : private configuration {
   auto operator=(LBMBndManager&&) -> LBMBndManager& = delete;
 
   void setupBndryCnds(const json& bndConfig, std::function<const Surface<dim(LBTYPE)>&(GString)>& bndrySurface) {
-    for(const auto& [geometry, geomBndConfig] : bndConfig.items()){
-      //todo: check that geometry exists
-      //todo: access only bndrySurfaces of this geometry!
-      cerr0 << geomBndConfig <<std::endl;
+    for(const auto& [geometry, geomBndConfig] : bndConfig.items()) {
+      // todo: check that geometry exists
+      // todo: access only bndrySurfaces of this geometry!
+      for(const auto& [surfId, surfBndConfig] : geomBndConfig.items()) {
+        const auto bndType = config::required_config_value<GString>(surfBndConfig, "type");
+        logger << "Adding bndCnd to surfaceId " << surfId;
 
+        // todo: convert to switch
+        if(bndType == "periodic") {
+          logger << " with periodic conditions" << std::endl;
+          addBndry(BndryType::Periodic, bndrySurface(surfId), surfBndConfig);
+          continue;
+        }
+        if(bndType == "wall"){
+          const GDouble tangentialV = config::opt_config_value(surfBndConfig, "tangentialVelocity", 0.0);
+          if(std::abs(tangentialV) > GDoubleEps){
+            logger << " wall bounce-back with tangential velocity" << std::endl;
+            addBndry(BndryType::Wall_BounceBack_TangentialVelocity, bndrySurface(surfId), surfBndConfig);
+          } else{
+            logger << " wall bounce-back with no slip" << std::endl;
+            addBndry(BndryType::Wall_BounceBack, bndrySurface(surfId), surfBndConfig);
+          }
+          continue;
+        }
+      }
     }
-
-//    TERMM(-1, "test");
-    addBndry(BndryType::Wall_BounceBack, bndrySurface(static_cast<GString>(DirIdString[static_cast<GInt>(DirId::mY)])), bndConfig);
-    addBndry(BndryType::Wall_BounceBack_TangentialVelocity, bndrySurface(static_cast<GString>(DirIdString[static_cast<GInt>(DirId::pY)
-    ])), bndConfig);
   }
 
   void addBndry(const BndryType bnd, const Surface<dim(LBTYPE)>& surf, const json& properties) {
@@ -60,6 +77,9 @@ class LBMBndManager : private configuration {
         break;
       case BndryType::Wall_BounceBack_TangentialVelocity:
         m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<LBTYPE, true>>(surf, properties));
+        break;
+      case BndryType::Periodic:
+        m_bndrys.emplace_back(std::make_unique<LBMBnd_dummy>());
         break;
       default:
         TERMM(-1, "Invalid bndry Type!");
@@ -107,48 +127,11 @@ class LBMBndCell {
   GInt                 m_mappedCellId = -1;
 };
 
-template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
-class LBMBndCell_wallBB;
-
-template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
-class LBMBnd_wallBB : public LBMBndInterface {
+class LBMBnd_dummy : public LBMBndInterface {
  public:
-  LBMBnd_wallBB(const Surface<dim(LBTYPE)>& surf, const json& properties) {
-    GInt surfId = 0;
-    // todo: assign the surfaces to each bndry cell
-    for(const GInt cellId : surf.getCellList()) {
-      m_bndCells.emplace_back(cellId, surf.normal(surfId));
-      ++surfId;
-    }
-    if constexpr(TANGENTIALVELO) {
-      m_tangentialVelo = 0.1; // todo: properties...
-    }
-    LBMBnd_wallBB<LBTYPE, TANGENTIALVELO>::init();
-  }
-  ~LBMBnd_wallBB() override = default;
+  void init() override {}
 
-  // deleted constructors not needed
-  LBMBnd_wallBB(const LBMBnd_wallBB&) = delete;
-  LBMBnd_wallBB(LBMBnd_wallBB&&)      = delete;
-  auto operator=(const LBMBnd_wallBB&) -> LBMBnd_wallBB& = delete;
-  auto operator=(LBMBnd_wallBB&&) -> LBMBnd_wallBB& = delete;
-
-  void init() override {
-    for(auto& bndCell : m_bndCells) {
-      bndCell.init();
-      bndCell.setTangentialVelocity(m_tangentialVelo);
-    }
-  }
-
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) override {
-    for(auto& bndCell : m_bndCells) {
-      bndCell.apply(f, fold);
-    }
-  }
-
- private:
-  GDouble                                                m_tangentialVelo = 0.1;
-  std::vector<LBMBndCell_wallBB<LBTYPE, TANGENTIALVELO>> m_bndCells;
+  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) override {}
 };
 
 template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
@@ -161,7 +144,7 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
   //  LBMBndCell_wallBB(const GInt cellId) {}
   virtual ~LBMBndCell_wallBB() = default;
 
-  void init() {
+  void init() override {
     LBMBndCell<LBTYPE>::init();
 
     // precalculate weight and bndIndex
@@ -241,5 +224,47 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
   std::array<GInt, noDists(LBTYPE)>                                        m_bndIndex;
   GInt                                                                     m_noSetDists = 0;
 };
+
+template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
+class LBMBnd_wallBB : public LBMBndInterface {
+ public:
+  LBMBnd_wallBB(const Surface<dim(LBTYPE)>& surf, const json& properties) {
+    GInt surfId = 0;
+    for(const GInt cellId : surf.getCellList()) {
+      m_bndCells.emplace_back(cellId, surf.normal(surfId));
+      ++surfId;
+    }
+    if constexpr(TANGENTIALVELO) {
+      m_tangentialVelo = config::required_config_value<GDouble>(properties, "tangentialVelocity");
+      logger << "Setting tangentialVelocity " << m_tangentialVelo << std::endl;
+    }
+    LBMBnd_wallBB<LBTYPE, TANGENTIALVELO>::init();
+  }
+  ~LBMBnd_wallBB() override = default;
+
+  // deleted constructors not needed
+  LBMBnd_wallBB(const LBMBnd_wallBB&) = delete;
+  LBMBnd_wallBB(LBMBnd_wallBB&&)      = delete;
+  auto operator=(const LBMBnd_wallBB&) -> LBMBnd_wallBB& = delete;
+  auto operator=(LBMBnd_wallBB&&) -> LBMBnd_wallBB& = delete;
+
+  void init() override {
+    for(auto& bndCell : m_bndCells) {
+      bndCell.init();
+      bndCell.setTangentialVelocity(m_tangentialVelo);
+    }
+  }
+
+  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) override {
+    for(auto& bndCell : m_bndCells) {
+      bndCell.apply(f, fold);
+    }
+  }
+
+ private:
+  GDouble                                                m_tangentialVelo = 0.1;
+  std::vector<LBMBndCell_wallBB<LBTYPE, TANGENTIALVELO>> m_bndCells;
+};
+
 
 #endif // LBM_LBM_BND_H

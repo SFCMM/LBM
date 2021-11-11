@@ -52,12 +52,12 @@
           "type": "periodic",
           "connection": "+x"
         },
-        "-y": {
+        "+y": {
           "type": "wall",
           "model": "bounceback",
-          "tangential velocity": 1.0
+          "tangentialVelocity": 0.1
         },
-        "+y": {
+        "-y": {
           "type": "wall",
           "model": "bounceback"
         }

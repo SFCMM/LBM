@@ -10,6 +10,8 @@
 - Couette in 3D 
 - Poiseuille flow in 3D
 - add simple LPT solver
+- capalilary simulation
+- contact angle
 
 # V0.0.1
 ## Planned:
@@ -32,6 +34,7 @@
 - periodic boundaries
 - general bounce back "no-slip" wall boundary condition
 - general bounce back "no-slip" wall boundary condition with tangential velocity
+- load bnd conditions from configuration file
 
 ### Buildsystem
 
