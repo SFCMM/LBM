@@ -38,10 +38,6 @@ enum class LBSolverType {
   PE
 };
 
-
-enum class LBMDir { mX, pX, mY, pY, mZ, pZ };
-static constexpr std::array<std::string_view, 6> LBMDirString = {"-x", "+x", "-y", "+y", "-z", "+z"};
-
 template <GInt NDIM>
 inline auto inDirection(const std::array<GDouble, NDIM>& normal, const std::array<GDouble, NDIM>& direction) -> GBool {
   return inDirection(VectorD<NDIM>(&normal[0]), direction);

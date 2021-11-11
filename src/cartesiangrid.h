@@ -386,14 +386,14 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private confi
   void identifyBndrySurfaces() {
     if(m_axisAlignedBnd) {
       for(GInt surfId = 0; surfId < cartesian::maxNoNghbrs<NDIM>(); ++surfId){
-        m_bndrySurfaces[static_cast<GString>(LBMDirString[surfId])] = Surface<NDIM>();
+        m_bndrySurfaces[static_cast<GString>(DirIdString[surfId])] = Surface<NDIM>();
       }
 
       for(GInt cellId = 0; cellId < size(); ++cellId) {
         if(property(cellId, Cell::bndry)) {
           for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
             if(!hasNeighbor(cellId, dir)) {
-              m_bndrySurfaces[static_cast<GString>(LBMDirString[dir])].addCell(cellId, dir);
+              m_bndrySurfaces[static_cast<GString>(DirIdString[dir])].addCell(cellId, dir);
             }
           }
         }

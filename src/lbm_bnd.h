@@ -47,8 +47,8 @@ class LBMBndManager : private configuration {
     }
 
 //    TERMM(-1, "test");
-    addBndry(BndryType::Wall_BounceBack, bndrySurface(static_cast<GString>(LBMDirString[static_cast<GInt>(LBMDir::mY)])), bndConfig);
-    addBndry(BndryType::Wall_BounceBack_TangentialVelocity, bndrySurface(static_cast<GString>(LBMDirString[static_cast<GInt>(LBMDir::pY)
+    addBndry(BndryType::Wall_BounceBack, bndrySurface(static_cast<GString>(DirIdString[static_cast<GInt>(DirId::mY)])), bndConfig);
+    addBndry(BndryType::Wall_BounceBack_TangentialVelocity, bndrySurface(static_cast<GString>(DirIdString[static_cast<GInt>(DirId::pY)
     ])), bndConfig);
   }
 

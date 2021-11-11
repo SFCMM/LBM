@@ -95,4 +95,7 @@ static inline auto resolveGeomType(const GString& type) -> GeomType {
   return GeomType::unknown;
 }
 
+enum class DirId { mX, pX, mY, pY, mZ, pZ };
+static constexpr std::array<std::string_view, 6> DirIdString = {"-x", "+x", "-y", "+y", "-z", "+z"};
+
 #endif
