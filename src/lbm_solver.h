@@ -1,5 +1,5 @@
-#ifndef LBM_LBM_SOLVER_H
-#define LBM_LBM_SOLVER_H
+#ifndef LBM_SOLVER_H
+#define LBM_SOLVER_H
 #include <sfcmm_common.h>
 #include "cartesiangrid.h"
 #include "configuration.h"
@@ -143,4 +143,4 @@ class LBMSolver : public SolverInterface, private configuration {
   GDouble m_omega     = 1.0 / m_relaxTime;
 };
 
-#endif // LBM_LBM_SOLVER_H
+#endif // LBM_SOLVER_H

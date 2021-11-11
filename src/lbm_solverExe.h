@@ -1,5 +1,5 @@
-#ifndef LBM_LBM_SOLVEREXE_H
-#define LBM_LBM_SOLVEREXE_H
+#ifndef LBM_SOLVEREXE_H
+#define LBM_SOLVEREXE_H
 
 #include <sfcmm_common.h>
 #include "lbm_solver.h"
@@ -32,4 +32,4 @@ class LBMSolverExecutor : public SolverInterface {
 
   std::unique_ptr<SolverInterface> m_lbmSolver;
 };
-#endif // LBM_LBM_SOLVEREXE_H
+#endif // LBM_SOLVEREXE_H

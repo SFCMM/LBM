@@ -1,5 +1,5 @@
-#ifndef LBM_LBM_CONSTANTS_H
-#define LBM_LBM_CONSTANTS_H
+#ifndef LBM_CONSTANTS_H
+#define LBM_CONSTANTS_H
 
 enum class LBMethodType;
 template <LBMethodType LBTYPE>
@@ -165,4 +165,4 @@ class LBMethod<LBMethodType::D2Q9> {
 };
 
 
-#endif // LBM_LBM_CONSTANTS_H
+#endif // LBM_CONSTANTS_H
