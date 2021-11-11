@@ -61,7 +61,7 @@ class LBMSolver : public SolverInterface, private configuration {
   inline auto center() const -> const std::vector<Point<NDIM>>& { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())
                                                                       ->center(); }
 
-  auto bndrySurface(const GInt id) const -> const Surface<NDIM>& {
+  auto bndrySurface(const GString id) const -> const Surface<NDIM>& {
     return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->bndrySurface(id);
   }
 

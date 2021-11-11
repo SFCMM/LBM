@@ -238,10 +238,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private confi
 
   void save(const GString& fileName, const json& gridOutConfig) const override { TERMM(-1, "Not implemented!"); }
 
-  auto bndrySurface(const GInt id) const -> const Surface<NDIM>& {
-    if(DEBUG_LEVEL > Debug_Level::min_debug) {
-      return m_bndrySurfaces.at(id);
-    }
+  auto bndrySurface(const GString& id) -> Surface<NDIM>& {
     return m_bndrySurfaces[id];
   }
 
@@ -388,13 +385,15 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private confi
 
   void identifyBndrySurfaces() {
     if(m_axisAlignedBnd) {
-      m_bndrySurfaces.resize(cartesian::maxNoNghbrs<NDIM>());
+      for(GInt surfId = 0; surfId < cartesian::maxNoNghbrs<NDIM>(); ++surfId){
+        m_bndrySurfaces[static_cast<GString>(LBMDirString[surfId])] = Surface<NDIM>();
+      }
 
       for(GInt cellId = 0; cellId < size(); ++cellId) {
         if(property(cellId, Cell::bndry)) {
           for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
             if(!hasNeighbor(cellId, dir)) {
-              m_bndrySurfaces[dir].addCell(cellId, dir);
+              m_bndrySurfaces[static_cast<GString>(LBMDirString[dir])].addCell(cellId, dir);
             }
           }
         }
@@ -417,9 +416,9 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private confi
       for(const auto& connection : periodicConnections) {
         if(periodicConnections.count(connection.second) != 0) {
           periodicConnections.erase(connection.second);
-          GInt srfA = std::find(LBMDirString.begin(), LBMDirString.end(), connection.first) - LBMDirString.begin();
-          GInt srfB = std::find(LBMDirString.begin(), LBMDirString.end(), connection.second) - LBMDirString.begin();
-          addPeriodicConnection(bndrySurface(srfA), bndrySurface(srfB));
+//          GInt srfA = std::find(LBMDirString.begin(), LBMDirString.end(), connection.first) - LBMDirString.begin();
+//          GInt srfB = std::find(LBMDirString.begin(), LBMDirString.end(), connection.second) - LBMDirString.begin();
+          addPeriodicConnection(bndrySurface(connection.first), bndrySurface(connection.second));
         }
       }
     }
@@ -602,7 +601,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private confi
   GBool m_axisAlignedBnd = false;
   GBool m_periodic       = false;
 
-  std::vector<Surface<NDIM>> m_bndrySurfaces;
+  std::unordered_map<GString, Surface<NDIM>> m_bndrySurfaces;
 
   // Data containers
   std::vector<GInt> m_childIds{};
