@@ -228,8 +228,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::timeStep() {
   updateMacroscopicValues();
   calcEquilibriumMoments();
   collisionStep();
-  //  m_lbm->collisionStep();
-  //  boundaryCnd();
+  prePropBoundaryCnd();
   propagationStep();
   boundaryCnd();
 }
@@ -260,7 +259,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced) {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::compareToAnalyticalResult() {
-  const GString analyticalSolutionName = required_config_value<GString>("analyticalSolution");
+  const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");
   const auto anaSolution = analytical::ns::getAnalyticalSolution(analyticalSolutionName);
   GDouble              maxError = 0;
   std::vector<GDouble> error;
@@ -341,6 +340,16 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::collisionStep() {
       m_f[cellId * NDIST + dist] = (1 - m_omega) * m_fold[cellId * NDIST + dist] + m_omega * m_feq[cellId * NDIST + dist];
     }
   }
+}
+
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+void LBMSolver<DEBUG_LEVEL, LBTYPE>::prePropBoundaryCnd() {
+  // todo: replace by lambda function
+  using namespace std::placeholders;
+  std::function<GDouble&(GInt, GInt)> _fold = std::bind(&LBMSolver::fold, this, _1, _2);
+  std::function<GDouble&(GInt, GInt)> _f    = std::bind(&LBMSolver::f, this, _1, _2);
+
+  m_bndManager->preApply(_f, _fold);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>

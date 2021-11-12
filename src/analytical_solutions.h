@@ -39,10 +39,14 @@ static constexpr auto poiseuille2D_1(const GDouble y) -> GDouble {
   return poiseuille2D(1, 0, y, refV);
 }
 
-std::function<GDouble(GDouble)> getAnalyticalSolution(const GString& name){
+auto getAnalyticalSolution(const GString& name) -> std::function<GDouble(GDouble)>{
   if(name == "couette2D_1_5"){
     return &couette2D_1_5;
   }
+  if(name == "poiseuille2D_1"){
+    return &poiseuille2D_1;
+  }
+  TERMM(-1, "Invalid analyticalSolution selected!");
 }
 
 } // namespace ns

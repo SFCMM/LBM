@@ -33,7 +33,7 @@
     "type": "lbm",
     "relaxation": 0.9,
     "reynoldsnumber": 0.75,
-    "analyticalsolution": "poiseuille2D_1",
+    "analyticalSolution": "poiseuille2D_1",
     "maxSteps": 20000,
     "info_interval": 100,
     "solution_interval": 100,
@@ -44,12 +44,14 @@
     "boundary": {
       "cube": {
         "+x": {
-          "type": "periodic",
-          "connection": "-x"
+          "type": "outlet",
+          "model": "bounceback",
+          "pressure": 1.0
         },
         "-x": {
-          "type": "periodic",
-          "connection": "+x"
+          "type": "inlet",
+          "model": "bounceback",
+          "pressure": 1.1
         },
         "-y": {
           "type": "wall",

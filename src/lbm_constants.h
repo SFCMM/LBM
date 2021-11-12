@@ -49,8 +49,10 @@ inline auto inDirection(const VectorD<NDIM>& normal, const std::array<GDouble, N
 }
 
 enum class BndryType {
-  Wall_BounceBack,                   // BounceBack Boundary condition 1st order accurate
+  Wall_BounceBack,                   // BounceBack Wall Boundary condition 1st order accurate
   Wall_BounceBack_TangentialVelocity, // BounceBack Boundary condition 1st order accurate with tangential velocity
+  Inlet_BounceBack_ConstPressure, // BounceBack Boundary condition 1st order accurate with tangential velocity
+  Outlet_BounceBack_ConstPressure, // BounceBack Boundary condition 1st order accurate with tangential velocity
   Periodic
 };
 

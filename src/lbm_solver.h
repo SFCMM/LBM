@@ -70,6 +70,7 @@ class LBMSolver : public SolverInterface, private configuration {
   void compareToAnalyticalResult();
   void initialCondition();
   auto convergenceCondition() -> GBool;
+  void prePropBoundaryCnd();
   void boundaryCnd();
   void propagationStep();
   void currToOldVars();

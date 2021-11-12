@@ -1,7 +1,7 @@
 #ifndef LBM_BND_WALL_H
 #define LBM_BND_WALL_H
-#include "lbm_constants.h"
 #include "lbm_bnd_interface.h"
+#include "lbm_constants.h"
 
 template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
 class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
@@ -18,6 +18,7 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
 
     // precalculate weight and bndIndex
     for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
+      // determine if the dist points into the outside normal direction of bndry
       if(inDirection<dim(LBTYPE)>(normal(), LBMethod<LBTYPE>::m_dirs[dist])) {
         m_bndIndex[m_noSetDists] = dist;
         ++m_noSetDists;
@@ -28,17 +29,16 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
   void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) {
     // iterate over the distributions that need to be set
     for(GInt id = 0; id < m_noSetDists; ++id) {
-      const GInt dist         = m_bndIndex[id];
-      GInt       oppositeDist = LBMethod<LBTYPE>::oppositeDist(dist);
+      // dists that point into the outside direction
+      const GInt dist = m_bndIndex[id];
+      // dist in reflected/opposite direction i.e. to the inside of the wall
+      GInt oppositeDist = LBMethod<LBTYPE>::oppositeDist(dist);
 
       // standard bounceback i.e. distribution that hits the wall is reflected to the opposite distribution direction
       fold(mapped(), oppositeDist) = f(mapped(), dist);
-    }
 
-    // todo: testing
-    if constexpr(TANGENTIALVELO) {
-      for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
-        fold(mapped(), dist) += m_tangentialVelo[dist];
+      if constexpr(TANGENTIALVELO) {
+        fold(mapped(), oppositeDist) += m_tangentialVelo[oppositeDist];
       }
     }
   }
@@ -123,6 +123,8 @@ class LBMBnd_wallBB : public LBMBndInterface {
       bndCell.setTangentialVelocity(m_tangentialVelo);
     }
   }
+
+  void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) override {}
 
   void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) override {
     for(auto& bndCell : m_bndCells) {

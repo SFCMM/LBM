@@ -12,6 +12,7 @@
 - add simple LPT solver
 - capalilary simulation
 - contact angle
+- output analytical solution if wanted
 
 # V0.0.1
 ## Planned:
