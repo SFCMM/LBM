@@ -91,9 +91,14 @@ class LBMSolver : public SolverInterface, private configuration {
     }
     return m_vars[cellId * NVARS + PV::rho<NDIM>()];
   }
+
   template <GInt NDIM>
   auto inline velocity(const GInt cellId, const GInt dir) -> GDouble& {
     return m_vars[cellId * NVARS + PV::velocities<NDIM>()[dir]];
+  }
+
+  auto inline vars(const GInt cellId, const GInt varId) -> GDouble&{
+    return m_vars[cellId * NVARS + varId];
   }
 
   auto inline f(const GInt cellId, const GInt dir) -> GDouble& { return m_f[cellId * NDIST + dir]; }

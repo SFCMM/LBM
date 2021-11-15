@@ -50,12 +50,12 @@ class LBMBndManager : private configuration {
           }
           continue;
         }
-        if(bndType == "outlet"){
+        if(bndType == "outlet") {
           logger << " outlet bounce-back with constant pressure" << std::endl;
           addBndry(BndryType::Outlet_BounceBack_ConstPressure, bndrySurface(surfId), surfBndConfig);
           continue;
         }
-        if(bndType == "inlet"){
+        if(bndType == "inlet") {
           logger << " inlet bounce-back with constant pressure" << std::endl;
           addBndry(BndryType::Inlet_BounceBack_ConstPressure, bndrySurface(surfId), surfBndConfig);
           continue;
@@ -65,7 +65,7 @@ class LBMBndManager : private configuration {
     }
   }
 
-  //todo: merge with the function above
+  // todo: merge with the function above
   void addBndry(const BndryType bnd, const Surface<dim(LBTYPE)>& surf, const json& properties) {
     ASSERT(surf.size() > 0, "Invalid surface");
     switch(bnd) {
@@ -76,8 +76,12 @@ class LBMBndManager : private configuration {
         m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<LBTYPE, true>>(surf, properties));
         break;
       case BndryType::Inlet_BounceBack_ConstPressure:
+        m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<LBTYPE>>(surf, properties));
+        break;
       case BndryType::Outlet_BounceBack_ConstPressure:
         m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<LBTYPE>>(surf, properties));
+
+//        m_bndrys.emplace_back(std::make_unique<LBMBnd_dummy>());
         break;
       case BndryType::Periodic:
         m_bndrys.emplace_back(std::make_unique<LBMBnd_dummy>());
@@ -93,9 +97,10 @@ class LBMBndManager : private configuration {
     }
   }
 
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) {
+  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+             const std::function<GDouble&(GInt, GInt)>& vars) {
     for(const auto& bndry : m_bndrys) {
-      bndry->apply(f, fold);
+      bndry->apply(f, fold, vars);
     }
   }
 
@@ -112,6 +117,7 @@ class LBMBnd_dummy : public LBMBndInterface {
   void init() override {}
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) override {}
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) override {}
+  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+             const std::function<GDouble&(GInt, GInt)>& vars) override {}
 };
 #endif // LBM_BND_H

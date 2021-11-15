@@ -237,20 +237,30 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced) {
 
   if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || forced) {
-    std::vector<GDouble>              tmp;
+    std::vector<GDouble>              tmpU;
+    std::vector<GDouble>              tmpV;
+    std::vector<GDouble>              tmpRho;
     std::vector<GString>              index;
     std::vector<std::vector<GString>> values;
 
     // only output leaf cells (i.e. cells without children)
     std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return noChildren(cellId) == 0; };
 
-    tmp.resize(size());
+    tmpU.resize(size());
+    tmpV.resize(size());
+    tmpRho.resize(size());
     for(GInt cellId = 0; cellId < size(); ++cellId) {
-      tmp[cellId] = velocity<NDIM>(cellId, 0);
+      tmpU[cellId] = velocity<NDIM>(cellId, 0);
+      tmpV[cellId] = velocity<NDIM>(cellId,1);
+      tmpRho[cellId] = rho<NDIM>(cellId);
     }
 
     index.emplace_back("u");
-    values.emplace_back(toStringVector(tmp, size()));
+    index.emplace_back("v");
+    index.emplace_back("rho");
+    values.emplace_back(toStringVector(tmpU, size()));
+    values.emplace_back(toStringVector(tmpV, size()));
+    values.emplace_back(toStringVector(tmpRho, size()));
 
     VTK::ASCII::writePoints<NDIM>("test_" + std::to_string(m_timeStep), size(), center(), index, values, isLeaf);
   }
@@ -370,8 +380,9 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::boundaryCnd() {
   using namespace std::placeholders;
   std::function<GDouble&(GInt, GInt)> _fold = std::bind(&LBMSolver::fold, this, _1, _2);
   std::function<GDouble&(GInt, GInt)> _f    = std::bind(&LBMSolver::f, this, _1, _2);
+  std::function<GDouble&(GInt, GInt)> _v    = std::bind(&LBMSolver::vars, this, _1, _2);
 
-  m_bndManager->apply(_f, _fold);
+  m_bndManager->apply(_f, _fold, _v);
 }
 
 //todo: simplify (move somewhere else?!)

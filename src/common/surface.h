@@ -36,11 +36,11 @@ class Surface : public SurfaceInterface {
     m_cellId.emplace_back(cellId);
     m_normal.emplace_back();
     m_normal.back().fill(0);
-    m_normal.back()[dir / 2] = 1 - 2 * ((dir-1)%2);
+    m_normal.back()[dir / 2] = 2 * (dir%2) - 1;
   }
 
-  auto normal(const GInt surfId) const -> const VectorD<NDIM>&{
-    return m_normal[surfId];
+  auto normal(const GInt surfCellId) const -> const VectorD<NDIM>&{
+    return m_normal[surfCellId];
   }
 
   [[nodiscard]] auto size() const -> GInt {

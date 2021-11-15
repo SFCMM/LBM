@@ -13,7 +13,8 @@ class LBMBndInterface {
 
   virtual void init()                                                                                                  = 0;
   virtual void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) = 0;
-  virtual void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold)    = 0;
+  virtual void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold, const
+                     std::function<GDouble&(GInt, GInt)>& vars)    = 0;
 
  private:
 };

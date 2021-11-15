@@ -23,6 +23,8 @@
 - switch analytical solution over to vector results!
 - solve 2D poisson equation
 - [bug] fix unused values being marked correctly!
+- order boundary conditions by type
+- exit on nan
 
 ## Ongoing:
 - implement output correctly

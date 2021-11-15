@@ -198,7 +198,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   GInt i = 0;
   for(const auto& column : values) {
     //todo: temporary test
-    if(index[i] == "u"){
+    if(index[i] == "u" || index[i] == "v" || index[i] == "rho"){
       pointFile << point_data_float64(index[i]);
     } else {
       pointFile << point_data_int32(index[i]);
