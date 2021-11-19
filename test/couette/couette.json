@@ -34,13 +34,13 @@
     "method": "bgk",
     "relaxation": 0.9,
     "reynoldsnumber": 0.75,
-    "maxSteps": 20000,
+    "maxSteps": 200000,
     "info_interval": 100,
     "solution_interval": 500,
-    "convergence": 1E-12,
+    "convergence": 5E-13,
     "analyticalSolution": "couette2D_1_5",
-    "errorL2": 3E-11,
-    "errorMax": 2E-12,
+    "errorL2": 2E-11,
+    "errorMax": 9E-13,
     "assumeAxisAligned": true,
     "boundary": {
       "cube": {

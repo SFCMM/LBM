@@ -1,6 +1,6 @@
 #include "lbm_solver.h"
-#include "pv.h"
 #include "analytical_solutions.h"
+#include "pv.h"
 
 #include <set>
 
@@ -36,7 +36,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::init(int argc, GChar** argv, GString config
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::initBenchmark(int argc, GChar** argv) {
-  m_benchmark             = true;
+  m_benchmark = true;
   init(argc, argv);
 
   logger << "Setting up benchmarking!" << endl;
@@ -64,12 +64,20 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   m_outputSolutionInterval = opt_config_value<GInt>("solution_interval", m_outputSolutionInterval);
 
 
+//  const GDouble m_referenceLength = 1.0;
+//  const GDouble m_ma = 0.001;
+
   // Re = rho * u * L/nu
   // u = ma * sqrt(gamma * R * T)
   //  m_nu = m_ma / gcem::sqrt(3) / m_re * m_refLength;
-  //todo: add option to define nu
+  // todo: add option to define nu
   m_relaxTime = opt_config_value<GDouble>("relaxation", m_relaxTime);
   m_re        = required_config_value<GDouble>("reynoldsnumber");
+
+
+  ///todo: 1.73205080756887729352??? (F1BCS)
+//  m_nu    = m_ma / 1.73205080756887729352 / m_re * m_referenceLength; //* (FFPOW2[maxLevel() - a_level(pCellId)]);
+//  m_omega = 2.0 / (1.0 + 6.0 * m_nu);
 
   m_omega     = 1.0 / m_relaxTime;
   m_nu        = (2.0 * m_relaxTime - 1) / 6.0;
@@ -77,8 +85,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
 
   m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL, LBTYPE>>();
 
-  //todo: doesn't work??
-  //  std::function<const Surface<NDIM>&(GInt)> _bndrySurface = [this](const GInt id) { return bndrySurface(id); };
+  // todo: doesn't work??
+  //   std::function<const Surface<NDIM>&(GInt)> _bndrySurface = [this](const GInt id) { return bndrySurface(id); };
   using namespace placeholders;
   std::function<const Surface<NDIM>&(GString)> _bndrySurface = std::bind(&LBMSolver::bndrySurface, this, _1);
   m_bndManager->setupBndryCnds(config()["boundary"], _bndrySurface);
@@ -93,6 +101,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   cerr0 << "No. Leaf cells: " << noLeafCells() << std::endl;
   cerr0 << "No. Bnd cells: " << noBndCells() << std::endl;
   cerr0 << "Relaxation Time: " << m_relaxTime << std::endl;
+  cerr0 << "Omega: " << m_omega << std::endl;
   cerr0 << "Reynolds Number: " << m_re << std::endl;
   cerr0 << "Viscosity: " << m_nu << std::endl;
   cerr0 << "Reference V: " << m_refU << std::endl;
@@ -111,22 +120,22 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::allocateMemory() {
 }
 
 
-//template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-//void LBMSolver<DEBUG_LEVEL, LBTYPE>::setupMethod() {
-//  //  switch(m_method) {
-//  //    case LBMethodType::D1Q3:
-//  //      m_tangentialVelo = {1.0 / 6.0, 1.0 / 6.0, 2.0 / 3.0};
-//  //      break;
-//  //    case LBMethodType::D2Q5:
-//  //      m_tangentialVelo = {1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 3.0};
-//  //      break;
-//  //    case LBMethodType::D2Q9:
-//  //      m_tangentialVelo = {1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 4.0 / 9.0};
-//  //      break;
-//  //    default:
-//  //      TERMM(-1, "Invalid LBM method type");
-//  //  }
-//}
+// template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+// void LBMSolver<DEBUG_LEVEL, LBTYPE>::setupMethod() {
+//   //  switch(m_method) {
+//   //    case LBMethodType::D1Q3:
+//   //      m_tangentialVelo = {1.0 / 6.0, 1.0 / 6.0, 2.0 / 3.0};
+//   //      break;
+//   //    case LBMethodType::D2Q5:
+//   //      m_tangentialVelo = {1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 3.0};
+//   //      break;
+//   //    case LBMethodType::D2Q9:
+//   //      m_tangentialVelo = {1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 4.0 / 9.0};
+//   //      break;
+//   //    default:
+//   //      TERMM(-1, "Invalid LBM method type");
+//   //  }
+// }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
@@ -142,15 +151,14 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
   GBool      converged   = false;
 
   for(m_timeStep = 0; m_timeStep < noTimesteps && !converged; ++m_timeStep) {
-
     converged = convergenceCondition();
     timeStep();
 
     // also write an output if its the last time step or if the solution has converged
-    output( m_timeStep == noTimesteps || converged);
+    output(m_timeStep == noTimesteps || converged);
   }
 
-  //todo: make settable
+  // todo: make settable
   static constexpr GBool analyticalTest = true;
   if(analyticalTest) {
     compareToAnalyticalResult();
@@ -164,9 +172,9 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-auto LBMSolver<DEBUG_LEVEL, LBTYPE>::convergenceCondition() -> GBool{
+auto LBMSolver<DEBUG_LEVEL, LBTYPE>::convergenceCondition() -> GBool {
   if(m_timeStep > 0 && m_timeStep % m_outputInfoInterval == 0) {
-    cerr0 <<  m_timeStep << ": ";
+    cerr0 << m_timeStep << ": ";
     logger << m_timeStep << ": ";
 
     const GDouble convUx  = sumAbsDiff(PV::velocitiy(0));
@@ -190,10 +198,10 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::convergenceCondition() -> GBool{
     logger << "rho: " << convRho << " ";
     logger << std::endl;
 
-    // todo: make settable
     // todo: make independent of output
-    const GDouble maxConv = std::max(std::max(std::max(convUx, convUy), convUz), convRho);
-    if(m_timeStep > 1 && maxConv < 1E-12) {
+    const GDouble maxConv         = std::max(std::max(std::max(convUx, convUy), convUz), convRho);
+    const GDouble convergenceCrit = opt_config_value("convergence", 1E-12);
+    if(m_timeStep > 1 && maxConv < convergenceCrit) {
       logger << "Reached convergence to: " << maxConv << std::endl;
       cerr0 << "Reached convergence to: " << maxConv << std::endl;
       return true;
@@ -235,7 +243,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::timeStep() {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced) {
-
   if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || forced) {
     std::vector<GDouble>              tmpU;
     std::vector<GDouble>              tmpV;
@@ -250,8 +257,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced) {
     tmpV.resize(size());
     tmpRho.resize(size());
     for(GInt cellId = 0; cellId < size(); ++cellId) {
-      tmpU[cellId] = velocity<NDIM>(cellId, 0);
-      tmpV[cellId] = velocity<NDIM>(cellId,1);
+      tmpU[cellId]   = velocity<NDIM>(cellId, 0);
+      tmpV[cellId]   = velocity<NDIM>(cellId, 1);
       tmpRho[cellId] = rho<NDIM>(cellId);
     }
 
@@ -264,14 +271,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced) {
 
     VTK::ASCII::writePoints<NDIM>("test_" + std::to_string(m_timeStep), size(), center(), index, values, isLeaf);
   }
-
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::compareToAnalyticalResult() {
-  const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");
-  const auto anaSolution = analytical::ns::getAnalyticalSolution(analyticalSolutionName);
-  GDouble              maxError = 0;
+  const auto           analyticalSolutionName = required_config_value<GString>("analyticalSolution");
+  const auto           anaSolution            = analytical::ns::getAnalyticalSolution(analyticalSolutionName);
+  GDouble              maxError               = 0;
   std::vector<GDouble> error;
   for(GInt cellId = 0; cellId < grid().size(); ++cellId) {
     const GDouble solution = anaSolution(center(cellId, 1));
@@ -281,7 +287,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::compareToAnalyticalResult() {
   }
   const GDouble L2error = 1.0 / grid().size() * std::accumulate(error.begin(), error.end(), 0.0);
 
-  const GDouble maximumExpectedError = opt_config_value("errorMax", 1.0);
+  const GDouble maximumExpectedError   = opt_config_value("errorMax", 1.0);
   const GDouble maximumExpectedErrorL2 = opt_config_value("errorL2", 1.0);
 
   cerr0 << "Comparing to analytical result:" << std::endl;
@@ -292,18 +298,18 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::compareToAnalyticalResult() {
   logger << "avg. L2: " << L2error << std::endl;
 
   GBool failedErrorCheck = false;
-  if(maximumExpectedError < maxError){
+  if(maximumExpectedError < maxError) {
     failedErrorCheck = true;
-    cerr0<< "Error bounds for the maximum error have failed!!! ( < " << maximumExpectedError << ")"<< std::endl;
-    logger<< "Error bounds for the maximum error have failed!!! ( < " << maximumExpectedError << ")"<< std::endl;
+    cerr0 << "Error bounds for the maximum error have failed!!! ( < " << maximumExpectedError << ")" << std::endl;
+    logger << "Error bounds for the maximum error have failed!!! ( < " << maximumExpectedError << ")" << std::endl;
   }
-  if(maximumExpectedErrorL2 < L2error){
+  if(maximumExpectedErrorL2 < L2error) {
     failedErrorCheck = true;
-    cerr0<< "Error bounds for the L2 error have failed!!! ( < " << maximumExpectedErrorL2 << ")"<< std::endl;
-    logger<< "Error bounds for the L2 error have failed!!! ( < " << maximumExpectedErrorL2 << ")"<< std::endl;
+    cerr0 << "Error bounds for the L2 error have failed!!! ( < " << maximumExpectedErrorL2 << ")" << std::endl;
+    logger << "Error bounds for the L2 error have failed!!! ( < " << maximumExpectedErrorL2 << ")" << std::endl;
   }
 
-  if(failedErrorCheck){
+  if(failedErrorCheck) {
     TERMM(-1, "Analytical testcase failed");
   }
 }
@@ -320,13 +326,15 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::updateMacroscopicValues() {
 
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     // todo:skip non-leaf cells!
+    rho<NDIM>(cellId) = std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST), 0.0);
+
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      velocity<NDIM>(cellId, dir) = m_fold[cellId * NDIST + moment[dir][0]] + m_fold[cellId * NDIST + moment[dir][1]]
-                                    + m_fold[cellId * NDIST + moment[dir][2]] - m_fold[cellId * NDIST + moment[dir][3]]
-                                    - m_fold[cellId * NDIST + moment[dir][4]] - m_fold[cellId * NDIST + moment[dir][5]];
+      velocity<NDIM>(cellId, dir) =
+          (m_fold[cellId * NDIST + moment[dir][0]] + m_fold[cellId * NDIST + moment[dir][1]] + m_fold[cellId * NDIST + moment[dir][2]]
+           - m_fold[cellId * NDIST + moment[dir][3]] - m_fold[cellId * NDIST + moment[dir][4]] - m_fold[cellId * NDIST + moment[dir][5]])
+          / rho<NDIM>(cellId);
     }
     //    cerr0 << "cellId: " << cellId << " (" << velocity<NDIM>(cellId, 0) << ", " << velocity<NDIM>(cellId, 1) << ")" << std::endl;
-    rho<NDIM>(cellId) = std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST), 0.0);
   }
 }
 
@@ -335,10 +343,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::calcEquilibriumMoments() {
   static constexpr std::array<GDouble, 9> cx = {-1, 1, 0, 0, 1, 1, -1, -1, 0};
   static constexpr std::array<GDouble, 9> cy = {0, 0, -1, 1, 1, -1, -1, 1, 0};
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
+//    const GDouble squaredV = gcem::pow(velocity<NDIM>(cellId, 0), 2) + gcem::pow(velocity<NDIM>(cellId, 1), 2);
     for(GInt dist = 0; dist < NDIST; ++dist) {
-      m_feq[cellId * NDIST + dist] =
-          LBMethod<LBTYPE>::m_weights[dist]
-          * (rho<NDIM>(cellId) + 3 * (velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist]));
+                  m_feq[cellId * NDIST + dist] =
+                      LBMethod<LBTYPE>::m_weights[dist] * rho<NDIM>(cellId) *
+                      (1 + 3 * (velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist]));
+//      const GDouble cu             = velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist];
+//      m_feq[cellId * NDIST + dist] = LBMethod<LBTYPE>::m_weights[dist] * rho<NDIM>(cellId) * (1 + 3 * cu + 4.5 * cu * cu - 1.5 * squaredV);
     }
   }
 }
@@ -358,8 +369,9 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::prePropBoundaryCnd() {
   using namespace std::placeholders;
   std::function<GDouble&(GInt, GInt)> _fold = std::bind(&LBMSolver::fold, this, _1, _2);
   std::function<GDouble&(GInt, GInt)> _f    = std::bind(&LBMSolver::f, this, _1, _2);
+  std::function<GDouble&(GInt, GInt)> _v    = std::bind(&LBMSolver::vars, this, _1, _2);
 
-  m_bndManager->preApply(_f, _fold);
+  m_bndManager->preApply(_f, _fold, _v);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
@@ -385,7 +397,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::boundaryCnd() {
   m_bndManager->apply(_f, _fold, _v);
 }
 
-//todo: simplify (move somewhere else?!)
+// todo: simplify (move somewhere else?!)
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::transferGrid(const GridInterface& grid) {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
@@ -441,17 +453,17 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::sumAbsDiff(const GInt var) const -> GDouble
   return conv;
 }
 
-//template class LBMSolver<Debug_Level::no_debug, LBMethodType::D1Q3>;
-//template class LBMSolver<Debug_Level::min_debug, LBMethodType::D1Q3>;
-//template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3>;
-//template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3>;
-//template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3>;
+// template class LBMSolver<Debug_Level::no_debug, LBMethodType::D1Q3>;
+// template class LBMSolver<Debug_Level::min_debug, LBMethodType::D1Q3>;
+// template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3>;
+// template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3>;
+// template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3>;
 //
-//template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q5>;
-//template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q5>;
-//template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q5>;
-//template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q5>;
-//template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q5>;
+// template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q5>;
+// template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q5>;
+// template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q5>;
+// template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q5>;
+// template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q5>;
 
 template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q9>;
 template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q9>;
@@ -459,8 +471,8 @@ template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q9>;
 template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q9>;
 template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q9>;
 
-//template class LBMSolver<Debug_Level::no_debug, LBMethodType::D3Q15>;
-//template class LBMSolver<Debug_Level::min_debug, LBMethodType::D3Q15>;
-//template class LBMSolver<Debug_Level::debug, LBMethodType::D3Q15>;
-//template class LBMSolver<Debug_Level::more_debug, LBMethodType::D3Q15>;
-//template class LBMSolver<Debug_Level::max_debug, LBMethodType::D3Q15>;
+// template class LBMSolver<Debug_Level::no_debug, LBMethodType::D3Q15>;
+// template class LBMSolver<Debug_Level::min_debug, LBMethodType::D3Q15>;
+// template class LBMSolver<Debug_Level::debug, LBMethodType::D3Q15>;
+// template class LBMSolver<Debug_Level::more_debug, LBMethodType::D3Q15>;
+// template class LBMSolver<Debug_Level::max_debug, LBMethodType::D3Q15>;
