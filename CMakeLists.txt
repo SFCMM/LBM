@@ -26,7 +26,7 @@ add_executable(lbm
         src/globaltimers.h src/cartesiangrid.h
         src/gridcell_properties.h src/WeightMethod.h src/geometry.h src/functions.h src/common/IO.h src/term.h
         src/interface/grid_interface.h src/gridgenerator/cartesiangrid_generation.h src/lbm_solver.h
-        src/lbm_constants.h src/pv.h src/interface/lbm_interface.h src/lbm_bnd.h src/common/surface.h src/lbm_solverExe.h src/configuration.h src/lbm_bnd_wall.h src/lbm_bnd_interface.h src/lbm_bnd_in_out.h)
+        src/lbm_constants.h src/pv.h src/interface/lbm_interface.h src/lbm_bnd.h src/common/surface.h src/lbm_solverExe.h src/configuration.h src/lbm_bnd_wall.h src/lbm_bnd_interface.h src/lbm_bnd_in_out.h src/lbm_bnd_periodic.h)
 
 #TARGET_LINK_LIBRARIES(lbm PUBLIC mpi)
 target_link_libraries(lbm PUBLIC MPI::MPI_CXX dl tinfo pthread)

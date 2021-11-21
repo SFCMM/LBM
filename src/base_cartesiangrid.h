@@ -33,7 +33,7 @@ struct /*alignas(64)*/ ChildList {
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
-class BaseCartesianGrid : public GridInterface {
+class BaseCartesianGrid : public GridInterfaceD<NDIM> {
  public:
   using PropertyBitsetType = grid::cell::BitsetType;
 
@@ -93,6 +93,9 @@ class BaseCartesianGrid : public GridInterface {
       return m_lengthOnLevel.at(lvl);
     }
     return m_lengthOnLevel[lvl]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+  };
+  [[nodiscard]] inline auto lengthOnLvl(const std::byte lvl) const -> GDouble override {
+    return lengthOnLvl(static_cast<GInt>(lvl));
   };
   [[nodiscard]] inline auto currentHighestLvl() const -> GInt override { return m_currentHighestLvl; }
   [[nodiscard]] inline auto dim() const -> GInt override { return NDIM; }

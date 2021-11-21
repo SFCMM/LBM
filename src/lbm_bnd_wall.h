@@ -97,10 +97,10 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
 template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
 class LBMBnd_wallBB : public LBMBndInterface {
  public:
-  LBMBnd_wallBB(const Surface<dim(LBTYPE)>& surf, const json& properties) {
+  LBMBnd_wallBB(const Surface<dim(LBTYPE)>* surf, const json& properties) {
     GInt surfId = 0;
-    for(const GInt cellId : surf.getCellList()) {
-      m_bndCells.emplace_back(cellId, surf.normal(surfId));
+    for(const GInt cellId : surf->getCellList()) {
+      m_bndCells.emplace_back(cellId, surf->normal(surfId));
       ++surfId;
     }
     if constexpr(TANGENTIALVELO) {
@@ -117,7 +117,7 @@ class LBMBnd_wallBB : public LBMBndInterface {
   auto operator=(const LBMBnd_wallBB&) -> LBMBnd_wallBB& = delete;
   auto operator=(LBMBnd_wallBB&&) -> LBMBnd_wallBB& = delete;
 
-  void init() override {
+  void init() {
     for(auto& bndCell : m_bndCells) {
       bndCell.init();
       bndCell.setTangentialVelocity(m_tangentialVelo);

@@ -57,6 +57,7 @@ class GridInterface {
   /// \param lvl The level of the cell length.
   /// \return The length of a cell at the provided level.
   [[nodiscard]] virtual inline auto lengthOnLvl(const GInt lvl) const -> GDouble = 0;
+  [[nodiscard]] virtual inline auto lengthOnLvl(const std::byte lvl) const -> GDouble = 0;
 
   /// Get the partition level of the grid.
   /// \return Partition level.
@@ -93,6 +94,8 @@ class GridInterface {
 
   [[nodiscard]] virtual inline auto property(const GInt id, CellProperties p) const -> GBool = 0;
 
+  [[nodiscard]] virtual inline auto level(const GInt cellId) const -> std::byte = 0;
+
 
   //  //// Grid Generation specific
   //  /// Create the grid that is used for partitioning. This grid has the level of the option provided in the grid
@@ -120,5 +123,11 @@ class GridInterface {
   virtual void save(const GString& fileName, const json& gridOutConfig) const = 0;
 
  private:
+};
+
+template<GInt NDIM>
+class GridInterfaceD: public GridInterface{
+ public:
+  [[nodiscard]] virtual inline auto center(const GInt cellId)-> VectorD<NDIM>& =0;
 };
 #endif // GRIDGENERATOR_GRIDINTERFACE_H

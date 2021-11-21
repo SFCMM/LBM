@@ -6,6 +6,7 @@
 #include "configuration.h"
 #include "lbm_bnd_in_out.h"
 #include "lbm_bnd_interface.h"
+#include "lbm_bnd_periodic.h"
 #include "lbm_bnd_wall.h"
 
 template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
@@ -25,6 +26,7 @@ class LBMBndManager : private configuration {
   auto operator=(const LBMBndManager&) -> LBMBndManager& = delete;
   auto operator=(LBMBndManager&&) -> LBMBndManager& = delete;
 
+  //todo: cleanup
   void setupBndryCnds(const json& bndConfig, std::function<const Surface<dim(LBTYPE)>&(GString)>& bndrySurface) {
     for(const auto& [geometry, geomBndConfig] : bndConfig.items()) {
       // todo: check that geometry exists
@@ -33,31 +35,37 @@ class LBMBndManager : private configuration {
         const auto bndType = config::required_config_value<GString>(surfBndConfig, "type");
         logger << "Adding bndCnd to surfaceId " << surfId;
 
+        const Surface<dim(LBTYPE)>& srf =bndrySurface(surfId);
+        std::vector<const Surface<dim(LBTYPE)>*> bndrySrf;
+        bndrySrf.emplace_back(&srf);
+
         // todo: convert to switch
         if(bndType == "periodic") {
+          const auto surfConnected = bndrySurface(config::required_config_value<GString>(surfBndConfig, "connection"));
+          bndrySrf.emplace_back(&surfConnected);
           logger << " with periodic conditions" << std::endl;
-          addBndry(BndryType::Periodic, bndrySurface(surfId), surfBndConfig);
+          addBndry(BndryType::Periodic, surfBndConfig, bndrySrf);
           continue;
         }
         if(bndType == "wall") {
           const GDouble tangentialV = config::opt_config_value(surfBndConfig, "tangentialVelocity", 0.0);
           if(std::abs(tangentialV) > GDoubleEps) {
             logger << " wall bounce-back with tangential velocity" << std::endl;
-            addBndry(BndryType::Wall_BounceBack_TangentialVelocity, bndrySurface(surfId), surfBndConfig);
+            addBndry(BndryType::Wall_BounceBack_TangentialVelocity, surfBndConfig, bndrySrf);
           } else {
             logger << " wall bounce-back with no slip" << std::endl;
-            addBndry(BndryType::Wall_BounceBack, bndrySurface(surfId), surfBndConfig);
+            addBndry(BndryType::Wall_BounceBack, surfBndConfig, bndrySrf);
           }
           continue;
         }
         if(bndType == "outlet") {
           logger << " outlet bounce-back with constant pressure" << std::endl;
-          addBndry(BndryType::Outlet_BounceBack_ConstPressure, bndrySurface(surfId), surfBndConfig);
+          addBndry(BndryType::Outlet_BounceBack_ConstPressure, surfBndConfig, bndrySrf);
           continue;
         }
         if(bndType == "inlet") {
           logger << " inlet bounce-back with constant pressure" << std::endl;
-          addBndry(BndryType::Inlet_BounceBack_ConstPressure, bndrySurface(surfId), surfBndConfig);
+          addBndry(BndryType::Inlet_BounceBack_ConstPressure, surfBndConfig, bndrySrf);
           continue;
         }
         TERMM(-1, "Invalid bndCndType: " + bndType);
@@ -66,28 +74,37 @@ class LBMBndManager : private configuration {
   }
 
   // todo: merge with the function above
-  void addBndry(const BndryType bnd, const Surface<dim(LBTYPE)>& surf, const json& properties) {
-    ASSERT(surf.size() > 0, "Invalid surface");
-    switch(bnd) {
-      case BndryType::Wall_BounceBack:
-        m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<LBTYPE, false>>(surf, properties));
-        break;
-      case BndryType::Wall_BounceBack_TangentialVelocity:
-        m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<LBTYPE, true>>(surf, properties));
-        break;
-      case BndryType::Inlet_BounceBack_ConstPressure:
-        m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<LBTYPE>>(surf, properties));
-        break;
-      case BndryType::Outlet_BounceBack_ConstPressure:
-        m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<LBTYPE>>(surf, properties));
+  void addBndry(const BndryType bnd,  const json& properties, const std::vector<const Surface<dim(LBTYPE)>*>& surf) {
+    ASSERT(surf[0]->size() > 0, "Invalid surface");
 
-//        m_bndrys.emplace_back(std::make_unique<LBMBnd_dummy>());
-        break;
-      case BndryType::Periodic:
-        m_bndrys.emplace_back(std::make_unique<LBMBnd_dummy>());
-        break;
-      default:
-        TERMM(-1, "Invalid bndry Type!");
+    // actually generate a boundary or just create a dummy e.g. the boundary is handled in a non standard way!
+    const auto generateBndry = config::opt_config_value<GBool>(properties, "generateBndry", true);
+
+    if(generateBndry) {
+      switch(bnd) {
+        case BndryType::Wall_BounceBack:
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<LBTYPE, false>>(surf[0], properties));
+          break;
+        case BndryType::Wall_BounceBack_TangentialVelocity:
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<LBTYPE, true>>(surf[0], properties));
+          break;
+        case BndryType::Inlet_BounceBack_ConstPressure:
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<LBTYPE>>(surf[0], properties));
+          TERMM(-1, "Broken");
+          break;
+        case BndryType::Outlet_BounceBack_ConstPressure:
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<LBTYPE>>(surf[0], properties));
+          TERMM(-1, "Broken");
+          break;
+        case BndryType::Periodic:
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_Periodic<LBTYPE>>(surf[0], surf[1], properties));
+          break;
+        default:
+          TERMM(-1, "Invalid bndry Type!");
+      }
+    } else {
+      logger << "Generated dummy boundary!" << std::endl;
+      m_bndrys.emplace_back(std::make_unique<LBMBnd_dummy>());
     }
   }
 
@@ -115,7 +132,7 @@ class LBMBndManager : private configuration {
 
 class LBMBnd_dummy : public LBMBndInterface {
  public:
-  void init() override {}
+//  void init() override {}
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold, const std::function<GDouble&(GInt, GInt)>& vars) override {}
   void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,

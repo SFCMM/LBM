@@ -7,12 +7,12 @@
 template <LBMethodType LBTYPE>
 class LBMBnd_InOutBB : public LBMBndInterface {
  public:
-  LBMBnd_InOutBB(const Surface<dim(LBTYPE)>& surf, const json& properties) {
-    for(const GInt cellId : surf.getCellList()) {
+  LBMBnd_InOutBB(const Surface<dim(LBTYPE)>* surf, const json& properties) {
+    for(const GInt cellId : surf->getCellList()) {
       m_bndCells.emplace_back(cellId);
     }
-    m_normal = surf.normal(0);
-    LBMBnd_InOutBB<LBTYPE>::init();
+    m_normal = surf->normal(0);
+//    LBMBnd_InOutBB<LBTYPE>::init();
   }
   ~LBMBnd_InOutBB() override = default;
 
@@ -22,7 +22,7 @@ class LBMBnd_InOutBB : public LBMBndInterface {
   auto operator=(const LBMBnd_InOutBB&) -> LBMBnd_InOutBB& = delete;
   auto operator=(LBMBnd_InOutBB&&) -> LBMBnd_InOutBB& = delete;
 
-  void init() override {}
+//  void init() override {}
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
                 const std::function<GDouble&(GInt, GInt)>& vars) override {

@@ -1,6 +1,8 @@
 #ifndef LBM_SURFACE_H
 #define LBM_SURFACE_H
 
+#include "interface/grid_interface.h"
+
 // 3D: Surface 2D: Line 1D: Point
 class SurfaceInterface {
  public:
@@ -15,14 +17,14 @@ class SurfaceInterface {
 template <GInt NDIM>
 class Surface : public SurfaceInterface {
  public:
-  Surface() = default;
+  Surface(GridInterfaceD<NDIM>* grid) : m_center(&grid->center(0)), m_grid(grid){};
   ~Surface() = default;
 
-  //todo:fix
-//  Surface(const Surface&) = delete;
-//  Surface(Surface&&)      = delete;
-//  auto operator=(const Surface&) -> Surface& = delete;
-//  auto operator=(Surface&&) -> Surface& = delete;
+  // todo:fix
+  Surface(const Surface& copy) : m_center(copy.m_center) {}
+  //  Surface(Surface&&)      = delete;
+  //  auto operator=(const Surface&) -> Surface& = delete;
+  //  auto operator=(Surface&&) -> Surface& = delete;
 
 
   [[nodiscard]] auto getCellList() const -> const std::vector<GInt>& override { return m_cellId; }
@@ -36,21 +38,27 @@ class Surface : public SurfaceInterface {
     m_cellId.emplace_back(cellId);
     m_normal.emplace_back();
     m_normal.back().fill(0);
-    m_normal.back()[dir / 2] = 2 * (dir%2) - 1;
+    m_normal.back()[dir / 2] = 2 * (dir % 2) - 1;
   }
 
-  auto normal(const GInt surfCellId) const -> const VectorD<NDIM>&{
-    return m_normal[surfCellId];
-  }
+  auto normal(const GInt surfCellId) const -> const VectorD<NDIM>& { return m_normal[surfCellId]; }
 
   [[nodiscard]] auto size() const -> GInt {
     ASSERT(!m_cellId.empty(), "Not inited!");
     return m_cellId.size();
   }
 
+  auto center(const GInt cellId) const -> const VectorD<NDIM>& { return m_center[cellId]; }
+
+  auto cellLength(const GInt cellId) const -> const GDouble {
+    return m_grid->lengthOnLvl(m_grid->level(cellId));
+  }
+
  private:
   std::vector<GInt>          m_cellId;
   std::vector<VectorD<NDIM>> m_normal;
+  VectorD<NDIM>*             m_center = nullptr;
+  GridInterfaceD<NDIM>*      m_grid   = nullptr;
 };
 
 #endif // LBM_SURFACE_H
