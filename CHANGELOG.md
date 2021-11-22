@@ -17,6 +17,7 @@
 - get boundary const access to grid information
 - pass all surfaces to the boundary manager
 - store reference to the surfaces in each boundary
+- allow comments in configuration files
 
 # V0.0.1
 ## Planned:

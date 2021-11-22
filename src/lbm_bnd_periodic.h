@@ -16,53 +16,85 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
   void init(const Surface<dim(LBTYPE)>* surfConnected)  {
     LBMBndCell<LBTYPE>::init();
 
+    const GDouble cellLength = surfConnected->cellLength(mapped());
+    const auto center = surfConnected->center(mapped());
+    const auto& bb = surfConnected->grid()->boundingBox();
+
     // set which dists are to be set by this boundary condition
     for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
       // determine if the dist points into the outside normal direction of bndry
       if(inDirection<dim(LBTYPE)>(normal(), LBMethod<LBTYPE>::m_dirs[dist])) {
-        m_bndIndex[m_noSetDists] = dist;
-        ++m_noSetDists;
+        GBool inside = true;
+        for(GInt dir = 0; dir < dim(LBTYPE); ++dir){
+          if(std::abs(normal()[dir]) > 0){
+            continue;
+          }
+
+          const GDouble coord =center[dir] + LBMethod<LBTYPE>::m_dirs[dist][dir] * cellLength;
+          //todo: move to function isInside...
+          if( coord < bb.min(dir) || coord > bb.max(dir)){
+            inside = false;
+            break;
+          }
+        }
+
+        if(inside) {
+          m_bndIndex[m_noSetDists] = dist;
+          ++m_noSetDists;
+        }
       }
     }
 
     //todo: this needs to be moved since we cannot guarantee double matching cells are handled correctly
     for(GInt id = 0; id < m_noSetDists; ++id) {
+      m_linkedCell[id] = -1;
       const GInt dist = m_bndIndex[id];
-      auto centerA        = surfConnected->center(mapped());
+      auto centerA        = center;
       for(GInt dir = 0; dir < dim(LBTYPE); ++dir){
-        centerA[dir] += LBMethod<LBTYPE>::m_dirs[dist][dir] * 0.5 * surfConnected->cellLength(mapped());
+        if(std::abs(normal()[dir]) > 0){
+          continue;
+        }
+        centerA[dir] += LBMethod<LBTYPE>::m_dirs[dist][dir] * cellLength;
       }
 
-
-      GInt minDistCellId = -1;
       GDouble minDist = std::numeric_limits<GDouble>::max();
       // connect cell of the boundary surface and connected surface
       for(const GInt cellIdB : surfConnected->getCellList()) {
-        const auto& centerB        = surfConnected->center(cellIdB);
-        const GDouble diff = (centerA - centerB).norm();
-
-        if(minDist > diff){
-          minDist = diff;
-          minDistCellId = cellIdB;
+        const auto&   centerB = surfConnected->center(cellIdB);
+        for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
+          const GDouble diff    = std::abs(centerA[dir] - centerB[dir]);
+          if(diff <= GDoubleEps) {
+            m_linkedCell[id] = cellIdB;
+            break;
+          }
+        }
+        if(m_linkedCell[id] >=0){
+          break;
         }
       }
 
-      m_linkedCell[id] = minDistCellId;
-      ASSERT(minDistCellId >= 0, "Invalid Cellid");
+      ASSERT(m_linkedCell[id] >= 0, "Invalid Cellid");
+    }
+
+    for(GInt idA = 0; idA < m_noSetDists; ++idA) {
+      for(GInt idB = idA+1; idB < m_noSetDists; ++idB) {
+        if(m_linkedCell[idA] == m_linkedCell[idB]){
+          TERMM(-1, "Invalid periodic bnd");
+        }
+      }
     }
   }
 
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) {
-    // iterate over the distributions that need to be set
+  void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) {
+    //do the same as in the propagation step
     for(GInt id = 0; id < m_noSetDists; ++id) {
-      // dists that point into the outside direction
       const GInt dist = m_bndIndex[id];
-      // dist in reflected/opposite direction i.e. to the inside of the wall
-      GInt oppositeDist = LBMethod<LBTYPE>::oppositeDist(dist);
-
-      // standard bounceback i.e. distribution that hits the wall is reflected to the opposite distribution direction
-      fold(mapped(), oppositeDist) = f(mapped(), dist);
+      fold(m_linkedCell[id], dist) = f(mapped(), dist);
     }
+  }
+
+  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+             const std::function<GDouble&(GInt, GInt)>& vars) {
   }
 
   // todo: fix me
@@ -100,7 +132,12 @@ class LBMBnd_Periodic : public LBMBndInterface {
   }
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-                const std::function<GDouble&(GInt, GInt)>& vars) override {}
+                const std::function<GDouble&(GInt, GInt)>& vars) override {
+    //apply to all boundary cells
+    for(auto& bndCell : m_bndCells) {
+      bndCell.preApply(f, fold);
+    }
+  }
   void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& vars) override {}
 

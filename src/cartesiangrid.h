@@ -409,16 +409,21 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private confi
       std::unordered_map<GString, GString> periodicConnections;
       for(const auto& bnd : periodicBnds) {
         for(const auto& [surfName, props] : bnd.items()) {
-          periodicConnections.emplace(surfName, config::required_config_value<GString>(props, "connection"));
+          // check if periodic boundary should be handled as a boundary condition
+          const auto generateBndry = config::opt_config_value<GBool>(props, "generateBndry", true);
+          // skip if it should be
+          if(!generateBndry) {
+            periodicConnections.emplace(surfName, config::required_config_value<GString>(props, "connection"));
+          }
         }
       }
-      logger << "Setting up periodic connections!" << std::endl;
-      for(const auto& connection : periodicConnections) {
-        if(periodicConnections.count(connection.second) != 0) {
-          periodicConnections.erase(connection.second);
-//          GInt srfA = std::find(LBMDirString.begin(), LBMDirString.end(), connection.first) - LBMDirString.begin();
-//          GInt srfB = std::find(LBMDirString.begin(), LBMDirString.end(), connection.second) - LBMDirString.begin();
-          addPeriodicConnection(bndrySurface(connection.first), bndrySurface(connection.second));
+      if(!periodicConnections.empty()) {
+        logger << "Setting up periodic connections!" << std::endl;
+        for(const auto& connection : periodicConnections) {
+          if(periodicConnections.count(connection.second) != 0) {
+            periodicConnections.erase(connection.second);
+            addPeriodicConnection(bndrySurface(connection.first), bndrySurface(connection.second));
+          }
         }
       }
     }

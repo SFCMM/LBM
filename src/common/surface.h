@@ -21,7 +21,7 @@ class Surface : public SurfaceInterface {
   ~Surface() = default;
 
   // todo:fix
-  Surface(const Surface& copy) : m_center(copy.m_center) {}
+//  Surface(const Surface& copy) : m_center(copy.m_center), m_grid(copy.m_grid) {}
   //  Surface(Surface&&)      = delete;
   //  auto operator=(const Surface&) -> Surface& = delete;
   //  auto operator=(Surface&&) -> Surface& = delete;
@@ -50,8 +50,17 @@ class Surface : public SurfaceInterface {
 
   auto center(const GInt cellId) const -> const VectorD<NDIM>& { return m_center[cellId]; }
 
-  auto cellLength(const GInt cellId) const -> const GDouble {
+  [[nodiscard]] auto cellLength(const GInt cellId) const -> GDouble {
+    cerr0 << cellId << std::endl;
+    cerr0 << m_grid << std::endl;
+    cerr0 << "grid dim " << m_grid->dim() << std::endl;
+
+    cerr0 << "level " << static_cast<GInt>(m_grid->level(cellId)) << std::endl;
     return m_grid->lengthOnLvl(m_grid->level(cellId));
+  }
+
+  auto grid() const -> GridInterfaceD<NDIM>* {
+    return m_grid;
   }
 
  private:
