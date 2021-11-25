@@ -18,6 +18,9 @@
 - pass all surfaces to the boundary manager
 - store reference to the surfaces in each boundary
 - allow comments in configuration files
+- inflow pressure bc
+- outflow pressure bc
+- refactor forcing setup
 
 # V0.0.1
 ## Planned:
@@ -30,11 +33,11 @@
 - [bug] fix unused values being marked correctly!
 - order boundary conditions by type
 - exit on nan
+- improve poiseuille setup (skip inlet and outlet cells for error calculation)
 
 ## Ongoing:
 - implement output correctly
-- inflow pressure bc
-- outflow pressure bc
+
 
 ## Done:
 ### Features
@@ -44,11 +47,13 @@
 - general bounce back "no-slip" wall boundary condition
 - general bounce back "no-slip" wall boundary condition with tangential velocity
 - load bnd conditions from configuration file
+- added forcing
 
 ### Buildsystem
 
 ### Testing
 - Added Couette flow testcase
+- Added Poiseuille flow testcase
 
 ### Usability
 

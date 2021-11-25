@@ -64,8 +64,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   m_outputSolutionInterval = opt_config_value<GInt>("solution_interval", m_outputSolutionInterval);
 
 
-//  const GDouble m_referenceLength = 1.0;
-//  const GDouble m_ma = 0.001;
+  //  const GDouble m_referenceLength = 1.0;
+  //  const GDouble m_ma = 0.001;
 
   // Re = rho * u * L/nu
   // u = ma * sqrt(gamma * R * T)
@@ -75,13 +75,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   m_re        = required_config_value<GDouble>("reynoldsnumber");
 
 
-  ///todo: 1.73205080756887729352??? (F1BCS)
-//  m_nu    = m_ma / 1.73205080756887729352 / m_re * m_referenceLength; //* (FFPOW2[maxLevel() - a_level(pCellId)]);
-//  m_omega = 2.0 / (1.0 + 6.0 * m_nu);
+  /// todo: 1.73205080756887729352??? (F1BCS)
+  //  m_nu    = m_ma / 1.73205080756887729352 / m_re * m_referenceLength; //* (FFPOW2[maxLevel() - a_level(pCellId)]);
+  //  m_omega = 2.0 / (1.0 + 6.0 * m_nu);
 
-  m_omega     = 1.0 / m_relaxTime;
-  m_nu        = (2.0 * m_relaxTime - 1) / 6.0;
-  m_refU      = m_re * m_nu / m_refLength;
+  m_omega = 1.0 / m_relaxTime;
+  m_nu    = (2.0 * m_relaxTime - 1) / 6.0;
+  m_refU  = m_re * m_nu / m_refLength;
 
   m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL, LBTYPE>>();
 
@@ -236,6 +236,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::timeStep() {
   updateMacroscopicValues();
   calcEquilibriumMoments();
   collisionStep();
+  forcing();
   prePropBoundaryCnd();
   propagationStep();
   boundaryCnd();
@@ -243,6 +244,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::timeStep() {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced) {
+  updateMacroscopicValues();
   if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || forced) {
     std::vector<GDouble>              tmpU;
     std::vector<GDouble>              tmpV;
@@ -334,7 +336,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::updateMacroscopicValues() {
            - m_fold[cellId * NDIST + moment[dir][3]] - m_fold[cellId * NDIST + moment[dir][4]] - m_fold[cellId * NDIST + moment[dir][5]])
           / rho<NDIM>(cellId);
     }
-    //    cerr0 << "cellId: " << cellId << " (" << velocity<NDIM>(cellId, 0) << ", " << velocity<NDIM>(cellId, 1) << ")" << std::endl;
   }
 }
 
@@ -343,13 +344,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::calcEquilibriumMoments() {
   static constexpr std::array<GDouble, 9> cx = {-1, 1, 0, 0, 1, 1, -1, -1, 0};
   static constexpr std::array<GDouble, 9> cy = {0, 0, -1, 1, 1, -1, -1, 1, 0};
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
-//    const GDouble squaredV = gcem::pow(velocity<NDIM>(cellId, 0), 2) + gcem::pow(velocity<NDIM>(cellId, 1), 2);
+    //    const GDouble squaredV = gcem::pow(velocity<NDIM>(cellId, 0), 2) + gcem::pow(velocity<NDIM>(cellId, 1), 2);
     for(GInt dist = 0; dist < NDIST; ++dist) {
-                  m_feq[cellId * NDIST + dist] =
-                      LBMethod<LBTYPE>::m_weights[dist] * rho<NDIM>(cellId) *
-                      (1 + 3 * (velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist]));
-//      const GDouble cu             = velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist];
-//      m_feq[cellId * NDIST + dist] = LBMethod<LBTYPE>::m_weights[dist] * rho<NDIM>(cellId) * (1 + 3 * cu + 4.5 * cu * cu - 1.5 * squaredV);
+      m_feq[cellId * NDIST + dist] = LBMethod<LBTYPE>::m_weights[dist] * rho<NDIM>(cellId)
+                                     * (1 + 3 * (velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist]));
+      //      const GDouble cu             = velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist];
+      //      m_feq[cellId * NDIST + dist] = LBMethod<LBTYPE>::m_weights[dist] * rho<NDIM>(cellId) * (1 + 3 * cu + 4.5 * cu * cu - 1.5 *
+      //      squaredV);
     }
   }
 }
@@ -359,6 +360,66 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::collisionStep() {
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST; ++dist) {
       m_f[cellId * NDIST + dist] = (1 - m_omega) * m_fold[cellId * NDIST + dist] + m_omega * m_feq[cellId * NDIST + dist];
+    }
+  }
+}
+
+//todo:refactor
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+void LBMSolver<DEBUG_LEVEL, LBTYPE>::forcing() {
+  static GBool  info        = true;
+  const GString forcingType = opt_config_value<GString>("forcing", "");
+
+  if(!forcingType.empty()) {
+    if(info) {
+      cerr0 << "Using forcing!" << std::endl;
+      logger << "Using forcing!" << std::endl;
+      info = false;
+    }
+
+    const auto inlet  = bndrySurface("-x");
+    const auto outlet = bndrySurface("+x");
+
+    //const GDouble umax = 0.1;
+//    const GDouble gradP = 0.00011276015; //gradP=8*nu*u_max/(NY)^2;
+    const GDouble outletPressure = 1.0;
+//    const GDouble inletPressure  = 1.010487; //rho_inlet=3*(NX-1)*gradP+outletPressure; //0.092
+//    const GDouble inletPressure  = 1.011497487;//0.09927
+    const GDouble inletPressure  = 1.0115985357;//0.01
+
+
+    // set Outlet forcing
+    for(const GInt inletCellId : inlet.getCellList()) {
+      const GInt           valueCellId        = grid().neighbor(inletCellId, 1);
+      const VectorD<NDIM>& centerInlet        = grid().center(valueCellId);
+      for(const GInt outletCellId : outlet.getCellList()) {
+        const VectorD<NDIM>& centerOutlet = grid().center(outletCellId);
+        if(std::abs(centerInlet[1] - centerOutlet[1]) < GDoubleEps) {
+          for(GInt dist = 0; dist < LBMethod<LBTYPE>::m_noDists; ++dist) {
+            f(outletCellId, dist) =
+                LBMethod<LBTYPE>::m_weights[dist] * outletPressure
+                    * (1 + 3 * (vars(valueCellId, PV::velocitiy(0)) * LBMethod<LBTYPE>::m_dirs[dist][0] + 0 * LBMethod<LBTYPE>::m_dirs[dist][1]))
+                + f(valueCellId, dist) - feq(valueCellId, dist);
+          }
+        }
+      }
+    }
+
+    // set Inlet forcing
+    for(const GInt outletCellId : outlet.getCellList()) {
+      const GInt           valueCellId         = grid().neighbor(outletCellId, 0);
+      const VectorD<NDIM>& centerOutlet        = grid().center(valueCellId);
+      for(const GInt inletCellId : inlet.getCellList()) {
+        const VectorD<NDIM>& centerInlet = grid().center(inletCellId);
+        if(std::abs(centerInlet[1] - centerOutlet[1]) < GDoubleEps) {
+          for(GInt dist = 0; dist < LBMethod<LBTYPE>::m_noDists; ++dist) {
+            f(inletCellId, dist) =
+                LBMethod<LBTYPE>::m_weights[dist] * inletPressure
+                    * (1 + 3 * (vars(valueCellId, PV::velocitiy(0)) * LBMethod<LBTYPE>::m_dirs[dist][0] + 0 * LBMethod<LBTYPE>::m_dirs[dist][1]))
+                + f(valueCellId, dist) - feq(valueCellId, dist);
+          }
+        }
+      }
     }
   }
 }
@@ -383,6 +444,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::propagationStep() {
         m_fold[neighborId * NDIST + dist] = m_f[cellId * NDIST + dist];
       }
     }
+    fold(cellId, NDIST-1) = f(cellId, NDIST-1);
   }
 }
 

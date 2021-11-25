@@ -37,7 +37,7 @@
     "maxSteps": 200000,
     "info_interval": 100,
     "solution_interval": 500,
-    "convergence": 5E-13,
+    "convergence": 2E-11,
     "analyticalSolution": "couette2D_1_5",
     "errorL2": 2E-11,
     "errorMax": 9E-13,

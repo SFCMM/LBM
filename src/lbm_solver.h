@@ -11,6 +11,14 @@
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMSolver : public SolverInterface, private configuration {
+ private:
+  // Type declarations and template variables only
+  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
+  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+  static constexpr GInt NVARS = NDIM + 1 + static_cast<GInt>(LBMethod<LBTYPE>::m_isThermal);
+
+  using method = LBMethod<LBTYPE>;
+
  public:
   LBMSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
   ~LBMSolver() override       = default;
@@ -23,18 +31,14 @@ class LBMSolver : public SolverInterface, private configuration {
   void initBenchmark(int argc, GChar** argv) override;
   auto run() -> GInt override;
 
-  [[nodiscard]] auto grid() const -> const GridInterface& override { return *m_grid; };
+  [[nodiscard]] auto grid() const -> const BaseCartesianGrid<DEBUG_LEVEL, NDIM>& override {
+    return *static_cast<BaseCartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get());
+  };
   void transferGrid(const GridInterface& grid) override;
 
   constexpr auto isThermal() -> GBool;
 
  private:
-  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
-  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
-  static constexpr GInt NVARS = NDIM + 1 + static_cast<GInt>(LBMethod<LBTYPE>::m_isThermal);
-
-  using method = LBMethod<LBTYPE>;
-
   void init(int argc, GChar** argv);
   void initTimers();
   void allocateMemory();
@@ -53,11 +57,13 @@ class LBMSolver : public SolverInterface, private configuration {
     return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->noChildren(cellId);
   }
 
-  [[nodiscard]] inline auto center(const GInt id, const GInt dir) const -> GDouble { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())
-                                                                      ->center(id, dir); }
+  [[nodiscard]] inline auto center(const GInt id, const GInt dir) const -> GDouble {
+    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->center(id, dir);
+  }
 
-  inline auto center() const -> const std::vector<Point<NDIM>>& { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())
-                                                                      ->center(); }
+  inline auto center() const -> const std::vector<Point<NDIM>>& {
+    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->center();
+  }
 
   auto bndrySurface(const GString id) const -> const Surface<NDIM>& {
     return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->bndrySurface(id);
@@ -70,6 +76,7 @@ class LBMSolver : public SolverInterface, private configuration {
   void compareToAnalyticalResult();
   void initialCondition();
   auto convergenceCondition() -> GBool;
+  void forcing();
   void prePropBoundaryCnd();
   void boundaryCnd();
   void propagationStep();
@@ -97,23 +104,23 @@ class LBMSolver : public SolverInterface, private configuration {
     return m_vars[cellId * NVARS + PV::velocities<NDIM>()[dir]];
   }
 
-  auto inline vars(const GInt cellId, const GInt varId) -> GDouble&{
-    return m_vars[cellId * NVARS + varId];
-  }
+  auto inline vars(const GInt cellId, const GInt varId) -> GDouble& { return m_vars[cellId * NVARS + varId]; }
 
   auto inline f(const GInt cellId, const GInt dir) -> GDouble& { return m_f[cellId * NDIST + dir]; }
+
+  auto inline feq(const GInt cellId, const GInt dir) -> GDouble& { return m_feq[cellId * NDIST + dir]; }
 
   auto inline fold(const GInt cellId, const GInt dir) -> GDouble& { return m_fold[cellId * NDIST + dir]; }
 
   [[nodiscard]] auto inline noCells() const -> GInt { return m_grid->noCells(); }
 
-  std::unique_ptr<GridInterface>              m_grid;
-  std::unique_ptr<LBMethodInterface>          m_lbm;        // todo:implement
+  std::unique_ptr<GridInterface>                      m_grid;
+  std::unique_ptr<LBMethodInterface>                  m_lbm;        // todo:implement
   std::unique_ptr<LBMBndManager<DEBUG_LEVEL, LBTYPE>> m_bndManager; // todo:implement
 
   GString m_exe;
   GString m_configurationFileName;
-  GBool m_benchmark = false;
+  GBool   m_benchmark = false;
 
   GInt32 m_domainId  = -1;
   GInt32 m_noDomains = -1;

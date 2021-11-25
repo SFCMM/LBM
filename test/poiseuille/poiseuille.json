@@ -1,9 +1,9 @@
 {
   "dry-run": true,
   "dim": 2,
-  "partitionLevel": 4,
-  "uniformLevel": 4,
-  "maxRfnmtLvl": 4,
+  "partitionLevel": 5,
+  "uniformLevel": 5,
+  "maxRfnmtLvl": 5,
   "maxNoCells": 1000000,
   "outputDir": "out",
   "gridFileName": "gridD",
@@ -34,24 +34,26 @@
     "relaxation": 0.933,
     "reynoldsnumber": 0.7,
     "analyticalSolution": "poiseuille2D_1",
-    "maxSteps": 200000,
+    "forcing": "poiseuille2D_1",
+    "forcing_param": "1.1",
+    "maxSteps": 500000,
     "info_interval": 100,
-    "solution_interval": 100,
-    "convergence": 1E-13,
+    "solution_interval": 10000,
+    "convergence": 2E-11,
     "errorL2": 3E-11,
     "errorMax": 2E-12,
     "assumeAxisAligned": true,
     "boundary": {
       "cube": {
         "+x": {
-          "type": "outlet",
-          "model": "bounceback",
-          "pressure": 1.0
+          "type": "periodic",
+          "generateBndry": false,
+          "connection": "-x"
         },
         "-x": {
-          "type": "inlet",
-          "model": "bounceback",
-          "pressure": 1.1
+          "type": "periodic",
+          "generateBndry": false,
+          "connection": "+x"
         },
         "-y": {
           "type": "wall",

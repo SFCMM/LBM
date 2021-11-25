@@ -132,7 +132,7 @@ class BaseCartesianGrid : public GridInterfaceD<NDIM> {
     return m_center[id];
   }
 
-  [[nodiscard]] inline auto level(const GInt id) const -> std::byte {
+  [[nodiscard]] inline auto level(const GInt id) const -> std::byte override {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
       return m_level.at(id);

@@ -61,11 +61,11 @@ class configuration{
   }
 
   auto has_any_key_value(const GString& key, const GString& value) const -> GBool {
-    auto has_config_value_key = [=](const json& cc, const GString& key, const GString& val){
+    auto has_config_value_key = [=](const json& cc, const GString& _key, const GString& val){
       // entry exists
-      if(cc.contains(key)){
+      if(cc.contains(_key)){
         // value matches
-        if(cc[key] == val){
+        if(cc[_key] == val){
           return true;
         }
       }
