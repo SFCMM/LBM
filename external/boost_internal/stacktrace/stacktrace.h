@@ -50,7 +50,7 @@ class basic_stacktrace {
       return;
     }
 
-    impl_.reserve(static_cast<std::size_t>(size));
+    impl_.reserve(size);
     for (std::size_t i = 0; i < size; ++i) {
       if (!begin[i]) {
         return;

@@ -49,10 +49,10 @@ inline auto inDirection(const VectorD<NDIM>& normal, const std::array<GDouble, N
 }
 
 enum class BndryType {
-  Wall_BounceBack,                   // BounceBack Wall Boundary condition 1st order accurate
+  Wall_BounceBack,                    // BounceBack Wall Boundary condition 1st order accurate
   Wall_BounceBack_TangentialVelocity, // BounceBack Boundary condition 1st order accurate with tangential velocity
-  Inlet_BounceBack_ConstPressure, // BounceBack Boundary condition 1st order accurate with tangential velocity
-  Outlet_BounceBack_ConstPressure, // BounceBack Boundary condition 1st order accurate with tangential velocity
+  Inlet_BounceBack_ConstPressure,     // BounceBack Boundary condition 1st order accurate with tangential velocity
+  Outlet_BounceBack_ConstPressure,    // BounceBack Boundary condition 1st order accurate with tangential velocity
   Periodic
 };
 
@@ -70,15 +70,15 @@ static constexpr auto getLBMethodType() -> LBMethodType {
           return LBMethodType::D2Q5;
         case 9:
           return LBMethodType::D2Q9;
-          //        default:
-          //          return LBMethodType::INVALID;
+        default:
+          std::terminate();
       }
     case 3:
       return LBMethodType::D3Q15;
-      //    default:
-      //      return LBMethodType::INVALID;
     case 4:
       return LBMethodType::D4Q20;
+    default:
+      std::terminate();
   }
 }
 
@@ -92,15 +92,15 @@ static constexpr auto getLBMethodType(const GInt noDims, const GInt noDistributi
           return getLBMethodType<2, 5>();
         case 9:
           return getLBMethodType<2, 9>();
-          //        default:
-          //          return LBMethodType::INVALID;
+        default:
+          std::terminate();
       }
     case 3:
       return getLBMethodType<3, 15>();
-      //    default:
-      //      return LBMethodType::INVALID;
     case 4:
       return getLBMethodType<4, 20>();
+    default:
+      std::terminate();
   }
 }
 
@@ -140,10 +140,10 @@ class LBMethod {
  public:
   static constexpr std::array<std::array<GDouble, dim(LBTYPE)>, noDists(LBTYPE)> m_dirs{};
   static constexpr auto                                                          oppositeDist(const GInt dist) -> GInt { return 0; }
-  static constexpr GInt                                                          m_dim     = 0;
-  static constexpr GInt                                                          m_noDists = 0;
-  static constexpr std::array<GDouble, 1> m_weights = {0};
-  static constexpr GBool m_isThermal = false;
+  static constexpr GInt                                                          m_dim       = 0;
+  static constexpr GInt                                                          m_noDists   = 0;
+  static constexpr std::array<GDouble, 1>                                        m_weights   = {0};
+  static constexpr GBool                                                         m_isThermal = false;
 };
 
 
@@ -161,8 +161,8 @@ class LBMethod<LBMethodType::D2Q9> {
   static constexpr std::array<GDouble, 9> m_weights = {1.0 / 9.0,  1.0 / 9.0,  1.0 / 9.0,  1.0 / 9.0, 1.0 / 36.0,
                                                        1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 4.0 / 9.0};
 
-  static constexpr GInt m_dim     = 2;
-  static constexpr GInt m_noDists = 9;
+  static constexpr GInt  m_dim       = 2;
+  static constexpr GInt  m_noDists   = 9;
   static constexpr GBool m_isThermal = false;
 };
 
