@@ -11,13 +11,19 @@ const std::function<GBool(GInt)> defaultTrue  = [](GInt /*ignored*/) { return tr
 const std::function<GBool(GInt)> defaultFalse = [](GInt /*ignored*/) { return false; };
 } // namespace hidden::_detail
 
+//todo: improve
+struct IOIndex{
+  GString name;
+  GString type;
+};
+
 namespace ASCII {
 // using namespace csv;
 using namespace std;
 
 template <GInt DIM>
 inline void writePointsCSV(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
-                           const std::vector<GString>& index = {}, const std::vector<std::vector<GString>>& values = {},
+                           const std::vector<IOIndex>& index = {}, const std::vector<std::vector<GString>>& values = {},
                            const std::function<GBool(GInt)>& filter = hidden::_detail::defaultTrue) {
   ASSERT(index.size() == values.size(), "Invalid values/index size!");
 
@@ -38,7 +44,7 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
     }
   }
   for(const auto& columnHeader : index) {
-    pointFile << "," << columnHeader;
+    pointFile << "," << columnHeader.name;
   }
   pointFile << "\n";
 
@@ -143,7 +149,7 @@ namespace ASCII {
 // todo: combine to functions ASCII and binary!!
 template <GInt DIM>
 inline void writePoints(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
-                        const std::vector<GString>& index = {}, const std::vector<std::vector<GString>>& values = {},
+                        const std::vector<IOIndex>& index = {}, const std::vector<std::vector<GString>>& values = {},
                         const std::function<GBool(GInt)>& filter = hidden::_detail::defaultTrue) {
   cerr0 << SP1 << "Writing " << fileName << ".vtp" << std::endl;
   logger << SP1 << "Writing " << fileName << ".vtp" << std::endl;
@@ -197,11 +203,11 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   pointFile << point_data_header();
   GInt i = 0;
   for(const auto& column : values) {
-    //todo: temporary test
-    if(index[i] == "u" || index[i] == "v" || index[i] == "rho"){
-      pointFile << point_data_float64(index[i]);
+    //todo: fix types
+    if(index[i].type == "float64" || index[i].type == "float32"){
+      pointFile << point_data_float64(index[i].name);
     } else {
-      pointFile << point_data_int32(index[i]);
+      pointFile << point_data_int32(index[i].name);
     }
     i++;
     for(GInt id = 0; id < noValues; ++id) {
@@ -221,7 +227,7 @@ namespace BINARY {
 // todo: combine to functions ASCII and binary!!
 template <GInt DIM>
 inline void writePoints(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
-                        const std::vector<GString>& index = {}, const std::vector<std::vector<GString>>& values = {},
+                        const std::vector<IOIndex>& index = {}, const std::vector<std::vector<GString>>& values = {},
                         const std::function<GBool(GInt)>& filter = hidden::_detail::defaultTrue) {
   cerr0 << SP1 << "Writing " << fileName << ".vtp" << std::endl;
   logger << SP1 << "Writing " << fileName << ".vtp" << std::endl;
@@ -300,7 +306,12 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   {
     GInt i = 0;
     for(const auto& column : values) {
-      pointFile << point_data_int32<true>(index[i++]);
+      //todo: fix types
+      if(index[i].type == "float64" || index[i].type == "float32"){
+        pointFile << point_data_float64<true>(index[i++].name);
+      } else {
+        pointFile << point_data_int32<true>(index[i++].name);
+      }
       std::vector<GInt32> tmp_val;
 
       for(GInt id = 0; id < noValues; ++id) {

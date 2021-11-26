@@ -206,6 +206,13 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::convergenceCondition() -> GBool {
       cerr0 << "Reached convergence to: " << maxConv << std::endl;
       return true;
     }
+    if(m_timeStep > 1 && std::isnan(maxConv)) {
+      logger << "Solution diverged!" << std::endl;
+      cerr0 << "Solution diverged!"  << std::endl;
+      m_diverged = true;
+      // return true to cancel further calculation
+      return true;
+    }
   }
   return false;
 }
@@ -243,35 +250,43 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::timeStep() {
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced) {
-  updateMacroscopicValues();
+void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced, const GString& postfix) {
+  if(m_diverged){
+    // output the values before updating the macroscopic values in case the solution diverged
+    output(true, "bdiv");
+  }
+//  updateMacroscopicValues();
   if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || forced) {
-    std::vector<GDouble>              tmpU;
-    std::vector<GDouble>              tmpV;
+    std::array<std::vector<GDouble>, NDIM> tmpVel;
     std::vector<GDouble>              tmpRho;
-    std::vector<GString>              index;
+    std::vector<IOIndex>              index;
     std::vector<std::vector<GString>> values;
 
     // only output leaf cells (i.e. cells without children)
     std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return noChildren(cellId) == 0; };
 
-    tmpU.resize(size());
-    tmpV.resize(size());
+    for(GInt dir = 0; dir < NDIM; ++dir){
+      tmpVel[dir].resize(size());
+    }
     tmpRho.resize(size());
+
     for(GInt cellId = 0; cellId < size(); ++cellId) {
-      tmpU[cellId]   = velocity<NDIM>(cellId, 0);
-      tmpV[cellId]   = velocity<NDIM>(cellId, 1);
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        tmpVel[dir][cellId] = velocity<NDIM>(cellId, dir);
+      }
       tmpRho[cellId] = rho<NDIM>(cellId);
     }
 
-    index.emplace_back("u");
-    index.emplace_back("v");
-    index.emplace_back("rho");
-    values.emplace_back(toStringVector(tmpU, size()));
-    values.emplace_back(toStringVector(tmpV, size()));
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      //todo: fix type
+      index.emplace_back(IOIndex{static_cast<GString>(PV::VELSTR[dir]), "float32"});
+      values.emplace_back(toStringVector(tmpVel[dir], size()));
+    }
+    //todo: fix type
+    index.emplace_back(IOIndex{"rho", "float32"});
     values.emplace_back(toStringVector(tmpRho, size()));
 
-    VTK::ASCII::writePoints<NDIM>("test_" + std::to_string(m_timeStep), size(), center(), index, values, isLeaf);
+    VTK::ASCII::writePoints<NDIM>("test_" + std::to_string(m_timeStep) + postfix, size(), center(), index, values, isLeaf);
   }
 }
 

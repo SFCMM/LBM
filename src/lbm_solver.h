@@ -72,7 +72,7 @@ class LBMSolver : public SolverInterface, private configuration {
 
   void loadConfiguration();
   void timeStep();
-  void output(const GBool forced = false);
+  void output(const GBool forced = false, const GString& postfix ="");
   void compareToAnalyticalResult();
   void initialCondition();
   auto convergenceCondition() -> GBool;
@@ -121,6 +121,7 @@ class LBMSolver : public SolverInterface, private configuration {
   GString m_exe;
   GString m_configurationFileName;
   GBool   m_benchmark = false;
+  GBool   m_diverged  = false;
 
   GInt32 m_domainId  = -1;
   GInt32 m_noDomains = -1;

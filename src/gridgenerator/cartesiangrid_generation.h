@@ -240,16 +240,18 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       TERMM(-1, "Unknown output filter " + filter);
     }
 
-    std::vector<GString>              index;
+    std::vector<IOIndex>              index;
     std::vector<std::vector<GString>> values;
     cerr0 << "Selected output values:";
     for(const auto& outputvalue : outvalues) {
       if(outputvalue == "level") {
-        index.emplace_back("Level");
+        //todo:replace type
+        index.emplace_back(IOIndex{"Level", "int64"});
         values.emplace_back(toStringVector(level(), size()));
         cerr0 << " level ";
       } else if(outputvalue == "noChildren") {
-        index.emplace_back("NoChildren");
+        //todo:replace type
+        index.emplace_back(IOIndex{"NoChildren", "int64"});
         values.emplace_back(toStringVector(m_noChildren, size()));
         cerr0 << " noChildren ";
       } else {

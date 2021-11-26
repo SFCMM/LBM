@@ -39,8 +39,8 @@
     "solution_interval": 500,
     "convergence": 2E-11,
     "analyticalSolution": "couette2D_1_5",
-    "errorL2": 2E-11,
-    "errorMax": 9E-13,
+    "errorL2": 7E-10,
+    "errorMax": 4E-11,
     "assumeAxisAligned": true,
     "boundary": {
       "cube": {

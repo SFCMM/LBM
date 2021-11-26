@@ -21,6 +21,11 @@
 - inflow pressure bc
 - outflow pressure bc
 - refactor forcing setup
+- optionally cancel calculation when any macro value is nan
+- refactor IO code
+- make types definitions in include/common/constant
+- set output separately for the solvers
+- include LPT solver
 
 # V0.0.1
 ## Planned:
@@ -32,11 +37,10 @@
 - solve 2D poisson equation
 - [bug] fix unused values being marked correctly!
 - order boundary conditions by type
-- exit on nan
-- improve poiseuille setup (skip inlet and outlet cells for error calculation)
+- write out lines
 
 ## Ongoing:
-- implement output correctly
+- improve poiseuille setup (skip inlet and outlet cells for error calculation)
 
 
 ## Done:
@@ -56,8 +60,10 @@
 - Added Poiseuille flow testcase
 
 ### Usability
+- exit on nan during convergence check
 
 ### IO
+-differentiate between float and integers correctly in the VTK output
 
 ### Performance
 

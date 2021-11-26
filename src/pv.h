@@ -7,6 +7,8 @@ static constexpr auto V() -> GInt { return 1; }
 
 static constexpr auto W() -> GInt { return 2; }
 
+static constexpr std::array<std::string_view, 3> VELSTR = {"U", "V", "W"};
+
 template <GInt NDIM>
 static constexpr auto velocities() -> std::array<GInt, NDIM> {
   if constexpr(NDIM == 1) {
