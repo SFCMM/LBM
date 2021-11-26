@@ -292,11 +292,36 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced, const GString& p
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::compareToAnalyticalResult() {
+  // for an analytical testcase the value "analyticalSolution" needs to be defined
   const auto           analyticalSolutionName = required_config_value<GString>("analyticalSolution");
+  // from the analyticalSolutionName we can get a functional representation of the solution
   const auto           anaSolution            = analytical::ns::getAnalyticalSolution(analyticalSolutionName);
+
+  // determine the error
   GDouble              maxError               = 0;
   std::vector<GDouble> error;
+
+  // exclude cells from error calculation, for example, the boundary surfaces
+  std::vector<std::vector<GInt>> m_excludedCells;
+  if(has_config_value("analyticalSolutionExcludeSurface")){
+    const auto excludedSurfaces = required_config_value<std::vector<GString>>("analyticalSolutionExcludeSurface");
+    for(const auto& exclSurfName: excludedSurfaces){
+      m_excludedCells.emplace_back(bndrySurface(exclSurfName).getCellList());
+    }
+  }
   for(GInt cellId = 0; cellId < grid().size(); ++cellId) {
+    GBool excluded = false;
+    if(!m_excludedCells.empty()){
+      for(const auto& cellList:m_excludedCells){
+        if(std::find(cellList.begin(), cellList.end(), cellId) != cellList.end() ){
+          excluded = true;
+          break;
+        }
+      }
+    }
+    if(excluded){
+      continue;
+    }
     const GDouble solution = anaSolution(center(cellId, 1));
     const GDouble delta    = velocity<NDIM>(cellId, 0) - solution;
     maxError               = std::max(std::abs(delta), maxError);
@@ -304,6 +329,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::compareToAnalyticalResult() {
   }
   const GDouble L2error = 1.0 / grid().size() * std::accumulate(error.begin(), error.end(), 0.0);
 
+  // if that compare with the maximum expected error to give a pass/no-pass result
   const GDouble maximumExpectedError   = opt_config_value("errorMax", 1.0);
   const GDouble maximumExpectedErrorL2 = opt_config_value("errorL2", 1.0);
 

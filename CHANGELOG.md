@@ -26,6 +26,7 @@
 - make types definitions in include/common/constant
 - set output separately for the solvers
 - include LPT solver
+- write out lines as svg
 
 # V0.0.1
 ## Planned:
@@ -37,10 +38,9 @@
 - solve 2D poisson equation
 - [bug] fix unused values being marked correctly!
 - order boundary conditions by type
-- write out lines
 
 ## Ongoing:
-- improve poiseuille setup (skip inlet and outlet cells for error calculation)
+- write out lines
 
 
 ## Done:
@@ -58,6 +58,7 @@
 ### Testing
 - Added Couette flow testcase
 - Added Poiseuille flow testcase
+- option to exclude surfaces from error calculation
 
 ### Usability
 - exit on nan during convergence check

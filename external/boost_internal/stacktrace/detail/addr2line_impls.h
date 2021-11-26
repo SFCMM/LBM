@@ -92,8 +92,8 @@ public:
       // `exec*p*` functions are vulnerable to PATH variable evaluation attacks.
       ::execv(prog_name, argp);
       ::_exit(127);
-    default:
-      std::terminate();
+//    default:
+//      std::terminate();
     }
 
     p = ::fdopen(pdes[0], "r");
