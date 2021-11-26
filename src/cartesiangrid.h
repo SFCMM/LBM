@@ -383,6 +383,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private confi
     }
   }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cppcoreguidelines-pro-bounds-constant-array-index"
   void identifyBndrySurfaces() {
     if(m_axisAlignedBnd) {
       for(GInt surfId = 0; surfId < cartesian::maxNoNghbrs<NDIM>(); ++surfId){
@@ -402,6 +404,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private confi
       TERMM(-1, "Not implemented");
     }
   }
+#pragma clang diagnostic pop
 
   void setupPeriodicConnections() {
     if(m_periodic) {
