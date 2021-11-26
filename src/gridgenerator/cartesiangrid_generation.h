@@ -245,12 +245,12 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     cerr0 << "Selected output values:";
     for(const auto& outputvalue : outvalues) {
       if(outputvalue == "level") {
-        //todo:replace type
+        // todo:replace type
         index.emplace_back(IOIndex{"Level", "int64"});
         values.emplace_back(toStringVector(level(), size()));
         cerr0 << " level ";
       } else if(outputvalue == "noChildren") {
-        //todo:replace type
+        // todo:replace type
         index.emplace_back(IOIndex{"NoChildren", "int64"});
         values.emplace_back(toStringVector(m_noChildren, size()));
         cerr0 << " noChildren ";
@@ -283,7 +283,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   [[nodiscard]] auto child(const GInt id, const GInt childId) const -> GInt { return m_childIds[id].c[childId]; }
 
-  [[nodiscard]] auto neighbor(const GInt id, const GInt dir) const -> GInt { return m_nghbrIds[id].n[dir]; }
+  [[nodiscard]] auto neighbor(const GInt id, const GInt dir) const -> GInt override { return m_nghbrIds[id].n[dir]; }
 
  protected:
   [[nodiscard]] auto neighbor(const GInt id, const GInt dir) -> GInt& { return m_nghbrIds[id].n[dir]; }

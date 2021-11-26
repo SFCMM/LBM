@@ -23344,7 +23344,8 @@ public:
         return lhs.m_value.number_unsigned == rhs.m_value.number_unsigned;
 
       case value_t::number_float:
-        return lhs.m_value.number_float == rhs.m_value.number_float;
+        return std::abs(lhs.m_value.number_float - rhs.m_value.number_float) <
+        std::numeric_limits<double>::epsilon();
 
       case value_t::binary:
         return *lhs.m_value.binary == *rhs.m_value.binary;
@@ -23355,19 +23356,24 @@ public:
     }
     else if (lhs_type == value_t::number_integer && rhs_type == value_t::number_float)
     {
-      return static_cast<number_float_t>(lhs.m_value.number_integer) == rhs.m_value.number_float;
+      return std::abs(static_cast<number_float_t>(lhs.m_value.number_integer) -
+          rhs.m_value.number_float) < std::numeric_limits<double>::epsilon();
     }
     else if (lhs_type == value_t::number_float && rhs_type == value_t::number_integer)
     {
-      return lhs.m_value.number_float == static_cast<number_float_t>(rhs.m_value.number_integer);
+      return std::abs(lhs.m_value.number_float - static_cast<number_float_t>(rhs
+      .m_value.number_integer)) < std::numeric_limits<double>::epsilon();
     }
     else if (lhs_type == value_t::number_unsigned && rhs_type == value_t::number_float)
     {
-      return static_cast<number_float_t>(lhs.m_value.number_unsigned) == rhs.m_value.number_float;
+      return std::abs(static_cast<number_float_t>(lhs.m_value.number_unsigned) -
+          rhs
+      .m_value.number_float) < std::numeric_limits<double>::epsilon();
     }
     else if (lhs_type == value_t::number_float && rhs_type == value_t::number_unsigned)
     {
-      return lhs.m_value.number_float == static_cast<number_float_t>(rhs.m_value.number_unsigned);
+      return std::abs(lhs.m_value.number_float - static_cast<number_float_t>
+(rhs.m_value.number_unsigned)) < std::numeric_limits<double>::epsilon();
     }
     else if (lhs_type == value_t::number_unsigned && rhs_type == value_t::number_integer)
     {

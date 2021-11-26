@@ -50,9 +50,11 @@
     }                                                                                                                                      \
   } while(false)
 #else
+#ifndef ASSERT
 #define ASSERT(condition, message)                                                                                                         \
   do {                                                                                                                                     \
   } while(false && (condition))
+#endif
 #endif
 
 #endif // GRIDGENERATOR_TERM_H
