@@ -65,6 +65,20 @@
           "model": "bounceback"
         }
       }
+    },
+    "postprocessing": {
+      "line1": {
+        "type": "line",
+        "execute": "atEnd",
+        "A": [
+          0.5,
+          0.0
+        ],
+        "B": [
+          0.5,
+          1.0
+        ]
+      }
     }
   }
 }

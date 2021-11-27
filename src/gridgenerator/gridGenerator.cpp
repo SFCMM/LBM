@@ -109,7 +109,7 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
   RECORD_TIMER_START(TimeKeeper[Timers::GridIo]);
 
   if(!m_benchmark) {
-    configuration::loadConfiguration();
+    Configuration::load();
   } else {
     logger << "Setting up benchmarking!" << endl;
   }

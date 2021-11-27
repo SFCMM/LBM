@@ -20,7 +20,7 @@
 #include "interface/grid_interface.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
-class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private configuration {
+class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Configuration {
  public:
   /// Underlying enum type for property access
   using Cell = CellProperties;
@@ -239,6 +239,11 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private confi
   void save(const GString& fileName, const json& gridOutConfig) const override { TERMM(-1, "Not implemented!"); }
 
   auto bndrySurface(const GString& id) -> Surface<NDIM>& {
+    if(DEBUG_LEVEL > Debug_Level::min_debug){
+      if(m_bndrySurfaces.count(id) == 0){
+        TERMM(-1, "Invalid bndryId \"" +id +"\"");
+      }
+    }
     return m_bndrySurfaces.at(id);
   }
 

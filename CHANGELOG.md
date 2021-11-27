@@ -27,6 +27,7 @@
 - set output separately for the solvers
 - include LPT solver
 - write out lines as svg
+- move comparision with analytical solution to postprocessing
 
 # V0.0.1
 ## Planned:
@@ -52,6 +53,8 @@
 - general bounce back "no-slip" wall boundary condition with tangential velocity
 - load bnd conditions from configuration file
 - added forcing
+- Postprocessing
+  - Lines
 
 ### Buildsystem
 
@@ -62,6 +65,7 @@
 
 ### Usability
 - exit on nan during convergence check
+- Add postprocessing structures
 
 ### IO
 -differentiate between float and integers correctly in the VTK output

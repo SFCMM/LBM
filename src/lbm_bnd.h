@@ -15,7 +15,7 @@ class LBMBnd_wallBB;
 class LBMBnd_dummy;
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-class LBMBndManager : private configuration {
+class LBMBndManager : private Configuration {
  public:
   LBMBndManager()          = default;
   virtual ~LBMBndManager() = default;

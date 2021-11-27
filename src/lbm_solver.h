@@ -7,10 +7,11 @@
 #include "interface/solver_interface.h"
 #include "lbm_bnd.h"
 #include "lbm_constants.h"
+#include "postprocessing.h"
 #include "pv.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-class LBMSolver : public SolverInterface, private configuration {
+class LBMSolver : public SolverInterface, private Configuration, private Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM> {
  private:
   // Type declarations and template variables only
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
@@ -19,8 +20,11 @@ class LBMSolver : public SolverInterface, private configuration {
 
   using method = LBMethod<LBTYPE>;
 
+  using POST = Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM>;
+  using POST::executePostprocess;
+
  public:
-  LBMSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
+  LBMSolver(GInt32 domainId, GInt32 noDomains) : POST(), m_domainId(domainId), m_noDomains(noDomains){};
   ~LBMSolver() override       = default;
   LBMSolver(const LBMSolver&) = delete;
   LBMSolver(LBMSolver&&)      = delete;
@@ -72,7 +76,7 @@ class LBMSolver : public SolverInterface, private configuration {
 
   void loadConfiguration();
   void timeStep();
-  void output(const GBool forced = false, const GString& postfix ="");
+  void output(const GBool forced = false, const GString& postfix = "");
   void compareToAnalyticalResult();
   void initialCondition();
   auto convergenceCondition() -> GBool;

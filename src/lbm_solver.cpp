@@ -30,7 +30,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::init(int argc, GChar** argv, GString config
   init(argc, argv);
   logger << "LBM Solver started ||>" << endl;
   cout << "LBM Solver started ||>" << endl;
-  configuration::loadConfiguration("solver");
+  Configuration::load("solver");
+  POST::setConfAccessor(Configuration::getAccessor("postprocessing"));
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
 }
 
@@ -150,6 +151,8 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
   const GInt noTimesteps = required_config_value<GInt>("maxSteps");
   GBool      converged   = false;
 
+  executePostprocess(pp::HOOK::ATSTART);
+
   for(m_timeStep = 0; m_timeStep < noTimesteps && !converged; ++m_timeStep) {
     converged = convergenceCondition();
     timeStep();
@@ -163,6 +166,8 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
   if(analyticalTest) {
     compareToAnalyticalResult();
   }
+
+  executePostprocess(pp::HOOK::ATEND);
 
   logger << "LBM Solver finished <||" << endl;
   cout << "LBM Solver finished <||" << endl;
@@ -208,7 +213,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::convergenceCondition() -> GBool {
     }
     if(m_timeStep > 1 && std::isnan(maxConv)) {
       logger << "Solution diverged!" << std::endl;
-      cerr0 << "Solution diverged!"  << std::endl;
+      cerr0 << "Solution diverged!" << std::endl;
       m_diverged = true;
       // return true to cancel further calculation
       return true;
@@ -239,6 +244,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::initialCondition() {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::timeStep() {
+  executePostprocess(pp::HOOK::BEFORETIMESTEP);
   currToOldVars();
   updateMacroscopicValues();
   calcEquilibriumMoments();
@@ -247,25 +253,26 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::timeStep() {
   prePropBoundaryCnd();
   propagationStep();
   boundaryCnd();
+  executePostprocess(pp::HOOK::AFTERTIMESTEP);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced, const GString& postfix) {
-  if(m_diverged){
+  if(m_diverged) {
     // output the values before updating the macroscopic values in case the solution diverged
     output(true, "bdiv");
   }
-//  updateMacroscopicValues();
+  //  updateMacroscopicValues();
   if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || forced) {
     std::array<std::vector<GDouble>, NDIM> tmpVel;
-    std::vector<GDouble>              tmpRho;
-    std::vector<IOIndex>              index;
-    std::vector<std::vector<GString>> values;
+    std::vector<GDouble>                   tmpRho;
+    std::vector<IOIndex>                   index;
+    std::vector<std::vector<GString>>      values;
 
     // only output leaf cells (i.e. cells without children)
     std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return noChildren(cellId) == 0; };
 
-    for(GInt dir = 0; dir < NDIM; ++dir){
+    for(GInt dir = 0; dir < NDIM; ++dir) {
       tmpVel[dir].resize(size());
     }
     tmpRho.resize(size());
@@ -278,11 +285,11 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced, const GString& p
     }
 
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      //todo: fix type
+      // todo: fix type
       index.emplace_back(IOIndex{static_cast<GString>(PV::VELSTR[dir]), "float32"});
       values.emplace_back(toStringVector(tmpVel[dir], size()));
     }
-    //todo: fix type
+    // todo: fix type
     index.emplace_back(IOIndex{"rho", "float32"});
     values.emplace_back(toStringVector(tmpRho, size()));
 
@@ -293,33 +300,33 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced, const GString& p
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::compareToAnalyticalResult() {
   // for an analytical testcase the value "analyticalSolution" needs to be defined
-  const auto           analyticalSolutionName = required_config_value<GString>("analyticalSolution");
+  const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");
   // from the analyticalSolutionName we can get a functional representation of the solution
-  const auto           anaSolution            = analytical::ns::getAnalyticalSolution(analyticalSolutionName);
+  const auto anaSolution = analytical::ns::getAnalyticalSolution(analyticalSolutionName);
 
   // determine the error
-  GDouble              maxError               = 0;
+  GDouble              maxError = 0;
   std::vector<GDouble> error;
 
   // exclude cells from error calculation, for example, the boundary surfaces
   std::vector<std::vector<GInt>> m_excludedCells;
-  if(has_config_value("analyticalSolutionExcludeSurface")){
+  if(has_config_value("analyticalSolutionExcludeSurface")) {
     const auto excludedSurfaces = required_config_value<std::vector<GString>>("analyticalSolutionExcludeSurface");
-    for(const auto& exclSurfName: excludedSurfaces){
+    for(const auto& exclSurfName : excludedSurfaces) {
       m_excludedCells.emplace_back(bndrySurface(exclSurfName).getCellList());
     }
   }
   for(GInt cellId = 0; cellId < grid().size(); ++cellId) {
     GBool excluded = false;
-    if(!m_excludedCells.empty()){
-      for(const auto& cellList:m_excludedCells){
-        if(std::find(cellList.begin(), cellList.end(), cellId) != cellList.end() ){
+    if(!m_excludedCells.empty()) {
+      for(const auto& cellList : m_excludedCells) {
+        if(std::find(cellList.begin(), cellList.end(), cellId) != cellList.end()) {
           excluded = true;
           break;
         }
       }
     }
-    if(excluded){
+    if(excluded) {
       continue;
     }
     const GDouble solution = anaSolution(center(cellId, 1));
@@ -405,7 +412,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::collisionStep() {
   }
 }
 
-//todo:refactor
+// todo:refactor
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::forcing() {
   static GBool  info        = true;
@@ -421,26 +428,28 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::forcing() {
     const auto inlet  = bndrySurface("-x");
     const auto outlet = bndrySurface("+x");
 
-    //const GDouble umax = 0.1;
-//    const GDouble gradP = 0.00011276015; //gradP=8*nu*u_max/(NY)^2;
+    // const GDouble umax = 0.1;
+    //    const GDouble gradP = 0.00011276015; //gradP=8*nu*u_max/(NY)^2;
     const GDouble outletPressure = 1.0;
-//    const GDouble inletPressure  = 1.010487; //rho_inlet=3*(NX-1)*gradP+outletPressure; //0.092
-//    const GDouble inletPressure  = 1.011497487;//0.09927
-    const GDouble inletPressure  = 1.0115985357;//0.01
+    //    const GDouble inletPressure  = 1.010487; //rho_inlet=3*(NX-1)*gradP+outletPressure; //0.092
+    //    const GDouble inletPressure  = 1.011497487;//0.09927
+    const GDouble inletPressure = 1.0115985357; // 0.01
 
 
     // set Outlet forcing
     for(const GInt inletCellId : inlet.getCellList()) {
-      const GInt           valueCellId        = grid().neighbor(inletCellId, 1);
-      const VectorD<NDIM>& centerInlet        = grid().center(valueCellId);
+      const GInt           valueCellId = grid().neighbor(inletCellId, 1);
+      const VectorD<NDIM>& centerInlet = grid().center(valueCellId);
       for(const GInt outletCellId : outlet.getCellList()) {
         const VectorD<NDIM>& centerOutlet = grid().center(outletCellId);
         if(std::abs(centerInlet[1] - centerOutlet[1]) < GDoubleEps) {
           for(GInt dist = 0; dist < LBMethod<LBTYPE>::m_noDists; ++dist) {
-            f(outletCellId, dist) =
-                LBMethod<LBTYPE>::m_weights[dist] * outletPressure
-                    * (1 + 3 * (vars(valueCellId, PV::velocitiy(0)) * LBMethod<LBTYPE>::m_dirs[dist][0] + 0 * LBMethod<LBTYPE>::m_dirs[dist][1]))
-                + f(valueCellId, dist) - feq(valueCellId, dist);
+            f(outletCellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * outletPressure
+                                        * (1
+                                           + 3
+                                                 * (vars(valueCellId, PV::velocitiy(0)) * LBMethod<LBTYPE>::m_dirs[dist][0]
+                                                    + 0 * LBMethod<LBTYPE>::m_dirs[dist][1]))
+                                    + f(valueCellId, dist) - feq(valueCellId, dist);
           }
         }
       }
@@ -448,16 +457,18 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::forcing() {
 
     // set Inlet forcing
     for(const GInt outletCellId : outlet.getCellList()) {
-      const GInt           valueCellId         = grid().neighbor(outletCellId, 0);
-      const VectorD<NDIM>& centerOutlet        = grid().center(valueCellId);
+      const GInt           valueCellId  = grid().neighbor(outletCellId, 0);
+      const VectorD<NDIM>& centerOutlet = grid().center(valueCellId);
       for(const GInt inletCellId : inlet.getCellList()) {
         const VectorD<NDIM>& centerInlet = grid().center(inletCellId);
         if(std::abs(centerInlet[1] - centerOutlet[1]) < GDoubleEps) {
           for(GInt dist = 0; dist < LBMethod<LBTYPE>::m_noDists; ++dist) {
-            f(inletCellId, dist) =
-                LBMethod<LBTYPE>::m_weights[dist] * inletPressure
-                    * (1 + 3 * (vars(valueCellId, PV::velocitiy(0)) * LBMethod<LBTYPE>::m_dirs[dist][0] + 0 * LBMethod<LBTYPE>::m_dirs[dist][1]))
-                + f(valueCellId, dist) - feq(valueCellId, dist);
+            f(inletCellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * inletPressure
+                                       * (1
+                                          + 3
+                                                * (vars(valueCellId, PV::velocitiy(0)) * LBMethod<LBTYPE>::m_dirs[dist][0]
+                                                   + 0 * LBMethod<LBTYPE>::m_dirs[dist][1]))
+                                   + f(valueCellId, dist) - feq(valueCellId, dist);
           }
         }
       }
@@ -485,7 +496,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::propagationStep() {
         m_fold[neighborId * NDIST + dist] = m_f[cellId * NDIST + dist];
       }
     }
-    fold(cellId, NDIST-1) = f(cellId, NDIST-1);
+    fold(cellId, NDIST - 1) = f(cellId, NDIST - 1);
   }
 }
 

@@ -1,11 +1,23 @@
 #ifndef LBM_CONFIGURATION_H
 #define LBM_CONFIGURATION_H
 #include <json.h>
+
+#include <utility>
 using json = nlohmann::json;
 
-class configuration {
- public:
+class Configuration;
 
+class ConfigurationAccess {
+ public:
+  ConfigurationAccess(GString prefix, const Configuration* parentConf) : m_prefix(std::move(prefix)), m_parentConf(parentConf) {}
+
+ private:
+  const GString        m_prefix;
+  const Configuration* m_parentConf;
+};
+
+class Configuration {
+ public:
   /// Set the configuration file name
   /// \param configFileName Configuration file name
   void setConfiguration(const GString& configFileName) { m_configFileName = configFileName; }
@@ -19,7 +31,7 @@ class configuration {
 
   /// Load the configuration from a configuration file based on the object
   /// \param section Section of the configuration file to use (optional default=everything)
-  void loadConfiguration(const GString& section = "") {
+  void load(const GString& section = "") {
     if(!m_config.empty()) {
       logger << "Warning loading configuration, but configuration already loaded!" << std::endl;
       TERMM(-1, "Invalid operation!");
@@ -172,6 +184,14 @@ class configuration {
   /// \return JSON-object
   auto config() const -> const json& { return m_config; }
 
+  auto getAccessor(const GString& subobject) -> ConfigurationAccess* {
+    if(has_config_value(subobject)) {
+      m_bondedConfAccess.emplace_back(subobject, this);
+      return &m_bondedConfAccess.back();
+    }
+    return nullptr;
+  }
+
  private:
   /// Init the tracking of unused configuration values
   void setupUnusedTracking() {
@@ -182,11 +202,13 @@ class configuration {
   }
 
   // file name of the configuration
-  GString                            m_configFileName = "grid.json";
+  GString m_configFileName = "grid.json";
   // json configuration object
-  json                               m_config{};
+  json m_config{};
   // map used for tracking the unused values
   std::unordered_map<GString, GBool> m_unusedKeys{};
+  // bonded access objects
+  std::vector<ConfigurationAccess> m_bondedConfAccess{};
 };
 
 #endif // LBM_CONFIGURATION_H
