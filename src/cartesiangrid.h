@@ -6,7 +6,7 @@
 #include <common/surface.h>
 #include <set>
 #include <sfcmm_common.h>
-#include "base_cartesiangrid.h"
+#include "cartesiangrid_base.h"
 #include "common/IO.h"
 #include "configuration.h"
 #include "geometry.h"

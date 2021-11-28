@@ -1,6 +1,6 @@
 #ifndef GRIDGENERATOR_CARTESIANGRID_GENERATION_H
 #define GRIDGENERATOR_CARTESIANGRID_GENERATION_H
-#include "base_cartesiangrid.h"
+#include "cartesiangrid_base.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {

@@ -7,8 +7,8 @@
 #include "interface/solver_interface.h"
 #include "lbm_bnd.h"
 #include "lbm_constants.h"
+#include "lbm_pv.h"
 #include "postprocessing.h"
-#include "pv.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMSolver : public SolverInterface, private Configuration, private Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM> {

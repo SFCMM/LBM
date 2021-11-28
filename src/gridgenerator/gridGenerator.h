@@ -11,7 +11,7 @@
 #include "globaltimers.h"
 #include "gridcell_properties.h"
 #include "interface/solver_interface.h"
-#include "WeightMethod.h"
+#include "loadbalancing_weights.h"
 
 using json = nlohmann::json;
 

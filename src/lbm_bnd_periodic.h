@@ -2,7 +2,7 @@
 #define LBM_LBM_BND_PERIODIC_H
 #include "lbm_bnd_interface.h"
 #include "lbm_constants.h"
-#include "pv.h"
+#include "lbm_pv.h"
 
 template <LBMethodType LBTYPE>
 class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {

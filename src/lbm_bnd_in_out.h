@@ -2,7 +2,7 @@
 #define LBM_LBM_BND_IN_OUT_H
 #include "lbm_bnd_interface.h"
 #include "lbm_constants.h"
-#include "pv.h"
+#include "lbm_pv.h"
 
 template <LBMethodType LBTYPE>
 class LBMBnd_InOutBB : public LBMBndInterface {

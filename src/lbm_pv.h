@@ -1,5 +1,5 @@
-#ifndef LBM_PV_H
-#define LBM_PV_H
+#ifndef LBM_LBM_PV_H
+#define LBM_LBM_PV_H
 namespace PV {
 static constexpr auto U() -> GInt { return 0; }
 
@@ -50,4 +50,4 @@ static constexpr auto temperature() -> GInt {
 } // namespace PV
 
 
-#endif // LBM_PV_H
+#endif // LBM_LBM_PV_H

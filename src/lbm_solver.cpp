@@ -1,6 +1,6 @@
 #include "lbm_solver.h"
 #include "analytical_solutions.h"
-#include "pv.h"
+#include "lbm_pv.h"
 
 #include <set>
 
