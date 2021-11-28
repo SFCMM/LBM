@@ -6,7 +6,7 @@
 #include "interface/solver_interface.h"
 #ifdef SOLVER_AVAILABLE
 #include "gridgenerator/gridGenerator.h"
-#include "lbm_solverExe.h"
+#include "lbm/lbm_solverExe.h"
 #else
 #include "gridGenerator.h"
 #endif

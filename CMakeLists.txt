@@ -21,12 +21,12 @@ include_directories(external src include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(lbm
-        src/main.cpp src/gridgenerator/gridGenerator.cpp src/lbm_solver.cpp
+        src/main.cpp src/gridgenerator/gridGenerator.cpp src/lbm/lbm_solver.cpp
         src/gridgenerator/gridGenerator.h config.h
         src/globaltimers.h src/cartesiangrid.h
         src/gridcell_properties.h src/loadbalancing_weights.h src/geometry.h src/functions.h src/common/IO.h src/term.h
-        src/interface/grid_interface.h src/gridgenerator/cartesiangrid_generation.h src/lbm_solver.h
-        src/lbm_constants.h src/lbm_pv.h src/interface/lbm_interface.h src/lbm_bnd.h src/common/surface.h src/lbm_solverExe.h src/configuration.h src/lbm_bnd_wall.h src/lbm_bnd_interface.h src/lbm_bnd_in_out.h src/lbm_bnd_periodic.h src/postprocessing.h src/postprocessing_cartesian.h src/lbm_postprocessing.h src/postprocessing_func.h)
+        src/interface/grid_interface.h src/gridgenerator/cartesiangrid_generation.h src/lbm/lbm_solver.h
+        src/lbm/lbm_constants.h src/lbm/lbm_pv.h src/interface/lbm_interface.h src/lbm/lbm_bnd.h src/common/surface.h src/lbm/lbm_solverExe.h src/configuration.h src/lbm/lbm_bnd_wall.h src/lbm/lbm_bnd_interface.h src/lbm/lbm_bnd_in_out.h src/lbm/lbm_bnd_periodic.h src/postprocessing.h src/postprocessing_cartesian.h src/lbm/lbm_postprocessing.h src/postprocessing_func.h)
 
 #TARGET_LINK_LIBRARIES(lbm PUBLIC mpi)
 target_link_libraries(lbm PUBLIC MPI::MPI_CXX dl tinfo pthread)
