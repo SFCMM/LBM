@@ -59,6 +59,12 @@ class GridInterface {
   [[nodiscard]] virtual inline auto lengthOnLvl(const GInt lvl) const -> GDouble = 0;
   [[nodiscard]] virtual inline auto lengthOnLvl(const std::byte lvl) const -> GDouble = 0;
 
+  /// The length of the cell
+  /// \param cellId The cellId of the cell to obtain the cellLength for.
+  /// \return CellLength of cell with cellId.
+  [[nodiscard]] virtual inline auto cellLength(const GInt cellId) const -> GDouble = 0;
+
+
   /// Get the partition level of the grid.
   /// \return Partition level.
   [[nodiscard]] virtual inline auto partitionLvl() const -> GInt = 0;

@@ -19,10 +19,25 @@ class PostprocessCartesianFunctionLine : public PostprocessFunctionInterface<NDI
 
     for(GInt cellId = 0; cellId < m_cartGridData.noCells(); ++cellId) {
       if(m_cartGridData.isLeaf(cellId)) {
-        cerr0 << m_cartGridData.center(cellId) << std::endl;
-        cerr0 << m_line->distance(m_cartGridData.center(cellId)) << std::endl;
+        const GDouble distance = m_line->distance(m_cartGridData.center(cellId));
+        const GDouble cellLength = 0.5 * m_cartGridData.cellLength(cellId);
+        if(cellLength >= distance) {
+          m_intersectingCells.emplace_back(cellId);
+        }
       }
     }
+
+    //sort the cellIds by the coordinates
+    std::sort(m_intersectingCells.begin(), m_intersectingCells.end(), [=](const GInt cellIdA, const GInt cellIdB){
+      const auto& centerA = m_cartGridData.center(cellIdA);
+      const auto& centerB = m_cartGridData.center(cellIdB);
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+       if(centerA[dir] < centerB[dir]) {
+         return true;
+       }
+      }
+      return false;
+    });
 
 
     // todo: improve

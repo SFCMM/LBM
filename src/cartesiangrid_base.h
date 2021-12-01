@@ -32,26 +32,42 @@ struct /*alignas(64)*/ ChildList {
   std::array<GInt, cartesian::maxNoChildren<NDIM>()> c{INVALID_LIST<cartesian::maxNoChildren<NDIM>()>()};
 };
 
+/// Data access object to give const-level access to an existing cartesian grid.
+/// \tparam NDIM
 template <GInt NDIM>
 class CartesianGridData {
  private:
   using PropertyBitsetType = grid::cell::BitsetType;
 
  public:
-  CartesianGridData(const GInt noCells, const std::vector<Point<NDIM>>& center, const std::vector<PropertyBitsetType>& props)
-    : m_noCells(noCells), m_center(center), m_properties(props) {}
+  CartesianGridData(const GInt noCells, const std::vector<Point<NDIM>>& center, const std::vector<PropertyBitsetType>& props,
+                    const std::vector<std::byte>& lvl, const std::array<GDouble, MAX_LVL> lengthLvl)
+    : m_noCells(noCells), m_center(center), m_properties(props), m_level(lvl), m_lengthOnLevel(lengthLvl) {}
 
-  inline auto noCells() const -> GInt { return m_noCells; }
+  // todo: add asserts
+  [[nodiscard]] inline auto noCells() const -> GInt { return m_noCells; }
 
+  // todo: add asserts
   inline auto center(const GInt cellId) const -> const Point<NDIM>& { return m_center[cellId]; }
 
-  inline auto isLeaf(const GInt cellId) const -> GBool {return m_properties[cellId][static_cast<GInt>(CellProperties::leaf)];}
+  // todo: add asserts
+  [[nodiscard]] inline auto isLeaf(const GInt cellId) const -> GBool {
+    return m_properties[cellId][static_cast<GInt>(CellProperties::leaf)];
+  }
+
+  // todo: add asserts
+  [[nodiscard]] inline auto level(const GInt cellId) const -> std::byte { return m_level[cellId]; }
+
+  // todo: add asserts
+  [[nodiscard]] inline auto cellLength(const GInt cellId) const -> GDouble { return m_lengthOnLevel[static_cast<GInt>(level(cellId))];}
 
  private:
   const GInt m_noCells;
 
   const std::vector<Point<NDIM>>&        m_center;
   const std::vector<PropertyBitsetType>& m_properties;
+  const std::vector<std::byte>&          m_level;
+  const std::array<GDouble, MAX_LVL>     m_lengthOnLevel{NAN_LIST<MAX_LVL>()};
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
@@ -117,6 +133,13 @@ class BaseCartesianGrid : public GridInterfaceD<NDIM> {
     return m_lengthOnLevel[lvl]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
   };
   [[nodiscard]] inline auto lengthOnLvl(const std::byte lvl) const -> GDouble override { return lengthOnLvl(static_cast<GInt>(lvl)); };
+  [[nodiscard]] inline auto cellLength(const GInt cellId) const -> GDouble override {
+    const GInt lvl = static_cast<GInt>(level(cellId));
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      return m_lengthOnLevel.at(lvl);
+    }
+    return m_lengthOnLevel[lvl]; // NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
+  };
   [[nodiscard]] inline auto currentHighestLvl() const -> GInt override { return m_currentHighestLvl; }
   [[nodiscard]] inline auto dim() const -> GInt override { return NDIM; }
 
@@ -246,7 +269,9 @@ class BaseCartesianGrid : public GridInterfaceD<NDIM> {
     return m_parentId[id] > -1;
   }
 
-  auto getCartesianGridData() const -> CartesianGridData<NDIM> { return CartesianGridData<NDIM>(m_size, m_center, m_properties); }
+  auto getCartesianGridData() const -> CartesianGridData<NDIM> {
+    return CartesianGridData<NDIM>(m_size, m_center, m_properties, m_level, m_lengthOnLevel);
+  }
 
  protected:
   inline auto currentHighestLvl() -> GInt& { return m_currentHighestLvl; }
