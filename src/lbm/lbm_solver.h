@@ -109,7 +109,6 @@ class LBMSolver : public SolverInterface, private Configuration, private Postpro
 
   [[nodiscard]] auto sumAbsDiff(const GInt var) const -> GDouble;
 
-  template <GInt NDIM>
   auto inline rho(const GInt cellId) -> GDouble& {
     if(DEBUG_LEVEL > Debug_Level::min_debug) {
       if(NVARS < PV::rho<NDIM>()) {
