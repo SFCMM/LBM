@@ -18,8 +18,10 @@ class PostprocessCartesianFunctionLine : public PostprocessFunctionInterface<NDI
     m_line = std::make_unique<Line<NDIM>>(required_config_value<NDIM>("A"), required_config_value<NDIM>("B"));
 
     for(GInt cellId = 0; cellId < m_cartGridData.noCells(); ++cellId) {
-      cerr0 << m_cartGridData.center(cellId) << std::endl;
-      cerr0 << m_line->distance(m_cartGridData.center(cellId)) << std::endl;
+      if(m_cartGridData.isLeaf(cellId)) {
+        cerr0 << m_cartGridData.center(cellId) << std::endl;
+        cerr0 << m_line->distance(m_cartGridData.center(cellId)) << std::endl;
+      }
     }
 
 

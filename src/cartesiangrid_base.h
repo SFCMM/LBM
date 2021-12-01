@@ -11,25 +11,6 @@
 #include "gridcell_properties.h"
 #include "interface/grid_interface.h"
 
-template<GInt NDIM>
-class CartesianGridData {
- public:
-  CartesianGridData(const GInt noCells, const std::vector<Point<NDIM>>& center): m_noCells(noCells), m_center(center) {}
-
-  inline auto noCells() const -> GInt {
-    return m_noCells;
-  }
-
-  inline auto center(const GInt cellId) const -> const Point<NDIM>& {
-    return m_center[cellId];
-  }
-
- private:
-  const GInt m_noCells;
-
-  const std::vector<Point<NDIM>>& m_center;
-};
-
 struct LevelOffsetType {
  public:
   GInt begin;
@@ -49,6 +30,28 @@ struct /*alignas(64)*/ NeighborList {
 template <GInt NDIM>
 struct /*alignas(64)*/ ChildList {
   std::array<GInt, cartesian::maxNoChildren<NDIM>()> c{INVALID_LIST<cartesian::maxNoChildren<NDIM>()>()};
+};
+
+template <GInt NDIM>
+class CartesianGridData {
+ private:
+  using PropertyBitsetType = grid::cell::BitsetType;
+
+ public:
+  CartesianGridData(const GInt noCells, const std::vector<Point<NDIM>>& center, const std::vector<PropertyBitsetType>& props)
+    : m_noCells(noCells), m_center(center), m_properties(props) {}
+
+  inline auto noCells() const -> GInt { return m_noCells; }
+
+  inline auto center(const GInt cellId) const -> const Point<NDIM>& { return m_center[cellId]; }
+
+  inline auto isLeaf(const GInt cellId) const -> GBool {return m_properties[cellId][static_cast<GInt>(CellProperties::leaf)];}
+
+ private:
+  const GInt m_noCells;
+
+  const std::vector<Point<NDIM>>&        m_center;
+  const std::vector<PropertyBitsetType>& m_properties;
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
@@ -243,9 +246,7 @@ class BaseCartesianGrid : public GridInterfaceD<NDIM> {
     return m_parentId[id] > -1;
   }
 
-  auto getCartesianGridData() const -> CartesianGridData<NDIM>{
-    return CartesianGridData<NDIM>(noCells(), center());
-  }
+  auto getCartesianGridData() const -> CartesianGridData<NDIM> { return CartesianGridData<NDIM>(m_size, m_center, m_properties); }
 
  protected:
   inline auto currentHighestLvl() -> GInt& { return m_currentHighestLvl; }
