@@ -1,3 +1,7 @@
+# V0.1
+## Planned
+- add python frontend
+
 # V0.0.3
 ## Planned
 - run basic 3D NS Case
@@ -11,6 +15,8 @@
 - add breakup models
 - add collision code for LPT
 - add multilevel method
+- add github website
+- add images to readme
 
 
 # V0.0.2
@@ -40,6 +46,10 @@
 - improve boundary condition with methods that use wet nodes 
 - make neem boundary condition available for NS
 - add way to just iterate over leaf cells
+- order boundary conditions by type
+- add documentation for the testcases
+- simplify writing output
+- check in output functions if fileformat ending is already included
 
 # V0.0.1
 ## Planned:
@@ -48,10 +58,8 @@
 - switch analytical solution over to vector results!
 - solve 2D poisson equation
 - [bug] fix unused values being marked correctly!
-- order boundary conditions by type
 
 ## Ongoing:
-- write out lines
 
 
 ## Done:
@@ -79,7 +87,8 @@
 - define boundary condition in the configuration file
 
 ### IO
--differentiate between float and integers correctly in the VTK output
+- differentiate between float and integers correctly in the VTK output
+- write lines output to csv
 
 ### Performance
 

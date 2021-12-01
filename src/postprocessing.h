@@ -88,8 +88,29 @@ class Postprocess {
     if(m_postprocessing) {
       const GInt ppHookId = static_cast<GInt>(hook);
       if(!m_postProcessFunc.at(ppHookId).empty()) {
+        //todo: this will produce to much output
         logger << "Executing postprocessing at hook:" << pp::getHook(hook) << std::endl;
         cerr0 << "Executing postprocessing at hook:" << pp::getHook(hook) << std::endl;
+
+        for(const auto& func: m_postProcessFunc.at(ppHookId)){
+          func->execute();
+        }
+        //todo: we output directly this needs to be settable...
+        //todo: move output writing some where else...
+        for(const auto& func: m_postProcessFunc.at(ppHookId)){
+          const auto& tmp = func->output();
+
+          std::vector<VectorD<NDIM>> tmp_coords;
+          std::vector<IOIndex> tmp_index;
+          std::vector<std::vector<GString>> tmp_values;
+          tmp_values.resize(1);
+          tmp_index.emplace_back(IOIndex{"u","float"});
+          for(const GInt cellId : tmp){
+            tmp_coords.emplace_back(solver()->center(cellId));
+            tmp_values[0].emplace_back(std::to_string(solver()->velocity(cellId, 0)));
+          }
+          ASCII::writePointsCSV<NDIM>("line", tmp.size(), tmp_coords, tmp_index, tmp_values);
+        }
       }
     }
   }

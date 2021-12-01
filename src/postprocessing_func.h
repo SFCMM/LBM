@@ -20,6 +20,8 @@ class PostprocessFunctionInterface {
 
   virtual void init() = 0;
   virtual void execute() = 0;
+  //todo: this is just temporary
+  virtual auto output() -> std::vector<GInt>& = 0;
 
 };
 

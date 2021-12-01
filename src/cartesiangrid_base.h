@@ -288,19 +288,19 @@ class BaseCartesianGrid : public GridInterfaceD<NDIM> {
   inline auto center() -> std::vector<Point<NDIM>>& { return m_center; }
   inline auto center() const -> const std::vector<Point<NDIM>>& { return m_center; }
 
+  [[nodiscard]] inline auto center(const GInt id) -> Point<NDIM>& override {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      m_center.at(id);
+    }
+    return m_center[id];
+  }
+
   inline auto center(const GInt id, const GInt dir) -> GDouble& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       //      checkBounds(id);
       checkDir(dir);
     }
     return m_center[id][dir];
-  }
-
-  [[nodiscard]] inline auto center(const GInt id) -> Point<NDIM>& override {
-    if(DEBUG_LEVEL >= Debug_Level::debug) {
-      m_center.at(id);
-    }
-    return m_center[id];
   }
 
   inline auto globalId(const GInt id) -> GInt& {

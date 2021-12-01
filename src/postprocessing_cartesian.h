@@ -48,7 +48,14 @@ class PostprocessCartesianFunctionLine : public PostprocessFunctionInterface<NDI
     // 3. Find all cells which intersect the line from the first intersecting leaf cell
   }
 
-  void execute() override {}
+  void execute() override {
+    //todo: implement
+    //nothing to do since we just pass the cell list
+  }
+
+  auto output() -> std::vector<GInt>& override{
+    return m_intersectingCells;
+  }
 
  private:
   std::unique_ptr<Line<NDIM>> m_line = nullptr;

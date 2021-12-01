@@ -47,9 +47,7 @@ class LBMSolver : public SolverInterface, private Configuration, private Postpro
   constexpr auto isThermal() -> GBool;
 
  protected:
-  inline auto center() const -> const std::vector<Point<NDIM>>& {
-    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->center();
-  }
+
 
   [[nodiscard]] auto size() const -> GInt { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->size(); }
 
@@ -60,6 +58,15 @@ class LBMSolver : public SolverInterface, private Configuration, private Postpro
   [[nodiscard]] auto noChildren(const GInt cellId) const -> GInt {
     return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->noChildren(cellId);
   }
+
+  inline auto center() const -> const std::vector<Point<NDIM>>& {
+    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->center();
+  }
+
+  inline auto center(const GInt cellId) const -> const Point<NDIM>& {
+    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->center(cellId);
+  }
+
 
   [[nodiscard]] inline auto center(const GInt id, const GInt dir) const -> GDouble {
     return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->center(id, dir);
@@ -113,7 +120,6 @@ class LBMSolver : public SolverInterface, private Configuration, private Postpro
     return m_vars[cellId * NVARS + PV::rho<NDIM>()];
   }
 
-  template <GInt NDIM>
   auto inline velocity(const GInt cellId, const GInt dir) -> GDouble& {
     return m_vars[cellId * NVARS + PV::velocities<NDIM>()[dir]];
   }

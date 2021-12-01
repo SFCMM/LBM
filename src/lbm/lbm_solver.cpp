@@ -280,7 +280,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced, const GString& p
 
     for(GInt cellId = 0; cellId < size(); ++cellId) {
       for(GInt dir = 0; dir < NDIM; ++dir) {
-        tmpVel[dir][cellId] = velocity<NDIM>(cellId, dir);
+        tmpVel[dir][cellId] = velocity(cellId, dir);
       }
       tmpRho[cellId] = rho<NDIM>(cellId);
     }
@@ -331,7 +331,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::compareToAnalyticalResult() {
       continue;
     }
     const GDouble solution = anaSolution(center(cellId, 1));
-    const GDouble delta    = velocity<NDIM>(cellId, 0) - solution;
+    const GDouble delta    = velocity(cellId, 0) - solution;
     maxError               = std::max(std::abs(delta), maxError);
     error.emplace_back(std::sqrt(delta * delta / (solution * solution)));
   }
@@ -380,7 +380,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::updateMacroscopicValues() {
     rho<NDIM>(cellId) = std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST), 0.0);
 
     for(GInt dir = 0; dir < NDIM; ++dir) {
-      velocity<NDIM>(cellId, dir) =
+      velocity(cellId, dir) =
           (m_fold[cellId * NDIST + moment[dir][0]] + m_fold[cellId * NDIST + moment[dir][1]] + m_fold[cellId * NDIST + moment[dir][2]]
            - m_fold[cellId * NDIST + moment[dir][3]] - m_fold[cellId * NDIST + moment[dir][4]] - m_fold[cellId * NDIST + moment[dir][5]])
           / rho<NDIM>(cellId);
@@ -396,7 +396,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::calcEquilibriumMoments() {
     //    const GDouble squaredV = gcem::pow(velocity<NDIM>(cellId, 0), 2) + gcem::pow(velocity<NDIM>(cellId, 1), 2);
     for(GInt dist = 0; dist < NDIST; ++dist) {
       m_feq[cellId * NDIST + dist] = LBMethod<LBTYPE>::m_weights[dist] * rho<NDIM>(cellId)
-                                     * (1 + 3 * (velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist]));
+                                     * (1 + 3 * (velocity(cellId, 0) * cx[dist] + velocity(cellId, 1) * cy[dist]));
       //      const GDouble cu             = velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist];
       //      m_feq[cellId * NDIST + dist] = LBMethod<LBTYPE>::m_weights[dist] * rho<NDIM>(cellId) * (1 + 3 * cu + 4.5 * cu * cu - 1.5 *
       //      squaredV);
