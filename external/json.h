@@ -11631,7 +11631,7 @@ public:
   }
 
   /*!
-    @brief post-increment (it++)
+    @brief getHook-increment (it++)
     @pre The iterator is initialized; i.e. `m_object != nullptr`.
     */
   iter_impl const operator++(int) // NOLINT(readability-const-return-type)
@@ -11674,7 +11674,7 @@ public:
   }
 
   /*!
-    @brief post-decrement (it--)
+    @brief getHook-decrement (it--)
     @pre The iterator is initialized; i.e. `m_object != nullptr`.
     */
   iter_impl const operator--(int) // NOLINT(readability-const-return-type)
@@ -12017,7 +12017,7 @@ public:
   /// create reverse iterator from base class
   explicit json_reverse_iterator(const base_iterator& it) noexcept : base_iterator(it) {}
 
-  /// post-increment (it++)
+  /// getHook-increment (it++)
   json_reverse_iterator const operator++(int) // NOLINT(readability-const-return-type)
   {
     return static_cast<json_reverse_iterator>(base_iterator::operator++(1));
@@ -12029,7 +12029,7 @@ public:
     return static_cast<json_reverse_iterator&>(base_iterator::operator++());
   }
 
-  /// post-decrement (it--)
+  /// getHook-decrement (it--)
   json_reverse_iterator const operator--(int) // NOLINT(readability-const-return-type)
   {
     return static_cast<json_reverse_iterator>(base_iterator::operator--(1));

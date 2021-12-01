@@ -11,6 +11,25 @@
 #include "gridcell_properties.h"
 #include "interface/grid_interface.h"
 
+template<GInt NDIM>
+class CartesianGridData {
+ public:
+  CartesianGridData(const GInt noCells, const std::vector<Point<NDIM>>& center): m_noCells(noCells), m_center(center) {}
+
+  inline auto noCells() const -> GInt {
+    return m_noCells;
+  }
+
+  inline auto center(const GInt cellId) const -> const Point<NDIM>& {
+    return m_center[cellId];
+  }
+
+ private:
+  const GInt m_noCells;
+
+  const std::vector<Point<NDIM>>& m_center;
+};
+
 struct LevelOffsetType {
  public:
   GInt begin;
@@ -222,6 +241,10 @@ class BaseCartesianGrid : public GridInterfaceD<NDIM> {
     }
     // no bound checking
     return m_parentId[id] > -1;
+  }
+
+  auto getCartesianGridData() const -> CartesianGridData<NDIM>{
+    return CartesianGridData<NDIM>(noCells(), center());
   }
 
  protected:

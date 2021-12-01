@@ -11,7 +11,8 @@
 #include "postprocessing.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-class LBMSolver : public SolverInterface, private Configuration, private Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM> {
+class LBMSolver : public SolverInterface, private Configuration, private Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM,
+                  LBMSolver<DEBUG_LEVEL, LBTYPE>> {
  private:
   // Type declarations and template variables only
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
@@ -20,7 +21,10 @@ class LBMSolver : public SolverInterface, private Configuration, private Postpro
 
   using method = LBMethod<LBTYPE>;
 
-  using POST = Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM>;
+  using POST = Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM, LBMSolver<DEBUG_LEVEL, LBTYPE>>;
+
+  // give postprocessing access to all data
+  friend POST;
   using POST::executePostprocess;
 
  public:
@@ -42,14 +46,10 @@ class LBMSolver : public SolverInterface, private Configuration, private Postpro
 
   constexpr auto isThermal() -> GBool;
 
- private:
-  void init(int argc, GChar** argv);
-  void initTimers();
-  void allocateMemory();
-
-  //  [[nodiscard]] auto grid() const -> CartesianGrid<DEBUG_LEVEL, LBMethod<LBTYPE>::m_dim>* {
-  //    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get());
-  //  }
+ protected:
+  inline auto center() const -> const std::vector<Point<NDIM>>& {
+    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->center();
+  }
 
   [[nodiscard]] auto size() const -> GInt { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->size(); }
 
@@ -65,9 +65,19 @@ class LBMSolver : public SolverInterface, private Configuration, private Postpro
     return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->center(id, dir);
   }
 
-  inline auto center() const -> const std::vector<Point<NDIM>>& {
-    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->center();
+  auto getCartesianGridData() -> CartesianGridData<NDIM>{
+    return grid().getCartesianGridData();
   }
+
+
+ private:
+  void init(int argc, GChar** argv);
+  void initTimers();
+  void allocateMemory();
+
+  //  [[nodiscard]] auto grid() const -> CartesianGrid<DEBUG_LEVEL, LBMethod<LBTYPE>::m_dim>* {
+  //    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get());
+  //  }
 
   auto bndrySurface(const GString id) const -> const Surface<NDIM>& {
     return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->bndrySurface(id);

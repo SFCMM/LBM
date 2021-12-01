@@ -1,14 +1,12 @@
 #ifndef LBM_LBM_POSTPROCESSING_H
 #define LBM_LBM_POSTPROCESSING_H
-#include "postprocessing_func.h"
+#include "postprocessing_cartesian.h"
 
 template <GInt NDIM>
-class LBMPostprocessFunctionExecutor : public PostprocessFunctionExecutorInterface<NDIM>,
-                                       private PostprocessCartesianFunctionExecutor<NDIM> {
-  LBMPostprocessFunctionExecutor(const pp::FuncType type)
-    : PostprocessCartesianFunctionExecutor<NDIM>(type){
-
-    };
+class LBMPostprocessFunctionLine : public PostprocessCartesianFunctionLine<NDIM> {
+ public:
+  LBMPostprocessFunctionLine(const json& conf, const CartesianGridData<NDIM>& data)
+    : PostprocessCartesianFunctionLine<NDIM>(conf, data) {}
 };
 
 #endif // LBM_LBM_POSTPROCESSING_H

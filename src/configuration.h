@@ -5,16 +5,7 @@
 #include <utility>
 using json = nlohmann::json;
 
-class Configuration;
-
-class ConfigurationAccess {
- public:
-  ConfigurationAccess(GString prefix, const Configuration* parentConf) : m_prefix(std::move(prefix)), m_parentConf(parentConf) {}
-
- private:
-  const GString        m_prefix;
-  const Configuration* m_parentConf;
-};
+class ConfigurationAccess;
 
 class Configuration {
  public:
@@ -64,6 +55,42 @@ class Configuration {
     TERMM(-1, "The required configuration value is missing: " + key);
   }
 
+  /// Get a required configuration value (exit if it doesn't exist) [Point Version]
+  /// \tparam NDIM Dimensionality of the point
+  /// \param key Key of the value
+  /// \return Configuration value if it exist or exit
+  template <GInt NDIM>
+  auto required_config_value(const GString& key) -> Point<NDIM> {
+    // todo: check for types
+    if(m_config.template contains(key)) {
+      m_unusedKeys[key] = true;
+      // todo: check size
+      std::vector<GDouble> tmp = m_config[key];
+      return Point<NDIM>(&tmp[0]);
+    }
+    cerr0 << m_config << std::endl;
+    TERMM(-1, "The required configuration value is missing: " + key);
+  }
+
+  /// Get a required configuration value (exit if it doesn't exist)
+  /// \tparam T Type of the value
+  /// \param key Key of the value
+  /// \param parentObj Parent object path
+  /// \return Configuration value if it exist or exit
+  template <typename T>
+  auto required_config_value(const std::vector<GString>& parentObjPath, const GString& key) -> T {
+    // todo: check for types
+    json conf = m_config;
+    for(const auto& parentKey : parentObjPath) {
+      conf = conf[parentKey];
+    }
+    if(conf.template contains(key)) {
+      m_unusedKeys[key] = true;
+      return static_cast<T>(conf[key]);
+    }
+    TERMM(-1, "The required configuration value is missing: " + key);
+  }
+
   /// Get an optional configuration value (return default value if value not found)
   /// \tparam T Type of the value
   /// \param key Key of the value
@@ -84,7 +111,7 @@ class Configuration {
   /// \return true if it exists
   auto has_config_value(const GString& key) -> GBool { return m_config.template contains(key); }
 
-  /// Exists a key-value pair in the configuration?
+  /// Exists the provided key-value pair in the configuration?
   /// \param key The key of the value
   /// \param value The value
   /// \return The key-value pair exits -> true
@@ -118,6 +145,28 @@ class Configuration {
     } while(!stack.empty());
 
     return false;
+  }
+
+  auto getObject(const GString& object, const GString& pObject = "") -> json {
+    const json& conf = (pObject.empty()) ? m_config : m_config[pObject];
+    if(!pObject.empty()) {
+      m_unusedKeys[pObject] = true;
+    }
+    return conf[object];
+  }
+
+  /// Get all objects that are within the parentobject
+  /// \param pObject Parent object name.
+  /// \return List of all the object identifiers.
+  auto getAllObjects(const GString& pObject = "") const -> std::vector<GString> {
+    std::vector<GString> tmp_objL;
+    const json&          conf = (pObject.empty()) ? m_config : m_config[pObject];
+    for(const auto& [key, item] : conf.items()) {
+      if(item.is_object()) {
+        tmp_objL.emplace_back(key);
+      }
+    }
+    return tmp_objL;
   }
 
   /// Get all the keys with a certain value
@@ -184,10 +233,13 @@ class Configuration {
   /// \return JSON-object
   auto config() const -> const json& { return m_config; }
 
-  auto getAccessor(const GString& subobject) -> ConfigurationAccess* {
+  /// Get an accessor to the configuration limited to the subobject.
+  /// \param subobject The subobject to be given access to
+  /// \return ConfigurationAccess object
+  auto getAccessor(const GString& subobject) -> std::shared_ptr<ConfigurationAccess> {
     if(has_config_value(subobject)) {
-      m_bondedConfAccess.emplace_back(subobject, this);
-      return &m_bondedConfAccess.back();
+      m_bondedConfAccess.emplace_back(std::make_shared<ConfigurationAccess>(subobject, this));
+      return m_bondedConfAccess.back();
     }
     return nullptr;
   }
@@ -208,7 +260,33 @@ class Configuration {
   // map used for tracking the unused values
   std::unordered_map<GString, GBool> m_unusedKeys{};
   // bonded access objects
-  std::vector<ConfigurationAccess> m_bondedConfAccess{};
+  std::vector<std::shared_ptr<ConfigurationAccess>> m_bondedConfAccess{};
+};
+
+
+class ConfigurationAccess {
+ public:
+  ConfigurationAccess(GString prefix, Configuration* parentConf) : m_prefix(std::move(prefix)), m_parentConf(parentConf) {}
+
+  [[nodiscard]] auto getAllObjects() const -> std::vector<GString> { return m_parentConf->getAllObjects(m_prefix); }
+
+  /// Get a required configuration value (exit if it doesn't exist)
+  /// \tparam T Type of the value
+  /// \param key Key of the value
+  /// \param parentObjKey Parent object key string
+  /// \return Configuration value if it exist or exit
+  template <typename T>
+  auto required_config_value(const GString& parentObjKey, const GString& key) -> T {
+    // todo: check for types
+    std::vector<GString> access{m_prefix, parentObjKey};
+    return m_parentConf->template required_config_value<T>(access, key);
+  }
+
+  auto getObject(const GString& object) -> json { return m_parentConf->getObject(object, m_prefix); }
+
+ private:
+  const GString  m_prefix;
+  Configuration* m_parentConf = nullptr;
 };
 
 #endif // LBM_CONFIGURATION_H

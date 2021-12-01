@@ -31,6 +31,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::checkBounds;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::property;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::size;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::noCells;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::empty;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::lengthOnLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::hasParent;
@@ -284,6 +285,9 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 #endif
 
     m_axisAlignedBnd = opt_config_value<GBool>("assumeAxisAligned", m_axisAlignedBnd);
+    if(!m_axisAlignedBnd){
+      TERMM(-1, "Not implemented!");
+    }
     m_periodic       = has_any_key_value("type", "periodic");
 
     currentHighestLvl() = grid.currentHighestLvl();

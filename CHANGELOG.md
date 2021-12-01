@@ -2,6 +2,16 @@
 ## Planned
 - run basic 3D NS Case
 - restart
+- store meta data in output files (version, node etc.)
+- output performance data
+- capillary simulation
+- add support for multiple species
+- add support for multiple phases
+- add injection models
+- add breakup models
+- add collision code for LPT
+- add multilevel method
+
 
 # V0.0.2
 ## Planned
@@ -10,7 +20,6 @@
 - Couette in 3D 
 - Poiseuille flow in 3D
 - add simple LPT solver
-- capalilary simulation
 - contact angle
 - output analytical solution if wanted
 - check in periodic boundaries if all cells have been linked
@@ -25,15 +34,16 @@
 - refactor IO code
 - make types definitions in include/common/constant
 - set output separately for the solvers
-- include LPT solver
 - write out lines as svg
-- move comparision with analytical solution to postprocessing
+- move comparison with analytical solution to postprocessing
+- fix keys in unused config value detection
+- improve boundary condition with methods that use wet nodes 
+- make neem boundary condition available for NS
+- add way to just iterate over leaf cells
 
 # V0.0.1
 ## Planned:
 - implement toRun()
-- run basic 2D navier-stokes case (couette)
-- load bcs from input file
 - additional timers 
 - switch analytical solution over to vector results!
 - solve 2D poisson equation
@@ -66,6 +76,7 @@
 ### Usability
 - exit on nan during convergence check
 - Add postprocessing structures
+- define boundary condition in the configuration file
 
 ### IO
 -differentiate between float and integers correctly in the VTK output

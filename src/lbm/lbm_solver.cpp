@@ -143,6 +143,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
   loadConfiguration();
   allocateMemory();
+  POST::init();
   initialCondition();
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
 
