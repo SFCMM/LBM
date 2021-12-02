@@ -51,15 +51,13 @@
 - simplify writing output
 - check in output functions if fileformat ending is already included
 - add openmp
+- in cartesiangrid don't use the configuration.json but the accessor to mark the unused values correctly
 
 ### moved:
 - switch analytical solution over to vector results!
 
 
 # V0.0.1
-## Planned:
-- [bug] fix unused values being marked correctly!
-
 ## Ongoing:
 - solve 2D poisson equation
 

@@ -101,7 +101,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   //   std::function<const Surface<NDIM>&(GInt)> _bndrySurface = [this](const GInt id) { return bndrySurface(id); };
   using namespace placeholders;
   std::function<const Surface<DEBUG_LEVEL, NDIM>&(GString)> _bndrySurface = std::bind(&LBMSolver::bndrySurface, this, _1);
-  m_bndManager->setupBndryCnds(config()["boundary"], _bndrySurface);
+  m_bndManager->setupBndryCnds(required_config_value<json>("boundary"), _bndrySurface);
 
 
   cerr0 << "<<<<<<<<<<<<>>>>>>>>>>>>>" << std::endl;
