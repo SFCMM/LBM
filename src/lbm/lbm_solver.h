@@ -11,8 +11,9 @@
 #include "postprocessing.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-class LBMSolver : public SolverInterface, private Configuration, private Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM,
-                  LBMSolver<DEBUG_LEVEL, LBTYPE>> {
+class LBMSolver : public SolverInterface,
+                  private Configuration,
+                  private Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM, LBMSolver<DEBUG_LEVEL, LBTYPE>> {
  private:
   // Type declarations and template variables only
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
@@ -47,8 +48,6 @@ class LBMSolver : public SolverInterface, private Configuration, private Postpro
   constexpr auto isThermal() -> GBool;
 
  protected:
-
-
   [[nodiscard]] auto size() const -> GInt { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->size(); }
 
   [[nodiscard]] auto noLeafCells() const -> GInt { return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->noLeafCells(); }
@@ -68,13 +67,11 @@ class LBMSolver : public SolverInterface, private Configuration, private Postpro
   }
 
 
-  [[nodiscard]] inline auto center(const GInt id, const GInt dir) const -> GDouble {
-    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->center(id, dir);
+  [[nodiscard]] inline auto center(const GInt cellId, const GInt dir) const -> GDouble {
+    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->center(cellId, dir);
   }
 
-  auto getCartesianGridData() -> CartesianGridData<NDIM>{
-    return grid().getCartesianGridData();
-  }
+  auto getCartesianGridData() -> CartesianGridData<NDIM> { return grid().getCartesianGridData(); }
 
 
  private:
@@ -86,8 +83,8 @@ class LBMSolver : public SolverInterface, private Configuration, private Postpro
   //    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get());
   //  }
 
-  auto bndrySurface(const GString id) const -> const Surface<DEBUG_LEVEL, NDIM>& {
-    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->bndrySurface(id);
+  auto bndrySurface(const GString surfaceName) const -> const Surface<DEBUG_LEVEL, NDIM>& {
+    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->bndrySurface(surfaceName);
   }
 
 
@@ -119,9 +116,7 @@ class LBMSolver : public SolverInterface, private Configuration, private Postpro
     return m_vars[cellId * NVARS + PV::rho<NDIM>()];
   }
 
-  auto inline velocity(const GInt cellId, const GInt dir) -> GDouble& {
-    return m_vars[cellId * NVARS + PV::velocities<NDIM>()[dir]];
-  }
+  auto inline velocity(const GInt cellId, const GInt dir) -> GDouble& { return m_vars[cellId * NVARS + PV::velocities<NDIM>()[dir]]; }
 
   auto inline vars(const GInt cellId, const GInt varId) -> GDouble& { return m_vars[cellId * NVARS + varId]; }
 
@@ -150,9 +145,7 @@ class LBMSolver : public SolverInterface, private Configuration, private Postpro
   GInt m_outputSolutionInterval = defaultSolutionInterval;
   GInt m_timeStep               = 0;
 
-  //  LBMethodType         m_method     = LBMethodType::D2Q9;
-  LBSolverType m_solverType = LBSolverType::BGK;
-  //  std::vector<GDouble> m_tangentialVelo;
+  LBSolverType         m_solverType = LBSolverType::BGK;
   std::vector<GDouble> m_f;
   std::vector<GDouble> m_feq;
   std::vector<GDouble> m_fold;

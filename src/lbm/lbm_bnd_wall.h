@@ -124,10 +124,11 @@ class LBMBnd_wallBB : public LBMBndInterface {
     }
   }
 
-  void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold, const std::function<GDouble&(GInt, GInt)>& vars) override {}
+  void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
+                const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
   void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-             const std::function<GDouble&(GInt, GInt)>& vars) override {
+             const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {
     for(auto& bndCell : m_bndCells) {
       bndCell.apply(f, fold);
     }

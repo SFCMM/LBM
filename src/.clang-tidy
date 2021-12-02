@@ -1,6 +1,6 @@
 Checks: '-*,misc-*,bugprone-*,clang-analyzer-*,mpi-*,performance-*,modernize-*,
-cppcoreguidelines-*,-cppcoreguidelines-pro-bounds-pointer-arithmetic,readability-*,
--readability-avoid-const-params-in-decls, portability-*, openmp-*'
+cppcoreguidelines-*, portability-*, openmp-*,-cppcoreguidelines-pro-bounds-pointer-arithmetic,readability-*,
+-readability-avoid-const-params-in-decls, -bugprone-easily-swappable-parameters, -cppcoreguidelines-pro-bounds-constant-array-index'
 CheckOptions:
   - key: readability-function-cognitive-complexity.Threshold
     value: '30'

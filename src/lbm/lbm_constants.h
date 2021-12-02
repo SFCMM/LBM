@@ -40,12 +40,12 @@ enum class LBSolverType {
 
 template <GInt NDIM>
 inline auto inDirection(const std::array<GDouble, NDIM>& normal, const std::array<GDouble, NDIM>& direction) -> GBool {
-  return inDirection(VectorD<NDIM>(&normal[0]), direction);
+  return inDirection(VectorD<NDIM>(normal.data()), direction);
 }
 
 template <GInt NDIM>
 inline auto inDirection(const VectorD<NDIM>& normal, const std::array<GDouble, NDIM>& direction) -> GBool {
-  return static_cast<GBool>(normal.dot(VectorD<NDIM>(&direction[0])) >= GDoubleEps);
+  return static_cast<GBool>(normal.dot(VectorD<NDIM>(direction.data())) >= GDoubleEps);
 }
 
 enum class BndryType {
@@ -139,7 +139,7 @@ template <LBMethodType LBTYPE>
 class LBMethod {
  public:
   static constexpr std::array<std::array<GDouble, dim(LBTYPE)>, noDists(LBTYPE)> m_dirs{};
-  static constexpr auto                                                          oppositeDist(const GInt dist) -> GInt { return 0; }
+  static constexpr auto                                                          oppositeDist(const GInt /*dist*/) -> GInt { return 0; }
   static constexpr GInt                                                          m_dim       = 0;
   static constexpr GInt                                                          m_noDists   = 0;
   static constexpr std::array<GDouble, 1>                                        m_weights   = {0};

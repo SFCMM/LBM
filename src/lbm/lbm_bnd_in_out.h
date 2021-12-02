@@ -6,13 +6,14 @@
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBnd_InOutBB : public LBMBndInterface {
+ private:
+  using method = LBMethod<LBTYPE>;
+
  public:
-  LBMBnd_InOutBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) {
+  LBMBnd_InOutBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& /*properties*/) : m_normal(surf->normal(0)) {
     for(const GInt cellId : surf->getCellList()) {
       m_bndCells.emplace_back(cellId);
     }
-    m_normal = surf->normal(0);
-//    LBMBnd_InOutBB<LBTYPE>::init();
   }
   ~LBMBnd_InOutBB() override = default;
 
@@ -22,13 +23,10 @@ class LBMBnd_InOutBB : public LBMBndInterface {
   auto operator=(const LBMBnd_InOutBB&) -> LBMBnd_InOutBB& = delete;
   auto operator=(LBMBnd_InOutBB&&) -> LBMBnd_InOutBB& = delete;
 
-//  void init() override {}
+  //  void init() override {}
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
                 const std::function<GDouble&(GInt, GInt)>& vars) override {
-    static constexpr std::array<GDouble, 9> cx = {-1, 1, 0, 0, 1, 1, -1, -1, 0};
-    static constexpr std::array<GDouble, 9> cy = {0, 0, -1, 1, 1, -1, -1, 1, 0};
-
     //    const GDouble diffRho   = 0.15;
     const GDouble targetRho = 1.008;
     for(const auto cellId : m_bndCells) {
@@ -41,24 +39,27 @@ class LBMBnd_InOutBB : public LBMBndInterface {
             continue;
           }
 
-          // inlet
-          f(cellId, dist) =
-              LBMethod<LBTYPE>::m_weights[dist] * targetRho * (1 + 3 * (vars(cellId, PV::velocitiy(0)) * cx[dist] + 0 * cy[dist]));
-          fold(cellId, dist) =
-              LBMethod<LBTYPE>::m_weights[dist] * targetRho * (1 + 3 * (vars(cellId, PV::velocitiy(0)) * cx[dist] + 0 * cy[dist]));
+          // todo: replace with call to recalc equilibrium dist
+          //  inlet
+          f(cellId, dist) = method::m_weights[dist] * targetRho
+                            * (1 + 3 * (vars(cellId, PV::velocitiy(0)) * method::m_dirs[dist][0] + 0 * method::m_dirs[dist][1]));
+          fold(cellId, dist) = method::m_weights[dist] * targetRho
+                               * (1 + 3 * (vars(cellId, PV::velocitiy(0)) * method::m_dirs[dist][0] + 0 * method::m_dirs[dist][1]));
 
 
           //          f(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * diffRho;
         } else {
-//          if(cellId == 682 || cellId == 1023) {
-//            f(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * (0.9951 - rho);
-//            fold(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * (0.9951 - rho);
-//            continue;
-//          }
-//          f(cellId, dist)    = LBMethod<LBTYPE>::m_weights[dist] * (0.9951 + 3 * (vars(cellId, PV::velocitiy(0)) * cx[dist] + 0 *
-//                                                                                                                               cy[dist]));
-//          fold(cellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * (0.9951 + 3 * (vars(cellId, PV::velocitiy(0)) * cx[dist] + 0 *
-//                                                                                                                                  cy[dist]));
+          //          if(cellId == 682 || cellId == 1023) {
+          //            f(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * (0.9951 - rho);
+          //            fold(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * (0.9951 - rho);
+          //            continue;
+          //          }
+          //          f(cellId, dist)    = LBMethod<LBTYPE>::m_weights[dist] * (0.9951 + 3 * (vars(cellId, PV::velocitiy(0)) * cx[dist] + 0
+          //          *
+          //                                                                                                                               cy[dist]));
+          //          fold(cellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * (0.9951 + 3 * (vars(cellId, PV::velocitiy(0)) * cx[dist] + 0
+          //          *
+          //                                                                                                                                  cy[dist]));
         }
       }
     }
@@ -66,27 +67,25 @@ class LBMBnd_InOutBB : public LBMBndInterface {
 
   void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& vars) override {
-    static constexpr std::array<GDouble, 9> cx = {-1, 1, 0, 0, 1, 1, -1, -1, 0};
-    static constexpr std::array<GDouble, 9> cy = {0, 0, -1, 1, 1, -1, -1, 1, 0};
     //    const GDouble targetRho = 1.075;
-    //todo: both rho and velocity need to be recalculated move to a separate function
-    //todo: function to recalculate feq
+    // todo: both rho and velocity need to be recalculated move to a separate function
+    // todo: function to recalculate feq
     for(const auto cellId : m_bndCells) {
-      GDouble u = 0;
+      GDouble u   = 0;
       GDouble rho = 0;
       for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
-        u += fold(cellId, dist) * cx[dist];
+        u += fold(cellId, dist) * method::m_dirs[dist][0];
         rho += fold(cellId, dist);
       }
       if(m_normal[0] > 0) {
         for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
           // set zero y-velocity
-          fold(cellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * (1.0 + 3 * (u * cx[dist] + 0 * cy[dist]));
+          fold(cellId, dist) = method::m_weights[dist] * (1.0 + 3 * (u * method::m_dirs[dist][0] + 0 * method::m_dirs[dist][1]));
         }
       } else {
         for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
           // set zero y-velocity
-          fold(cellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * rho * (1.0 + 3 * (u * cx[dist] + 0 * cy[dist]));
+          fold(cellId, dist) = method::m_weights[dist] * rho * (1.0 + 3 * (u * method::m_dirs[dist][0] + 0 * method::m_dirs[dist][1]));
         }
       }
     }

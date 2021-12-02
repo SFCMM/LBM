@@ -26,7 +26,7 @@ class LBMBndManager : private Configuration {
   auto operator=(const LBMBndManager&) -> LBMBndManager& = delete;
   auto operator=(LBMBndManager&&) -> LBMBndManager& = delete;
 
-  //todo: cleanup
+  // todo: cleanup
   void setupBndryCnds(const json& bndConfig, std::function<const Surface<DEBUG_LEVEL, dim(LBTYPE)>&(GString)>& bndrySurface) {
     for(const auto& [geometry, geomBndConfig] : bndConfig.items()) {
       // todo: check that geometry exists
@@ -35,7 +35,7 @@ class LBMBndManager : private Configuration {
         const auto bndType = config::required_config_value<GString>(surfBndConfig, "type");
         logger << "Adding bndCnd to surfaceId " << surfId;
 
-        const Surface<DEBUG_LEVEL, dim(LBTYPE)>& srf =bndrySurface(surfId);
+        const Surface<DEBUG_LEVEL, dim(LBTYPE)>&              srf = bndrySurface(surfId);
         std::vector<const Surface<DEBUG_LEVEL, dim(LBTYPE)>*> bndrySrf;
         bndrySrf.emplace_back(&srf);
 
@@ -74,7 +74,7 @@ class LBMBndManager : private Configuration {
   }
 
   // todo: merge with the function above
-  void addBndry(const BndryType bnd,  const json& properties, const std::vector<const Surface<DEBUG_LEVEL, dim(LBTYPE)>*>& surf) {
+  void addBndry(const BndryType bnd, const json& properties, const std::vector<const Surface<DEBUG_LEVEL, dim(LBTYPE)>*>& surf) {
     ASSERT(surf[0]->size() > 0, "Invalid surface");
 
     // actually generate a boundary or just create a dummy e.g. the boundary is handled in a non standard way!
@@ -108,8 +108,8 @@ class LBMBndManager : private Configuration {
     }
   }
 
-  void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold, const
-                std::function<GDouble&(GInt, GInt)>& vars) {
+  void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+                const std::function<GDouble&(GInt, GInt)>& vars) {
     for(const auto& bndry : m_bndrys) {
       bndry->preApply(f, fold, vars);
     }
@@ -132,11 +132,14 @@ class LBMBndManager : private Configuration {
 
 class LBMBnd_dummy : public LBMBndInterface {
  public:
-//  void init() override {}
+  LBMBnd_dummy()           = default;
+  ~LBMBnd_dummy() override = default;
 
-  void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/, const
-                std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-             const std::function<GDouble&(GInt, GInt)>& vars) override {}
+  //  void init() override {}
+
+  void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
+                const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
+  void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
+             const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 };
 #endif // LBM_BND_H

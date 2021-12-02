@@ -247,7 +247,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::initialCondition() {
 
     // assuming initial zero velocity and density 1
     for(GInt dist = 0; dist < NDIST; ++dist) {
-      m_feq[cellId * NDIST + dist]  = LBMethod<LBTYPE>::m_weights[dist];
+      m_feq[cellId * NDIST + dist]  = method::m_weights[dist];
       m_f[cellId * NDIST + dist]    = m_feq[cellId * NDIST + dist];
       m_fold[cellId * NDIST + dist] = m_feq[cellId * NDIST + dist];
     }
@@ -461,8 +461,8 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::forcing() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMForce]);
 
-  static GBool  info        = true;
-  const GString forcingType = opt_config_value<GString>("forcing", "");
+  static GBool info        = true;
+  const auto   forcingType = opt_config_value<GString>("forcing", "");
 
   if(!forcingType.empty()) {
     if(info) {

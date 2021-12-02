@@ -8,12 +8,10 @@
 template <Debug_Level DEBUG_LEVEL>
 class LBMSolverExecutor : public SolverInterface {
  public:
-  LBMSolverExecutor(const GInt32 domainId, const GInt32 noDomains)
-    : m_domainId(domainId),
-      m_noDomains(noDomains){
+  LBMSolverExecutor(const GInt32 domainId, const GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains) {
     // todo: make settable
     static constexpr GInt nodims = 2;
-    static constexpr GInt ndist = 9;
+    static constexpr GInt ndist  = 9;
 
     m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, getLBMethodType(nodims, ndist)>>(domainId, noDomains);
   };

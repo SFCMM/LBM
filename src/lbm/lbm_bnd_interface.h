@@ -11,7 +11,7 @@ class LBMBndInterface {
   auto operator=(const LBMBndInterface&) -> LBMBndInterface& = delete;
   auto operator=(LBMBndInterface&&) -> LBMBndInterface& = delete;
 
-//  virtual void init()                                                    = 0;
+  //  virtual void init()                                                    = 0;
   virtual void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
                         const std::function<GDouble&(GInt, GInt)>& vars) = 0;
   virtual void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
@@ -23,8 +23,6 @@ class LBMBndInterface {
 template <LBMethodType LBTYPE>
 class LBMBndCell {
  public:
-  LBMBndCell() = delete;
-  //  LBMBndCell() = default;
   LBMBndCell(const GInt mappedCellId, const VectorD<dim(LBTYPE)>& normal) : m_mappedCellId(mappedCellId), m_normal(normal) {}
   virtual ~LBMBndCell() = default;
 

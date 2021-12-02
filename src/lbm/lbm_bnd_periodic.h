@@ -127,7 +127,7 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBnd_Periodic : public LBMBndInterface {
  public:
   LBMBnd_Periodic(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected, const json&
-                                                                                                                             properties) {
+                  /*properties*/) {
     GInt surfId = 0;
     for(const GInt cellId : surf->getCellList()) {
       m_bndCells.emplace_back(cellId, surf->normal(surfId));
