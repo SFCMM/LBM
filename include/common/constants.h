@@ -55,6 +55,7 @@ static constexpr std::array<std::string_view, 5> DEBUG_LEVEL = {"NO DEBUG", "MIN
 
 enum class SolverType { NONE, LBM };
 static constexpr std::array<std::string_view, 2> SOLVER_NAME = {"NONE", "LBM"};
+static constexpr std::array<std::string_view, 2> SOLVER_NAMELC = {"none", "lbm"};
 
 static const std::vector<std::vector<GDouble>> DEFAULT_BOUNDINGBOX = {
     {0.0, 1.0}, {0.0, 1.0, 0.0, 1.0}, {0.0, 1.0, 0.0, 1.0, 0.0, 1.0}, {0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0}};

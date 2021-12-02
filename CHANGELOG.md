@@ -17,7 +17,7 @@
 - add multilevel method
 - add github website
 - add images to readme
-
+-allow more than one solver to run at the same time
 
 # V0.0.2
 ## Planned
@@ -52,14 +52,16 @@
 - check in output functions if fileformat ending is already included
 - add openmp
 
+### moved:
+- switch analytical solution over to vector results!
+
+
 # V0.0.1
 ## Planned:
-- implement toRun()
-- switch analytical solution over to vector results!
-- solve 2D poisson equation
 - [bug] fix unused values being marked correctly!
 
 ## Ongoing:
+- solve 2D poisson equation
 
 
 ## Done:
