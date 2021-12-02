@@ -25,6 +25,15 @@ struct Timers_ {
     LBMSolverTotal,
     LBMInit,
     LBMMainLoop,
+    LBMCalc,
+    LBMProp,
+    LBMColl,
+    LBMBnd,
+    LBMEq,
+    LBMMacro,
+    LBMForce,
+    LBMPost,
+    LBMIo,
 
     // counter
     _count

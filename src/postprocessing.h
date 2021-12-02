@@ -85,6 +85,7 @@ class Postprocess {
   }
 
   void executePostprocess(const pp::HOOK hook) {
+    RECORD_TIMER_START(TimeKeeper[Timers::LBMPost]);
     if(m_postprocessing) {
       const GInt ppHookId = static_cast<GInt>(hook);
       if(!m_postProcessFunc.at(ppHookId).empty()) {
@@ -113,6 +114,7 @@ class Postprocess {
         }
       }
     }
+    RECORD_TIMER_STOP(TimeKeeper[Timers::LBMPost]);
   }
 
  private:

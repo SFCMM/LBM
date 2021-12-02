@@ -50,11 +50,11 @@
 - add documentation for the testcases
 - simplify writing output
 - check in output functions if fileformat ending is already included
+- add openmp
 
 # V0.0.1
 ## Planned:
 - implement toRun()
-- additional timers 
 - switch analytical solution over to vector results!
 - solve 2D poisson equation
 - [bug] fix unused values being marked correctly!

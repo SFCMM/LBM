@@ -54,6 +54,17 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::initTimers() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
 
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMMainLoop], "Main Loop of the LBM solver!", TimeKeeper[Timers::LBMSolverTotal]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMCalc], "Computation", TimeKeeper[Timers::LBMMainLoop]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMColl], "Collision", TimeKeeper[Timers::LBMCalc]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMProp], "Propagation", TimeKeeper[Timers::LBMCalc]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMBnd], "Boundary condition", TimeKeeper[Timers::LBMCalc]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMEq], "Equilibrium distribution", TimeKeeper[Timers::LBMCalc]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMMacro], "Computing macroscopic values", TimeKeeper[Timers::LBMCalc]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMForce], "Computing forcing", TimeKeeper[Timers::LBMCalc]);
+
+
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMPost], "Postprocessing", TimeKeeper[Timers::LBMMainLoop]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMIo], "IO", TimeKeeper[Timers::LBMMainLoop]);
 }
 
 
@@ -245,6 +256,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::initialCondition() {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::timeStep() {
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMCalc]);
   executePostprocess(pp::HOOK::BEFORETIMESTEP);
   currToOldVars();
   updateMacroscopicValues();
@@ -255,10 +267,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::timeStep() {
   propagationStep();
   boundaryCnd();
   executePostprocess(pp::HOOK::AFTERTIMESTEP);
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LBMCalc]);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced, const GString& postfix) {
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMIo]);
+
   if(m_diverged) {
     // output the values before updating the macroscopic values in case the solution diverged
     output(true, "bdiv");
@@ -296,6 +311,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced, const GString& p
 
     VTK::ASCII::writePoints<NDIM>("test_" + std::to_string(m_timeStep) + postfix, size(), center(), index, values, isLeaf);
   }
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LBMIo]);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
@@ -367,12 +383,16 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::compareToAnalyticalResult() {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::currToOldVars() {
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMMacro]);
   std::copy(m_vars.begin(), m_vars.end(), m_varsold.begin());
   //  std::copy(m_f.begin(), m_f.end(), m_fold.begin());
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LBMMacro]);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::updateMacroscopicValues() {
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMMacro]);
+
   static constexpr std::array<std::array<GInt, 6>, 2> moment = {{{{1, 4, 5, 0, 6, 7}}, {{3, 4, 7, 2, 5, 6}}}};
 
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
@@ -386,10 +406,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::updateMacroscopicValues() {
           / rho(cellId);
     }
   }
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LBMMacro]);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::calcEquilibriumMoments() {
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMEq]);
+
   static constexpr std::array<GDouble, 9> cx = {-1, 1, 0, 0, 1, 1, -1, -1, 0};
   static constexpr std::array<GDouble, 9> cy = {0, 0, -1, 1, 1, -1, -1, 1, 0};
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
@@ -402,20 +425,27 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::calcEquilibriumMoments() {
       //      squaredV);
     }
   }
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LBMEq]);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::collisionStep() {
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMColl]);
+
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST; ++dist) {
       m_f[cellId * NDIST + dist] = (1 - m_omega) * m_fold[cellId * NDIST + dist] + m_omega * m_feq[cellId * NDIST + dist];
     }
   }
+
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LBMColl]);
 }
 
 // todo:refactor
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::forcing() {
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMForce]);
+
   static GBool  info        = true;
   const GString forcingType = opt_config_value<GString>("forcing", "");
 
@@ -475,10 +505,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::forcing() {
       }
     }
   }
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LBMForce]);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::prePropBoundaryCnd() {
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMBnd]);
+
   // todo: replace by lambda function
   using namespace std::placeholders;
   std::function<GDouble&(GInt, GInt)> _fold = std::bind(&LBMSolver::fold, this, _1, _2);
@@ -486,10 +519,12 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::prePropBoundaryCnd() {
   std::function<GDouble&(GInt, GInt)> _v    = std::bind(&LBMSolver::vars, this, _1, _2);
 
   m_bndManager->preApply(_f, _fold, _v);
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LBMBnd]);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::propagationStep() {
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMProp]);
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST - 1; ++dist) {
       const GInt neighborId = m_grid->neighbor(cellId, dist);
@@ -499,10 +534,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::propagationStep() {
     }
     fold(cellId, NDIST - 1) = f(cellId, NDIST - 1);
   }
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LBMProp]);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::boundaryCnd() {
+  RECORD_TIMER_START(TimeKeeper[Timers::LBMBnd]);
+
   // todo: replace by lambda function
   using namespace std::placeholders;
   std::function<GDouble&(GInt, GInt)> _fold = std::bind(&LBMSolver::fold, this, _1, _2);
@@ -510,6 +548,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::boundaryCnd() {
   std::function<GDouble&(GInt, GInt)> _v    = std::bind(&LBMSolver::vars, this, _1, _2);
 
   m_bndManager->apply(_f, _fold, _v);
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LBMBnd]);
 }
 
 // todo: simplify (move somewhere else?!)
