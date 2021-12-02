@@ -5,6 +5,7 @@
 #include "geometry.h"
 #include "gridcell_properties.h"
 
+/// GridInterface is an interface class which grants access to the different grid types.
 class GridInterface {
  public:
   GridInterface()          = default;
@@ -33,6 +34,8 @@ class GridInterface {
   /// \param maxLvl The maximum possible level the grid object can store.
   virtual void setMaxLvl(const GInt maxLvl) = 0;
 
+  /// Set the geometry interface to get access to the geometry.
+  /// \param geom Geometry interface to use.
   virtual void setGeometryManager(std::shared_ptr<GeometryInterface> geom) = 0;
 
   //// Getter functions.
@@ -57,6 +60,10 @@ class GridInterface {
   /// \param lvl The level of the cell length.
   /// \return The length of a cell at the provided level.
   [[nodiscard]] virtual inline auto lengthOnLvl(const GInt lvl) const -> GDouble = 0;
+
+  /// The length of the cell at a given level.
+  /// \param lvl The level of the cell length.
+  /// \return The length of a cell at the provided level.
   [[nodiscard]] virtual inline auto lengthOnLvl(const std::byte lvl) const -> GDouble = 0;
 
   /// The length of the cell
@@ -101,26 +108,6 @@ class GridInterface {
   [[nodiscard]] virtual inline auto property(const GInt id, CellProperties p) const -> GBool = 0;
 
   [[nodiscard]] virtual inline auto level(const GInt cellId) const -> std::byte = 0;
-
-
-  //  //// Grid Generation specific
-  //  /// Create the grid that is used for partitioning. This grid has the level of the option provided in the grid
-  //  /// configuration file. The grid up to this level is always produced on a single MPI rank.
-  //  /// \param partioningLvl Level of the partitioing grid.
-  //  virtual void createPartitioningGrid(const GInt partioningLvl) = 0;
-  //
-  //  /// Uniformly refine the grid up to the provided level.
-  //  /// \param uniformLvl Level of uniform refinement.
-  //  virtual void uniformRefineGrid(const GInt uniformLvl) = 0;
-  //
-  //  /// Refine the cells that have been marked for refinement.
-  //  /// \param noCellsToRefine The number of cells that have been marked.
-  //  virtual void refineMarkedCells(const GInt noCellsToRefine) = 0;
-  //
-  //  /// Mark all boundary cells for refinement
-  //  /// \return Number of cells marked for refinement
-  //  virtual auto markBndryCells() -> GInt = 0;
-
 
   ////IO
   /// Save the grid to a file.

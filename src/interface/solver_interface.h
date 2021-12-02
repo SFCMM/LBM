@@ -11,7 +11,7 @@ class SolverInterface {
   virtual void initBenchmark(int argc, GChar** argv)             = 0;
 
   virtual auto run() -> GInt                           = 0;
-  virtual auto grid() const -> const GridInterface&    = 0;
+  [[nodiscard]] virtual auto grid() const -> const GridInterface&    = 0;
   virtual void transferGrid(const GridInterface& grid) = 0;
 };
 
