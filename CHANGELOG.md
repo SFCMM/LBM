@@ -73,6 +73,7 @@
 - added forcing
 - Postprocessing
   - Lines
+- basic openMP
 
 ### Buildsystem
 

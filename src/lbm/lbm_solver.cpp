@@ -393,19 +393,30 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::updateMacroscopicValues() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMMacro]);
 
-  static constexpr std::array<std::array<GInt, 6>, 2> moment = {{{{1, 4, 5, 0, 6, 7}}, {{3, 4, 7, 2, 5, 6}}}};
+#ifdef _OPENMP
+#pragma omp parallel default(none)
+  {
+#endif
+    static constexpr std::array<std::array<GInt, 6>, 2> moment = {{{{1, 4, 5, 0, 6, 7}}, {{3, 4, 7, 2, 5, 6}}}};
 
-  for(GInt cellId = 0; cellId < noCells(); ++cellId) {
-    // todo:skip non-leaf cells!
-    rho(cellId) = std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST), 0.0);
+#ifdef _OPENMP
+#pragma omp for
+#endif
+    for(GInt cellId = 0; cellId < noCells(); ++cellId) {
+      // todo:skip non-leaf cells!
+      rho(cellId) = std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST), 0.0);
 
-    for(GInt dir = 0; dir < NDIM; ++dir) {
-      velocity(cellId, dir) =
-          (m_fold[cellId * NDIST + moment[dir][0]] + m_fold[cellId * NDIST + moment[dir][1]] + m_fold[cellId * NDIST + moment[dir][2]]
-           - m_fold[cellId * NDIST + moment[dir][3]] - m_fold[cellId * NDIST + moment[dir][4]] - m_fold[cellId * NDIST + moment[dir][5]])
-          / rho(cellId);
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        velocity(cellId, dir) =
+            (m_fold[cellId * NDIST + moment[dir][0]] + m_fold[cellId * NDIST + moment[dir][1]] + m_fold[cellId * NDIST + moment[dir][2]]
+             - m_fold[cellId * NDIST + moment[dir][3]] - m_fold[cellId * NDIST + moment[dir][4]] - m_fold[cellId * NDIST + moment[dir][5]])
+            / rho(cellId);
+      }
     }
+#ifdef _OPENMP
   }
+#endif
+
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMMacro]);
 }
 
@@ -413,13 +424,17 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::calcEquilibriumMoments() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMEq]);
 
-  static constexpr std::array<GDouble, 9> cx = {-1, 1, 0, 0, 1, 1, -1, -1, 0};
-  static constexpr std::array<GDouble, 9> cy = {0, 0, -1, 1, 1, -1, -1, 1, 0};
+#ifdef _OPENMP
+#pragma omp parallel for default(none)
+#endif
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     //    const GDouble squaredV = gcem::pow(velocity<NDIM>(cellId, 0), 2) + gcem::pow(velocity<NDIM>(cellId, 1), 2);
+    const GDouble u = velocity(cellId, 0);
+    const GDouble v = velocity(cellId, 1);
+    const GDouble d = rho(cellId);
+
     for(GInt dist = 0; dist < NDIST; ++dist) {
-      m_feq[cellId * NDIST + dist] =
-          LBMethod<LBTYPE>::m_weights[dist] * rho(cellId) * (1 + 3 * (velocity(cellId, 0) * cx[dist] + velocity(cellId, 1) * cy[dist]));
+      m_feq[cellId * NDIST + dist] = method::m_weights[dist] * d * (1 + 3 * (u * method::m_dirs[dist][0] + v * method::m_dirs[dist][1]));
       //      const GDouble cu             = velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist];
       //      m_feq[cellId * NDIST + dist] = LBMethod<LBTYPE>::m_weights[dist] * rho<NDIM>(cellId) * (1 + 3 * cu + 4.5 * cu * cu - 1.5 *
       //      squaredV);
@@ -525,6 +540,9 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::prePropBoundaryCnd() {
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::propagationStep() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMProp]);
+#ifdef _OPENMP
+#pragma omp parallel for default(none)
+#endif
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST - 1; ++dist) {
       const GInt neighborId = m_grid->neighbor(cellId, dist);
