@@ -4,7 +4,7 @@
 #include "lbm_constants.h"
 #include "lbm_pv.h"
 
-template <LBMethodType LBTYPE>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
   // class LBMBndCell_wallBB {
  public:
@@ -13,12 +13,12 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
   virtual ~LBMBndCell_periodic() = default;
 
   // todo: move to some common place
-  void init(const Surface<dim(LBTYPE)>* surfConnected) {
+  void init(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected) {
     LBMBndCell<LBTYPE>::init();
 
     const GDouble cellLength = surfConnected->cellLength(mapped());
     const auto    center     = surfConnected->center(mapped());
-    const auto&   bb         = surfConnected->grid()->boundingBox();
+    const auto&   bb         = surfConnected->grid().boundingBox();
 
     // set which dists are to be set by this boundary condition
     for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
@@ -123,19 +123,20 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
   GInt                              m_noSetDists = 0;
 };
 
-template <LBMethodType LBTYPE>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBnd_Periodic : public LBMBndInterface {
  public:
-  LBMBnd_Periodic(const Surface<dim(LBTYPE)>* surf, const Surface<dim(LBTYPE)>* surfConnected, const json& properties) {
+  LBMBnd_Periodic(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected, const json&
+                                                                                                                             properties) {
     GInt surfId = 0;
     for(const GInt cellId : surf->getCellList()) {
       m_bndCells.emplace_back(cellId, surf->normal(surfId));
       ++surfId;
     }
-    LBMBnd_Periodic<LBTYPE>::init(surfConnected);
+    LBMBnd_Periodic<DEBUG_LEVEL, LBTYPE>::init(surfConnected);
   }
 
-  void init(const Surface<dim(LBTYPE)>* surfConnected) {
+  void init(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected) {
     for(auto& bndCell : m_bndCells) {
       bndCell.init(surfConnected);
     }
@@ -152,6 +153,6 @@ class LBMBnd_Periodic : public LBMBndInterface {
              const std::function<GDouble&(GInt, GInt)>& vars) override {}
 
  private:
-  std::vector<LBMBndCell_periodic<LBTYPE>> m_bndCells;
+  std::vector<LBMBndCell_periodic<DEBUG_LEVEL, LBTYPE>> m_bndCells;
 };
 #endif // LBM_LBM_BND_PERIODIC_H

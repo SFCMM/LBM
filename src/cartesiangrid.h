@@ -239,7 +239,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 
   void save(const GString& fileName, const json& gridOutConfig) const override { TERMM(-1, "Not implemented!"); }
 
-  auto bndrySurface(const GString& id) -> Surface<NDIM>& {
+  auto bndrySurface(const GString& id) -> Surface<DEBUG_LEVEL, NDIM>& {
     if(DEBUG_LEVEL > Debug_Level::min_debug){
       if(m_bndrySurfaces.count(id) == 0){
         TERMM(-1, "Invalid bndryId \"" +id +"\"");
@@ -397,7 +397,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   void identifyBndrySurfaces() {
     if(m_axisAlignedBnd) {
       for(GInt surfId = 0; surfId < cartesian::maxNoNghbrs<NDIM>(); ++surfId){
-        m_bndrySurfaces.insert({static_cast<GString>(DirIdString[surfId]), Surface<NDIM>(this)});
+        m_bndrySurfaces.insert({static_cast<GString>(DirIdString[surfId]), Surface<DEBUG_LEVEL, NDIM>(this->getCartesianGridData())});
       }
 
       for(GInt cellId = 0; cellId < size(); ++cellId) {
@@ -443,7 +443,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 
   // todo: fix for refinement level changes
   // todo: simplify
-  void addPeriodicConnection(const Surface<NDIM>& surfA, const Surface<NDIM>& surfB) {
+  void addPeriodicConnection(const Surface<DEBUG_LEVEL, NDIM>& surfA, const Surface<DEBUG_LEVEL, NDIM>& surfB) {
     // connect cells of surfA and surfB
     for(const GInt cellIdA : surfA.getCellList()) {
       for(const GInt cellIdB : surfB.getCellList()) {
@@ -618,7 +618,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   GBool m_axisAlignedBnd = false;
   GBool m_periodic       = false;
 
-  std::unordered_map<GString, Surface<NDIM>> m_bndrySurfaces;
+  std::unordered_map<GString, Surface<DEBUG_LEVEL, NDIM>> m_bndrySurfaces;
 
   // Data containers
   std::vector<GInt> m_childIds{};

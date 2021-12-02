@@ -4,10 +4,10 @@
 #include "lbm_constants.h"
 #include "lbm_pv.h"
 
-template <LBMethodType LBTYPE>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBnd_InOutBB : public LBMBndInterface {
  public:
-  LBMBnd_InOutBB(const Surface<dim(LBTYPE)>* surf, const json& properties) {
+  LBMBnd_InOutBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) {
     for(const GInt cellId : surf->getCellList()) {
       m_bndCells.emplace_back(cellId);
     }

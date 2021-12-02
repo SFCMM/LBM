@@ -130,10 +130,4 @@ class GridInterface {
 
  private:
 };
-
-template<GInt NDIM>
-class GridInterfaceD: public GridInterface{
- public:
-  [[nodiscard]] virtual inline auto center(const GInt cellId)-> VectorD<NDIM>& =0;
-};
 #endif // GRIDGENERATOR_GRIDINTERFACE_H

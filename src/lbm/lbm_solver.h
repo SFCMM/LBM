@@ -86,7 +86,7 @@ class LBMSolver : public SolverInterface, private Configuration, private Postpro
   //    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get());
   //  }
 
-  auto bndrySurface(const GString id) const -> const Surface<NDIM>& {
+  auto bndrySurface(const GString id) const -> const Surface<DEBUG_LEVEL, NDIM>& {
     return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->bndrySurface(id);
   }
 

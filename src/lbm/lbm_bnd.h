@@ -9,7 +9,7 @@
 #include "lbm_bnd_periodic.h"
 #include "lbm_bnd_wall.h"
 
-template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, GBool TANGENTIALVELO>
 class LBMBnd_wallBB;
 
 class LBMBnd_dummy;
@@ -27,7 +27,7 @@ class LBMBndManager : private Configuration {
   auto operator=(LBMBndManager&&) -> LBMBndManager& = delete;
 
   //todo: cleanup
-  void setupBndryCnds(const json& bndConfig, std::function<const Surface<dim(LBTYPE)>&(GString)>& bndrySurface) {
+  void setupBndryCnds(const json& bndConfig, std::function<const Surface<DEBUG_LEVEL, dim(LBTYPE)>&(GString)>& bndrySurface) {
     for(const auto& [geometry, geomBndConfig] : bndConfig.items()) {
       // todo: check that geometry exists
       // todo: access only bndrySurfaces of this geometry!
@@ -35,8 +35,8 @@ class LBMBndManager : private Configuration {
         const auto bndType = config::required_config_value<GString>(surfBndConfig, "type");
         logger << "Adding bndCnd to surfaceId " << surfId;
 
-        const Surface<dim(LBTYPE)>& srf =bndrySurface(surfId);
-        std::vector<const Surface<dim(LBTYPE)>*> bndrySrf;
+        const Surface<DEBUG_LEVEL, dim(LBTYPE)>& srf =bndrySurface(surfId);
+        std::vector<const Surface<DEBUG_LEVEL, dim(LBTYPE)>*> bndrySrf;
         bndrySrf.emplace_back(&srf);
 
         // todo: convert to switch
@@ -74,7 +74,7 @@ class LBMBndManager : private Configuration {
   }
 
   // todo: merge with the function above
-  void addBndry(const BndryType bnd,  const json& properties, const std::vector<const Surface<dim(LBTYPE)>*>& surf) {
+  void addBndry(const BndryType bnd,  const json& properties, const std::vector<const Surface<DEBUG_LEVEL, dim(LBTYPE)>*>& surf) {
     ASSERT(surf[0]->size() > 0, "Invalid surface");
 
     // actually generate a boundary or just create a dummy e.g. the boundary is handled in a non standard way!
@@ -83,21 +83,21 @@ class LBMBndManager : private Configuration {
     if(generateBndry) {
       switch(bnd) {
         case BndryType::Wall_BounceBack:
-          m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<LBTYPE, false>>(surf[0], properties));
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<DEBUG_LEVEL, LBTYPE, false>>(surf[0], properties));
           break;
         case BndryType::Wall_BounceBack_TangentialVelocity:
-          m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<LBTYPE, true>>(surf[0], properties));
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<DEBUG_LEVEL, LBTYPE, true>>(surf[0], properties));
           break;
         case BndryType::Inlet_BounceBack_ConstPressure:
-          m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<LBTYPE>>(surf[0], properties));
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
           TERMM(-1, "Broken");
           break;
         case BndryType::Outlet_BounceBack_ConstPressure:
-          m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<LBTYPE>>(surf[0], properties));
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
           TERMM(-1, "Broken");
           break;
         case BndryType::Periodic:
-          m_bndrys.emplace_back(std::make_unique<LBMBnd_Periodic<LBTYPE>>(surf[0], surf[1], properties));
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_Periodic<DEBUG_LEVEL, LBTYPE>>(surf[0], surf[1], properties));
           break;
         default:
           TERMM(-1, "Invalid bndry Type!");

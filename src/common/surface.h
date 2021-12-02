@@ -1,7 +1,7 @@
 #ifndef LBM_SURFACE_H
 #define LBM_SURFACE_H
 
-#include "interface/grid_interface.h"
+#include "cartesiangrid_base.h"
 
 // 3D: Surface 2D: Line 1D: Point
 class SurfaceInterface {
@@ -14,16 +14,21 @@ class SurfaceInterface {
 };
 
 // 3D: Surface 2D: Line 1D: Point
-template <GInt NDIM>
+template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class Surface : public SurfaceInterface {
  public:
-  Surface(GridInterfaceD<NDIM>* grid) : m_center(&grid->center(0)), m_grid(grid){};
+  Surface(CartesianGridData<NDIM> data) : m_grid(data){};
   ~Surface() = default;
 
   // todo:fix
-//  Surface(const Surface& copy) : m_center(copy.m_center), m_grid(copy.m_grid) {}
+  //  Surface(const Surface& copy) : m_center(copy.m_center), m_grid(copy.m_grid) {}
   //  Surface(Surface&&)      = delete;
-  //  auto operator=(const Surface&) -> Surface& = delete;
+  //    auto operator=(const Surface& copy) -> Surface& {
+  //      m_center = copy.m_center;
+  //      m_normal = copy.m_normal;
+  //      m_cellId = copy.m_cellId;
+  //      m_grid = copy.m_grid;
+  //    }
   //  auto operator=(Surface&&) -> Surface& = delete;
 
 
@@ -48,26 +53,16 @@ class Surface : public SurfaceInterface {
     return m_cellId.size();
   }
 
-  auto center(const GInt cellId) const -> const VectorD<NDIM>& { return m_center[cellId]; }
+  auto center(const GInt cellId) const -> const VectorD<NDIM>& { return m_grid.center(cellId); }
 
-  [[nodiscard]] auto cellLength(const GInt cellId) const -> GDouble {
-    cerr0 << cellId << std::endl;
-    cerr0 << m_grid << std::endl;
-    cerr0 << "grid dim " << m_grid->dim() << std::endl;
+  [[nodiscard]] auto cellLength(const GInt cellId) const -> GDouble { return m_grid.cellLength(cellId); }
 
-    cerr0 << "level " << static_cast<GInt>(m_grid->level(cellId)) << std::endl;
-    return m_grid->lengthOnLvl(m_grid->level(cellId));
-  }
-
-  auto grid() const -> GridInterfaceD<NDIM>* {
-    return m_grid;
-  }
+  auto grid() const -> CartesianGridData<NDIM> { return m_grid; }
 
  private:
-  std::vector<GInt>          m_cellId;
-  std::vector<VectorD<NDIM>> m_normal;
-  VectorD<NDIM>*             m_center = nullptr;
-  GridInterfaceD<NDIM>*      m_grid   = nullptr;
+  std::vector<GInt>                                           m_cellId;
+  std::vector<VectorD<NDIM>>                                  m_normal;
+  const CartesianGridData<NDIM> m_grid = nullptr;
 };
 
 #endif // LBM_SURFACE_H

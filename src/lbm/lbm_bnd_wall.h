@@ -94,10 +94,10 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
   GInt                                                                     m_noSetDists = 0;
 };
 
-template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, GBool TANGENTIALVELO>
 class LBMBnd_wallBB : public LBMBndInterface {
  public:
-  LBMBnd_wallBB(const Surface<dim(LBTYPE)>* surf, const json& properties) {
+  LBMBnd_wallBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) {
     GInt surfId = 0;
     for(const GInt cellId : surf->getCellList()) {
       m_bndCells.emplace_back(cellId, surf->normal(surfId));
@@ -107,7 +107,7 @@ class LBMBnd_wallBB : public LBMBndInterface {
       m_tangentialVelo = config::required_config_value<GDouble>(properties, "tangentialVelocity");
       logger << "Setting tangentialVelocity " << m_tangentialVelo << std::endl;
     }
-    LBMBnd_wallBB<LBTYPE, TANGENTIALVELO>::init();
+    LBMBnd_wallBB<DEBUG_LEVEL, LBTYPE, TANGENTIALVELO>::init();
   }
   ~LBMBnd_wallBB() override = default;
 
