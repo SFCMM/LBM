@@ -11,8 +11,8 @@ const std::function<GBool(GInt)> defaultTrue  = [](GInt /*ignored*/) { return tr
 const std::function<GBool(GInt)> defaultFalse = [](GInt /*ignored*/) { return false; };
 } // namespace hidden::_detail
 
-//todo: improve
-struct IOIndex{
+// todo: improve
+struct IOIndex {
   GString name;
   GString type;
 };
@@ -94,10 +94,11 @@ static inline auto point_header() -> GString {
   // todo: it seems that number of components is ignored by paraview
   // todo: allow change of float type
   if(BINARY) {
-//    return "<Points>\n<DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"binary\"> \n";
+    //    return "<Points>\n<DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"binary\">
+    //    \n";
     return "<Points>\n<DataArray type=\"Float32\" Name=\"Points\" NumberOfComponents=\"3\" format=\"binary\"> \n";
   }
-//  return "<Points>\n<DataArray type=\"Float64\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"ascii\"> \n";
+  //  return "<Points>\n<DataArray type=\"Float64\" Name=\"Points\" NumberOfComponents=\"" + to_string(DIM) + "\" format=\"ascii\"> \n";
   return "<Points>\n<DataArray type=\"Float64\" Name=\"Points\" NumberOfComponents=\"3\" format=\"ascii\"> \n";
 }
 
@@ -182,10 +183,10 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
         pointFile << " ";
       }
     }
-    if(DIM < 3){
-     for(GInt i = DIM; i < 3; ++i){
-       pointFile << " 0.0";
-     }
+    if(DIM < 3) {
+      for(GInt i = DIM; i < 3; ++i) {
+        pointFile << " 0.0";
+      }
     }
     pointFile << "\n";
   }
@@ -203,8 +204,8 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   pointFile << point_data_header();
   GInt i = 0;
   for(const auto& column : values) {
-    //todo: fix types
-    if(index[i].type == "float64" || index[i].type == "float32"){
+    // todo: fix types
+    if(index[i].type == "float64" || index[i].type == "float32") {
       pointFile << point_data_float64(index[i].name);
     } else {
       pointFile << point_data_int32(index[i].name);
@@ -264,8 +265,8 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
       for(GInt i = 0; i < DIM; ++i) {
         tmp_coords[actualValues++] = coord[i];
       }
-      if(DIM < 3){
-        for(GInt i = DIM; i < 3; ++i){
+      if(DIM < 3) {
+        for(GInt i = DIM; i < 3; ++i) {
           tmp_coords[actualValues++] = 0.0;
         }
       }
@@ -306,8 +307,8 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   {
     GInt i = 0;
     for(const auto& column : values) {
-      //todo: fix types
-      if(index[i].type == "float64" || index[i].type == "float32"){
+      // todo: fix types
+      if(index[i].type == "float64" || index[i].type == "float32") {
         pointFile << point_data_float64<true>(index[i++].name);
       } else {
         pointFile << point_data_int32<true>(index[i++].name);

@@ -38,8 +38,8 @@ class GridGenerator : public SolverInterface, private Configuration {
   int m_noDomains = -1;
 
   GString m_exe;
-  json                               m_geometryConfig;
-  json                               m_gridOutConfig;
+  json    m_geometryConfig;
+  json    m_gridOutConfig;
 
   void initTimers();
   void loadConfiguration();

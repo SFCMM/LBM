@@ -60,8 +60,8 @@ class Surface : public SurfaceInterface {
   auto grid() const -> CartesianGridData<NDIM> { return m_grid; }
 
  private:
-  std::vector<GInt>                                           m_cellId;
-  std::vector<VectorD<NDIM>>                                  m_normal;
+  std::vector<GInt>             m_cellId;
+  std::vector<VectorD<NDIM>>    m_normal;
   const CartesianGridData<NDIM> m_grid = nullptr;
 };
 

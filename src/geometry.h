@@ -300,7 +300,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
             continue;
           }
           Point<NDIM> normal;
-          //todo: fix for 1D/2D
+          // todo: fix for 1D/2D
           normal[0] = edge[0][1] * edge[1][2] - edge[0][2] * edge[1][1];
           normal[1] = edge[0][2] * edge[1][0] - edge[0][0] * edge[1][2];
           normal[2] = edge[0][0] * edge[1][1] - edge[0][1] * edge[1][0];

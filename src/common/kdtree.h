@@ -133,8 +133,9 @@ class KDTree {
 
         // sort by the currentDir of the bounding boxes of each element
         // example: currentDir = 0 -> (min x dir) -3, -1, 2 , 4
-        std::sort(index.begin() + currentOffset.from, index.begin() + currentOffset.to + 1,
-                  [&](GInt a, GInt b) { return geometryM.elementBoundingBox(a, currentDir) < geometryM.elementBoundingBox(b, currentDir); });
+        std::sort(index.begin() + currentOffset.from, index.begin() + currentOffset.to + 1, [&](GInt a, GInt b) {
+          return geometryM.elementBoundingBox(a, currentDir) < geometryM.elementBoundingBox(b, currentDir);
+        });
 
         // remove own element from offset range
         m_nodes[currentNode].m_element = index[currentOffset.from];

@@ -15,14 +15,13 @@ inline auto getFuncType(const GString& typeId) -> FuncType {
 template <GInt NDIM>
 class PostprocessFunctionInterface {
  public:
-  PostprocessFunctionInterface() = default;
+  PostprocessFunctionInterface()          = default;
   virtual ~PostprocessFunctionInterface() = default;
 
-  virtual void init() = 0;
+  virtual void init()    = 0;
   virtual void execute() = 0;
-  //todo: this is just temporary
+  // todo: this is just temporary
   virtual auto output() -> std::vector<GInt>& = 0;
-
 };
 
 #endif // LBM_POSTPROCESSING_FUNC_H

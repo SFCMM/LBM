@@ -153,10 +153,10 @@ void startupInfo(GChar** argv) {
 auto main(int argc, GChar** argv) -> int {
   std::ostringstream tmpBuffer;
 #ifdef SOLVER_AVAILABLE
-  tmpBuffer << "LBM Solver v" << XSTRINGIFY(PROJECT_VER) << "b" <<BUILD_NUM;
+  tmpBuffer << "LBM Solver v" << XSTRINGIFY(PROJECT_VER) << "b" << BUILD_NUM;
   // todo: also give information about the version of the gridgenerator
 #else
-  tmpBuffer << "GridGenerator v" << XSTRINGIFY(PROJECT_VER) << "b"<<BUILD_NUM;
+  tmpBuffer << "GridGenerator v" << XSTRINGIFY(PROJECT_VER) << "b" << BUILD_NUM;
 #endif
   cxxopts::Options options(tmpBuffer.str(), "A highly parallel grid generator.");
 

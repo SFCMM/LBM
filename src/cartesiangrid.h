@@ -240,9 +240,9 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   void save(const GString& /*fileName*/, const json& /*gridOutConfig*/) const override { TERMM(-1, "Not implemented!"); }
 
   auto bndrySurface(const GString& id) -> Surface<DEBUG_LEVEL, NDIM>& {
-    if(DEBUG_LEVEL > Debug_Level::min_debug){
-      if(m_bndrySurfaces.count(id) == 0){
-        TERMM(-1, "Invalid bndryId \"" +id +"\"");
+    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+      if(m_bndrySurfaces.count(id) == 0) {
+        TERMM(-1, "Invalid bndryId \"" + id + "\"");
       }
     }
     return m_bndrySurfaces.at(id);
@@ -285,10 +285,10 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 #endif
 
     m_axisAlignedBnd = opt_config_value<GBool>("assumeAxisAligned", m_axisAlignedBnd);
-    if(!m_axisAlignedBnd){
+    if(!m_axisAlignedBnd) {
       TERMM(-1, "Not implemented!");
     }
-    m_periodic       = has_any_key_value("type", "periodic");
+    m_periodic = has_any_key_value("type", "periodic");
 
     currentHighestLvl() = grid.currentHighestLvl();
     partitionLvl()      = grid.partitionLvl();
@@ -393,10 +393,10 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   }
 
 #pragma clang diagnostic push
-#pragma ide diagnostic ignored "cppcoreguidelines-pro-bounds-constant-array-index"
+#pragma ide diagnostic   ignored "cppcoreguidelines-pro-bounds-constant-array-index"
   void identifyBndrySurfaces() {
     if(m_axisAlignedBnd) {
-      for(GInt surfId = 0; surfId < cartesian::maxNoNghbrs<NDIM>(); ++surfId){
+      for(GInt surfId = 0; surfId < cartesian::maxNoNghbrs<NDIM>(); ++surfId) {
         m_bndrySurfaces.insert({static_cast<GString>(DirIdString[surfId]), Surface<DEBUG_LEVEL, NDIM>(this->getCartesianGridData())});
       }
 
