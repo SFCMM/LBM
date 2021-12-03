@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 #include "sfcmm_types.h"
-#include "term.h"
+#include "common/term.h"
 
 // todo: documentation
 // todo: tests

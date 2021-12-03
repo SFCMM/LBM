@@ -8,7 +8,7 @@
 #include <sstream>
 #include <unordered_set>
 #include <sfcmm_common.h>
-#include "term.h"
+#include "common/term.h"
 
 namespace config {
 using json = nlohmann::json;
