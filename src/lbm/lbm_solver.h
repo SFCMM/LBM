@@ -2,7 +2,7 @@
 #define LBM_SOLVER_H
 #include <sfcmm_common.h>
 #include "cartesiangrid.h"
-#include "configuration.h"
+#include "common/configuration.h"
 #include "interface/lbm_interface.h"
 #include "interface/solver_interface.h"
 #include "lbm_bnd.h"

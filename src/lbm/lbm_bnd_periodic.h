@@ -57,7 +57,7 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
         centerA[dir] += LBMethod<LBTYPE>::m_dirs[dist][dir] * cellLength;
       }
 
-      GDouble minDist = std::numeric_limits<GDouble>::max();
+      //      GDouble minDist = std::numeric_limits<GDouble>::max();
       // connect cell of the boundary surface and connected surface
       for(const GInt cellIdB : surfConnected->getCellList()) {
         const auto& centerB = surfConnected->center(cellIdB);
@@ -149,8 +149,8 @@ class LBMBnd_Periodic : public LBMBndInterface {
       bndCell.preApply(f, fold, vars);
     }
   }
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-             const std::function<GDouble&(GInt, GInt)>& vars) override {}
+  void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
+             const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
  private:
   std::vector<LBMBndCell_periodic<DEBUG_LEVEL, LBTYPE>> m_bndCells;

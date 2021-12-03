@@ -63,16 +63,16 @@ public:
     char* argp[] = {
         prog_name,
         const_cast<char*>(flag),
-        const_cast<char*>(exec_path),
-        const_cast<char*>(addr),
-        0
-    };
+                    const_cast<char *>(exec_path), const_cast<char *>(addr), 0};
 
     if (::pipe(pdes) < 0) {
       return;
     }
 
     pid = ::fork();
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch-default"
+
     switch (pid) {
     case -1:
       // Failed...
@@ -95,6 +95,7 @@ public:
 //    default:
 //      std::terminate();
     }
+#pragma GCC diagnostic pop
 
     p = ::fdopen(pdes[0], "r");
     ::close(pdes[1]);

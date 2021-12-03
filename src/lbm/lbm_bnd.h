@@ -3,7 +3,7 @@
 
 #include <sfcmm_common.h>
 #include "common/surface.h"
-#include "configuration.h"
+#include "common/configuration.h"
 #include "lbm_bnd_in_out.h"
 #include "lbm_bnd_interface.h"
 #include "lbm_bnd_periodic.h"

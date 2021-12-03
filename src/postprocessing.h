@@ -3,7 +3,7 @@
 
 #include <lbm/lbm_postprocessing.h>
 #include <utility>
-#include "configuration.h"
+#include "common/configuration.h"
 #include "postprocessing_func.h"
 
 namespace pp {

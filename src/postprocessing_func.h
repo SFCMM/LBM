@@ -10,7 +10,7 @@ inline auto getFuncType(const GString& typeId) -> FuncType {
   }
   TERMM(-1, "Invalid functype");
 }
-}; // namespace pp
+} // namespace pp
 
 template <GInt NDIM>
 class PostprocessFunctionInterface {

@@ -6,7 +6,7 @@
 
 #include <sfcmm_common.h>
 #include "cartesiangrid.h"
-#include "configuration.h"
+#include "common/configuration.h"
 #include "geometry.h"
 #include "globaltimers.h"
 #include "gridcell_properties.h"

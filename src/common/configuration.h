@@ -1,6 +1,6 @@
 #ifndef LBM_CONFIGURATION_H
 #define LBM_CONFIGURATION_H
-#include <json.h>
+#include "json.h"
 
 #include <utility>
 using json = nlohmann::json;

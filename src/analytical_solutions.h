@@ -28,9 +28,9 @@ static constexpr auto poiseuille2D(const GDouble ytop, const GDouble ybot, const
 }
 
 static constexpr auto poiseuille2D_1(const GDouble y) -> GDouble {
-  constexpr GDouble reynoldsNum = 0.7;
-  constexpr GDouble relaxTime   = gcem::sqrt(3.0 / 16.0) + 0.5;
-  constexpr GDouble refL        = 1.0;
+  //  constexpr GDouble reynoldsNum = 0.7;
+  //  constexpr GDouble relaxTime   = gcem::sqrt(3.0 / 16.0) + 0.5;
+  //  constexpr GDouble refL        = 1.0;
 
   //  constexpr GDouble dynViscosity = (2.0 * relaxTime - 1.0) / 6.0;
   // from reynolds obtain reference velocity

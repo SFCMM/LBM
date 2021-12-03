@@ -8,7 +8,7 @@
 #include <sfcmm_common.h>
 #include "cartesiangrid_base.h"
 #include "common/IO.h"
-#include "configuration.h"
+#include "common/configuration.h"
 #include "geometry.h"
 #include "globaltimers.h"
 #ifdef SOLVER_AVAILABLE
@@ -262,11 +262,10 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 #pragma omp parallel default(none) shared(grid)
     {
 #endif
-      const GInt noCells = grid.size();
 #ifdef _OPENMP
 #pragma omp for
 #endif
-      for(GInt cellId = 0; cellId < noCells; ++cellId) {
+      for(GInt cellId = 0; cellId < noCells(); ++cellId) {
         globalId(cellId) = grid.globalId(cellId);
         parent(cellId)   = grid.parent(cellId);
         for(GInt childId = 0; childId < cartesian::maxNoChildren<NDIM>(); ++childId) {
@@ -355,8 +354,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 
  private:
   void setProperties() {
-    const GInt noCells = size();
-    for(GInt cellId = 0; cellId < noCells; ++cellId) {
+    for(GInt cellId = 0; cellId < noCells(); ++cellId) {
       const GBool isLeaf                     = noChildren(cellId) == 0;
       property(cellId, CellProperties::leaf) = isLeaf;
       m_noLeafCells += static_cast<GInt>(isLeaf);
@@ -364,8 +362,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   };
 
   void determineBoundaryCells() {
-    const GInt noCells = size();
-    for(GInt cellId = 0; cellId < noCells; ++cellId) {
+    for(GInt cellId = 0; cellId < noCells(); ++cellId) {
       // is a partition cell determine for each if it can be a boundary cell (no existent parent)
       // parent has a cut with the boundary -> possible cut of child!
       if(parent(cellId) == -1 || property(parent(cellId), CellProperties::bndry)) {
@@ -392,8 +389,10 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     }
   }
 
+#ifdef CLANG_COMPILER
 #pragma clang diagnostic push
 #pragma ide diagnostic   ignored "cppcoreguidelines-pro-bounds-constant-array-index"
+#endif
   void identifyBndrySurfaces() {
     if(m_axisAlignedBnd) {
       for(GInt surfId = 0; surfId < cartesian::maxNoNghbrs<NDIM>(); ++surfId) {
@@ -413,7 +412,9 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
       TERMM(-1, "Not implemented");
     }
   }
+#ifdef CLANG_COMPILER
 #pragma clang diagnostic pop
+#endif
 
   void setupPeriodicConnections() {
     if(m_periodic) {

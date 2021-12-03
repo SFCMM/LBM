@@ -23,7 +23,7 @@ class LBMBndInterface {
 template <LBMethodType LBTYPE>
 class LBMBndCell {
  public:
-  LBMBndCell(const GInt mappedCellId, const VectorD<dim(LBTYPE)>& normal) : m_mappedCellId(mappedCellId), m_normal(normal) {}
+  LBMBndCell(const GInt mappedCellId, const VectorD<dim(LBTYPE)>& normal) : m_normal(normal), m_mappedCellId(mappedCellId) {}
   virtual ~LBMBndCell() = default;
 
   virtual void init() {

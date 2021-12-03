@@ -46,11 +46,11 @@ class CartesianGridData {
   template <typename T>
   CartesianGridData(const T& initGrid)
     : m_noCells(initGrid.noCells()),
+      m_boundingBox(initGrid.boundingBox()),
       m_center(initGrid.center()),
       m_properties(initGrid.props()),
       m_level(initGrid.level()),
-      m_lengthOnLevel(initGrid.lengthOnLvl()),
-      m_boundingBox(initGrid.boundingBox()) {}
+      m_lengthOnLevel(initGrid.lengthOnLvl()) {}
 
   // todo: add asserts
   [[nodiscard]] inline auto noCells() const -> GInt { return m_noCells; }
