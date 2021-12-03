@@ -420,7 +420,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     std::ifstream                  ifl(m_fileName);
     static constexpr GInt          buffer_size = 1024;
     std::array<GChar, buffer_size> buffer{};
-    ifl.getline(&buffer[0], buffer_size);
+    ifl.getline(buffer.data(), buffer_size);
     if(static_cast<GString>(buffer.data()).find("solid") != 0) {
       m_binary = true;
     }
@@ -442,7 +442,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
       GString text;
       // If number of elements unknown, count them...
       while(text.find("endsolid") == std::string::npos) {
-        ifl.getline(&buffer[0], buffer_size);
+        ifl.getline(buffer.data(), buffer_size);
         text = static_cast<GString>(buffer.data());
         if(text.find("facet") != std::string::npos && text.find("endface") == std::string::npos) {
           ++m_noTriangles;
@@ -463,7 +463,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     // iterate overall triangles
     GInt triangleId = 0;
     while(text.find("endsolid") == std::string::npos) {
-      ifl.getline(&buffer[0], buffer_size);
+      ifl.getline(buffer.data(), buffer_size);
       text = static_cast<GString>(buffer.data());
 
       // get normal of the triangle
@@ -486,11 +486,11 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
           m_triangles[triangleId].m_normal[i] = stod(tokens[i + 2]);
         }
         // Jump expression : outer loop
-        ifl.getline(&buffer[0], buffer_size);
+        ifl.getline(buffer.data(), buffer_size);
 
         // Read vertices
         for(GInt j = 0; j < NDIM; j++) {
-          ifl.getline(&buffer[0], buffer_size);
+          ifl.getline(buffer.data(), buffer_size);
 
           text = static_cast<GString>(buffer.data());
           trim(text);
@@ -530,7 +530,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     array<char, stl_header_size> header{};
     unsigned short               ibuff2 = 0;
 
-    if(fread(&header[0], 1, stl_header_size - 1, fp) == 0U) {
+    if(fread(header.data(), 1, stl_header_size - 1, fp) == 0U) {
       TERMM(-1, "ERROR: Memory error!");
     }
 

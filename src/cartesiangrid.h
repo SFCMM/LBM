@@ -237,7 +237,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     BaseCartesianGrid<DEBUG_LEVEL, NDIM>::reset();
   }
 
-  void save(const GString& fileName, const json& gridOutConfig) const override { TERMM(-1, "Not implemented!"); }
+  void save(const GString& /*fileName*/, const json& /*gridOutConfig*/) const override { TERMM(-1, "Not implemented!"); }
 
   auto bndrySurface(const GString& id) -> Surface<DEBUG_LEVEL, NDIM>& {
     if(DEBUG_LEVEL > Debug_Level::min_debug){

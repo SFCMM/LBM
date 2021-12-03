@@ -23,9 +23,11 @@
 ## Planned
 - run basic 2D NS Case
 - load grid from disk
-- Couette in 3D 
+- Couette in 3D
 - Poiseuille flow in 3D
 - add simple LPT solver
+- add simple injection model
+- add simple collision model
 - contact angle
 - output analytical solution if wanted
 - check in periodic boundaries if all cells have been linked
@@ -43,7 +45,7 @@
 - write out lines as svg
 - move comparison with analytical solution to postprocessing
 - fix keys in unused config value detection
-- improve boundary condition with methods that use wet nodes 
+- improve boundary condition with methods that use wet nodes
 - make neem boundary condition available for NS
 - add way to just iterate over leaf cells
 - order boundary conditions by type
@@ -52,7 +54,8 @@
 - check in output functions if fileformat ending is already included
 - add openmp
 - in cartesiangrid don't use the configuration.json but the accessor to mark the unused values correctly
-- move kdtree to common project.
+- move kdtree to common lib project.
+- move line to common lib project.
 
 ### moved:
 - switch analytical solution over to vector results!

@@ -66,7 +66,7 @@ class Configuration {
       m_unusedKeys[key] = true;
       // todo: check size
       std::vector<GDouble> tmp = m_config[key];
-      return Point<NDIM>(&tmp[0]);
+      return Point<NDIM>(tmp.data());
     }
     cerr0 << m_config << std::endl;
     TERMM(-1, "The required configuration value is missing: " + key);
