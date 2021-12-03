@@ -1,6 +1,7 @@
 #ifndef LBM_LINE_H
 #define LBM_LINE_H
 #include <Eigen/Geometry>
+#include <sfcmm_common.h>
 
 
 template<GInt NDIM>
@@ -8,9 +9,7 @@ class Line{
  private:
   using EigenLine = Eigen::Hyperplane<GDouble, 2>;
  public:
-  Line(const Point<NDIM>& A, const Point<NDIM>& B): m_a(A), m_b(B){
-    m_line = EigenLine::Through(A, B);
-  }
+  Line(const Point<NDIM>& pointA, const Point<NDIM>& pointB): m_a(pointA), m_b(pointB), m_line(EigenLine::Through(pointA, pointB)){}
 
   auto distance(const Point<NDIM>& point) const -> GDouble{
     return m_line.absDistance(point);

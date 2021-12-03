@@ -48,14 +48,14 @@ class KDTree {
   auto operator=(KDTree&&) -> KDTree& = delete;
 
   /// Build a min/max kd tree using the provided GeometryManager.
-  /// \param gm Geometry Manager for which to build the kd tree
-  void buildTree(GeometryManager<DEBUG_LEVEL, NDIM>& gm) {
+  /// \param geometryM Geometry Manager for which to build the kd tree
+  void buildTree(GeometryManager<DEBUG_LEVEL, NDIM>& geometryM) {
     // todo: this is mostly the same as below find a way to unify
 
     // count number of total geometry elements
     // analytical geometries have 1
     // STLs 1 for each triangle
-    const GInt noNodes = gm.noElements();
+    const GInt noNodes = geometryM.noElements();
 
     // allocate memory
     m_nodes.resize(noNodes);
@@ -69,7 +69,7 @@ class KDTree {
     std::vector<OffsetType> offset;
     offset.resize(noNodes);
 
-    m_boundingBox = BoundingBoxCT<NDIM>(gm.getBoundingBox());
+    m_boundingBox = BoundingBoxCT<NDIM>(geometryM.getBoundingBox());
 
     // set root node
     m_root                   = 0;
@@ -134,7 +134,7 @@ class KDTree {
         // sort by the currentDir of the bounding boxes of each element
         // example: currentDir = 0 -> (min x dir) -3, -1, 2 , 4
         std::sort(index.begin() + currentOffset.from, index.begin() + currentOffset.to + 1,
-                  [&](GInt a, GInt b) { return gm.elementBoundingBox(a, currentDir) < gm.elementBoundingBox(b, currentDir); });
+                  [&](GInt a, GInt b) { return geometryM.elementBoundingBox(a, currentDir) < geometryM.elementBoundingBox(b, currentDir); });
 
         // remove own element from offset range
         m_nodes[currentNode].m_element = index[currentOffset.from];
@@ -142,7 +142,7 @@ class KDTree {
 
         // find the pivot
         const GInt pivotElement      = (offsetWidth - 1) / 2 + currentOffset.from;
-        m_nodes[currentNode].m_pivot = gm.elementBoundingBox(index[pivotElement], currentDir);
+        m_nodes[currentNode].m_pivot = geometryM.elementBoundingBox(index[pivotElement], currentDir);
 
 
         // Left subtree (lower values)
@@ -163,11 +163,12 @@ class KDTree {
 
         // Connect id to leaf
         m_nodes[currentNode].m_element = index[currentOffset.to];
-        m_nodes[currentNode].m_pivot   = gm.elementBoundingBox(m_nodes[currentNode].m_element, currentDir);
+        m_nodes[currentNode].m_pivot   = geometryM.elementBoundingBox(m_nodes[currentNode].m_element, currentDir);
       }
       // set the minimum and maximum value of all children
-      m_nodes[currentNode].m_min = gm.elementBoundingBox(index[currentOffset.from - 1], currentDir); // -1 because from has been increased
-      m_nodes[currentNode].m_max = gm.elementBoundingBox(index[currentOffset.to], currentDir);
+      m_nodes[currentNode].m_min =
+          geometryM.elementBoundingBox(index[currentOffset.from - 1], currentDir); // -1 because from has been increased
+      m_nodes[currentNode].m_max = geometryM.elementBoundingBox(index[currentOffset.to], currentDir);
     }
   };
 
@@ -438,17 +439,17 @@ class KDTree {
       const GInt currentNode = stacker.top();
       stacker.pop();
 
-      const GInt r = m_nodes[currentNode].m_rightSubtree;
-      const GInt l = m_nodes[currentNode].m_leftSubtree;
-      if(r > 0) {
-        stacker.emplace(r);
-        cout << "R node " << r << " element " << m_nodes[r].m_element << " pivot " << m_nodes[r].m_pivot << " parent "
-             << m_nodes[r].m_parent << " depth " << m_nodes[r].m_depth << endl;
+      const GInt right = m_nodes[currentNode].m_rightSubtree;
+      const GInt left  = m_nodes[currentNode].m_leftSubtree;
+      if(right > 0) {
+        stacker.emplace(right);
+        cout << "R node " << right << " element " << m_nodes[right].m_element << " pivot " << m_nodes[right].m_pivot << " parent "
+             << m_nodes[right].m_parent << " depth " << m_nodes[right].m_depth << endl;
       }
-      if(l > 0) {
-        stacker.emplace(l);
-        cout << "L node " << l << " element " << m_nodes[l].m_element << " pivot " << m_nodes[l].m_pivot << " parent "
-             << m_nodes[l].m_parent << " depth " << m_nodes[l].m_depth << endl;
+      if(left > 0) {
+        stacker.emplace(left);
+        cout << "L node " << left << " element " << m_nodes[left].m_element << " pivot " << m_nodes[left].m_pivot << " parent "
+             << m_nodes[left].m_parent << " depth " << m_nodes[left].m_depth << endl;
       }
     }
   }

@@ -52,6 +52,7 @@
 - check in output functions if fileformat ending is already included
 - add openmp
 - in cartesiangrid don't use the configuration.json but the accessor to mark the unused values correctly
+- move kdtree to common project.
 
 ### moved:
 - switch analytical solution over to vector results!
