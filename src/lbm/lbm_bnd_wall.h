@@ -11,7 +11,7 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
   //  LBMBndCell_wallBB() = default;
   LBMBndCell_wallBB(const GInt cellId, const VectorD<dim(LBTYPE)>& _normal) : LBMBndCell<LBTYPE>(cellId, _normal) {}
   //  LBMBndCell_wallBB(const GInt cellId) {}
-  virtual ~LBMBndCell_wallBB() = default;
+  ~LBMBndCell_wallBB() override = default;
 
   void init() override {
     LBMBndCell<LBTYPE>::init();

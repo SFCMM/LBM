@@ -104,8 +104,8 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
     }
   }
 
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-             const std::function<GDouble&(GInt, GInt)>& vars) {}
+  void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
+             const std::function<GDouble&(GInt, GInt)>& /*vars*/) {}
 
   // todo: fix me
   //  deleted constructors not needed

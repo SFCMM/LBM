@@ -7,8 +7,8 @@
 #include <set>
 #include <sfcmm_common.h>
 #include "cartesiangrid_base.h"
-#include "common/IO.h"
 #include "common/configuration.h"
+#include "common/IO.h"
 #include "geometry.h"
 #include "globaltimers.h"
 #ifdef SOLVER_AVAILABLE
@@ -391,6 +391,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 
 #ifdef CLANG_COMPILER
 #pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-pragmas"
 #pragma ide diagnostic   ignored "cppcoreguidelines-pro-bounds-constant-array-index"
 #endif
   void identifyBndrySurfaces() {
