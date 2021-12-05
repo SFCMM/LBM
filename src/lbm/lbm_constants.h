@@ -82,6 +82,15 @@ static constexpr auto getLBMethodType() -> LBMethodType {
   }
 }
 
+static constexpr auto getLBMethodType(const std::string_view modelName) -> LBMethodType {
+  if(modelName == "D2Q5") {
+    return LBMethodType::D2Q5;
+  }
+  if(modelName == "D2Q9") {
+    return LBMethodType::D2Q9;
+  }
+}
+
 static constexpr auto getLBMethodType(const GInt noDims, const GInt noDistributions) -> LBMethodType {
   switch(noDims) {
     case 1:
@@ -144,8 +153,26 @@ class LBMethod {
   static constexpr GInt                                                          m_noDists   = 0;
   static constexpr std::array<GDouble, 1>                                        m_weights   = {0};
   static constexpr GBool                                                         m_isThermal = false;
+  static constexpr std::string_view                                              m_name      = "INVALID";
 };
 
+template <>
+class LBMethod<LBMethodType::D2Q5> {
+ public:
+  static constexpr std::array<std::array<GDouble, 2>, 5> m_dirs = {{{{-1, 0}}, {{1, 0}}, {{0, -1}}, {{0, 1}}, {{0, 0}}}};
+
+  static constexpr std::array<GInt, 5> m_oppositeDist = {1, 0, 3, 2, 4};
+
+  /// look-up table for opposite direction
+  static constexpr auto oppositeDist(const GInt dist) -> GInt { return m_oppositeDist[dist]; }
+
+  static constexpr std::array<GDouble, 5> m_weights = {1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 3.0};
+
+  static constexpr GInt             m_dim       = 2;
+  static constexpr GInt             m_noDists   = 5;
+  static constexpr GBool            m_isThermal = false;
+  static constexpr std::string_view m_name      = "D2Q5";
+};
 
 template <>
 class LBMethod<LBMethodType::D2Q9> {
@@ -161,9 +188,10 @@ class LBMethod<LBMethodType::D2Q9> {
   static constexpr std::array<GDouble, 9> m_weights = {1.0 / 9.0,  1.0 / 9.0,  1.0 / 9.0,  1.0 / 9.0, 1.0 / 36.0,
                                                        1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 4.0 / 9.0};
 
-  static constexpr GInt  m_dim       = 2;
-  static constexpr GInt  m_noDists   = 9;
-  static constexpr GBool m_isThermal = false;
+  static constexpr GInt             m_dim       = 2;
+  static constexpr GInt             m_noDists   = 9;
+  static constexpr GBool            m_isThermal = false;
+  static constexpr std::string_view m_name      = "D2Q9";
 };
 
 

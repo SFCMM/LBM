@@ -56,6 +56,13 @@
 - in cartesiangrid don't use the configuration.json but the accessor to mark the unused values correctly
 - move kdtree to common lib project.
 - move line to common lib project.
+- [BUG] segmentation fault after divergence
+- [BUG] D2Q5 still uses diagonal neighbors also this is not necessary
+- add prefix names and output folder configuration options
+- warn when overwritting files
+- give option to not overwrite files
+- [BUG] tangential velocity is not set correctly for D2Q5
+- [BUG] fix poiseuille test for D2Q5
 
 ### moved:
 - switch analytical solution over to vector results!
@@ -63,8 +70,9 @@
 
 # V0.0.1
 ## Ongoing:
-- solve 2D poisson equation
 
+- solve 2D poisson equation
+- fix 2D poiseuille case
 
 ## Done:
 ### Features
@@ -78,6 +86,7 @@
 - Postprocessing
   - Lines
 - basic openMP
+- supports both D2Q5 and D2Q9
 
 ### Buildsystem
 

@@ -107,8 +107,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   cerr0 << "<<<<<<<<<<<<>>>>>>>>>>>>>" << std::endl;
   cerr0 << "LBM Type "
         << "BGK" << std::endl; // todo: fix me
-  cerr0 << "LBM Method "
-        << "D2Q9" << std::endl; // todo: fix me
+  cerr0 << "LBM Model " << method::m_name << std::endl;
   cerr0 << "No. of variables " << std::to_string(NVARS) << std::endl;
   cerr0 << "No. Leaf cells: " << noLeafCells() << std::endl;
   cerr0 << "No. Bnd cells: " << noBndCells() << std::endl;
@@ -131,24 +130,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::allocateMemory() {
   m_varsold.resize(grid().size() * NVARS);
 }
 
-
-// template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-// void LBMSolver<DEBUG_LEVEL, LBTYPE>::setupMethod() {
-//   //  switch(m_method) {
-//   //    case LBMethodType::D1Q3:
-//   //      m_tangentialVelo = {1.0 / 6.0, 1.0 / 6.0, 2.0 / 3.0};
-//   //      break;
-//   //    case LBMethodType::D2Q5:
-//   //      m_tangentialVelo = {1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 3.0};
-//   //      break;
-//   //    case LBMethodType::D2Q9:
-//   //      m_tangentialVelo = {1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 4.0 / 9.0};
-//   //      break;
-//   //    default:
-//   //      TERMM(-1, "Invalid LBM method type");
-//   //  }
-// }
-
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
@@ -156,6 +137,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
   allocateMemory();
   POST::init();
   initialCondition();
+  output(true); // todo: just for debugging
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
 
   RECORD_TIMER_START(TimeKeeper[Timers::LBMMainLoop]);
@@ -397,7 +379,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::updateMacroscopicValues() {
 #pragma omp parallel default(none)
   {
 #endif
-    static constexpr std::array<std::array<GInt, 6>, 2> moment = {{{{1, 4, 5, 0, 6, 7}}, {{3, 4, 7, 2, 5, 6}}}};
 
 #ifdef _OPENMP
 #pragma omp for
@@ -407,10 +388,11 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::updateMacroscopicValues() {
       rho(cellId) = std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST), 0.0);
 
       for(GInt dir = 0; dir < NDIM; ++dir) {
-        velocity(cellId, dir) =
-            (m_fold[cellId * NDIST + moment[dir][0]] + m_fold[cellId * NDIST + moment[dir][1]] + m_fold[cellId * NDIST + moment[dir][2]]
-             - m_fold[cellId * NDIST + moment[dir][3]] - m_fold[cellId * NDIST + moment[dir][4]] - m_fold[cellId * NDIST + moment[dir][5]])
-            / rho(cellId);
+        velocity(cellId, dir) = 0;
+        for(GInt dist = 0; dist < NDIST - 1; ++dist) {
+          velocity(cellId, dir) += method::m_dirs[dist][dir] * fold(cellId, dist);
+        }
+        velocity(cellId, dir) /= rho(cellId);
       }
     }
 #ifdef _OPENMP
@@ -479,7 +461,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::forcing() {
     const GDouble outletPressure = 1.0;
     //    const GDouble inletPressure  = 1.010487; //rho_inlet=3*(NX-1)*gradP+outletPressure; //0.092
     //    const GDouble inletPressure  = 1.011497487;//0.09927
-    const GDouble inletPressure = 1.0115985357; // 0.01
+    const GDouble inletPressure = 1.0115985357; // 0.01 (D2Q9)
+                                                //    const GDouble inletPressure = 1.00055; // 0.01
 
 
     // set Outlet forcing
@@ -630,12 +613,12 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::sumAbsDiff(const GInt var) const -> GDouble
 // template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3>;
 // template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3>;
 // template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3>;
-//
-// template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q5>;
-// template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q5>;
-// template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q5>;
-// template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q5>;
-// template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q5>;
+
+template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q5>;
+template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q5>;
+template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q5>;
+template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q5>;
+template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q5>;
 
 template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q9>;
 template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q9>;
