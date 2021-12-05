@@ -608,11 +608,11 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::sumAbsDiff(const GInt var) const -> GDouble
   return conv;
 }
 
-// template class LBMSolver<Debug_Level::no_debug, LBMethodType::D1Q3>;
-// template class LBMSolver<Debug_Level::min_debug, LBMethodType::D1Q3>;
-// template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3>;
-// template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3>;
-// template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3>;
+template class LBMSolver<Debug_Level::no_debug, LBMethodType::D1Q3>;
+template class LBMSolver<Debug_Level::min_debug, LBMethodType::D1Q3>;
+template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3>;
+template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3>;
+template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3>;
 
 template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q5>;
 template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q5>;

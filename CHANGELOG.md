@@ -72,7 +72,7 @@
 ## Ongoing:
 
 - solve 2D poisson equation
-- fix 2D poiseuille case
+- fix D2Q5 poiseuille case
 
 ## Done:
 ### Features
@@ -86,7 +86,7 @@
 - Postprocessing
   - Lines
 - basic openMP
-- supports both D2Q5 and D2Q9
+- supports D1Q3, D2Q5 and D2Q9
 
 ### Buildsystem
 

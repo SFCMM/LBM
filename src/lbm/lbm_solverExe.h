@@ -28,6 +28,9 @@ class LBMSolverExecutor : public SolverInterface {
     // todo: communicate the model
 
     switch(modelType) {
+      case LBMethodType::D1Q3:
+        m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3>>(m_domainId, m_noDomains);
+        break;
       case LBMethodType::D2Q5:
         m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q5>>(m_domainId, m_noDomains);
         break;

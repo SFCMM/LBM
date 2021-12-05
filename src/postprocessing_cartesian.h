@@ -15,14 +15,16 @@ class PostprocessCartesianFunctionLine : public PostprocessFunctionInterface<NDI
   };
 
   void init() override {
-    m_line = std::make_unique<Line<NDIM>>(required_config_value<NDIM>("A"), required_config_value<NDIM>("B"));
+    if constexpr(NDIM > 1) {
+      m_line = std::make_unique<Line<NDIM>>(required_config_value<NDIM>("A"), required_config_value<NDIM>("B"));
 
-    for(GInt cellId = 0; cellId < m_cartGridData.noCells(); ++cellId) {
-      if(m_cartGridData.isLeaf(cellId)) {
-        const GDouble distance   = m_line->distance(m_cartGridData.center(cellId));
-        const GDouble cellLength = 0.5 * m_cartGridData.cellLength(cellId);
-        if(cellLength >= distance) {
-          m_intersectingCells.emplace_back(cellId);
+      for(GInt cellId = 0; cellId < m_cartGridData.noCells(); ++cellId) {
+        if(m_cartGridData.isLeaf(cellId)) {
+          const GDouble distance   = m_line->distance(m_cartGridData.center(cellId));
+          const GDouble cellLength = 0.5 * m_cartGridData.cellLength(cellId);
+          if(cellLength >= distance) {
+            m_intersectingCells.emplace_back(cellId);
+          }
         }
       }
     }
