@@ -2,11 +2,16 @@
 #define LBM_LBM_BND_PERIODIC_H
 #include "lbm_bnd_interface.h"
 #include "lbm_constants.h"
-#include "lbm_pv.h"
+#include "lbm_variables.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
-  // class LBMBndCell_wallBB {
+ private:
+  using method               = LBMethod<LBTYPE>;
+  static constexpr GInt NDIM = LBMethod<LBTYPE>::m_dim;
+
+  using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
+
  public:
   LBMBndCell_periodic() = delete;
   LBMBndCell_periodic(const GInt cellId, const VectorD<dim(LBTYPE)>& _normal) : LBMBndCell<LBTYPE>(cellId, _normal) {}
@@ -90,11 +95,11 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
     std::array<GDouble, noDists(LBTYPE)> feq;
 
     for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
-      feq[dist] = LBMethod<LBTYPE>::m_weights[dist] * vars(mapped(), PV::rho<dim(LBTYPE)>())
+      feq[dist] = LBMethod<LBTYPE>::m_weights[dist] * vars(mapped(), VAR::rho())
                   * (1
                      + 3
-                           * (vars(mapped(), PV::velocitiy(0)) * LBMethod<LBTYPE>::m_dirs[dist][0]
-                              + vars(mapped(), PV::velocitiy(1)) * LBMethod<LBTYPE>::m_dirs[dist][1]));
+                           * (vars(mapped(), VAR::velocity(0)) * LBMethod<LBTYPE>::m_dirs[dist][0]
+                              + vars(mapped(), VAR::velocity(1)) * LBMethod<LBTYPE>::m_dirs[dist][1]));
     }
 
     //    do the same as in the propagation step

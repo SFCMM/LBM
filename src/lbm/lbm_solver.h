@@ -7,7 +7,7 @@
 #include "interface/solver_interface.h"
 #include "lbm_bnd.h"
 #include "lbm_constants.h"
-#include "lbm_pv.h"
+#include "lbm_variables.h"
 #include "postprocessing.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
@@ -20,13 +20,15 @@ class LBMSolver : public SolverInterface,
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
   static constexpr GInt NVARS = noVars<LBTYPE>(LBEquation::Navier_Stokes);
 
-  using method = LBMethod<LBTYPE>;
+  using METH = LBMethod<LBTYPE>;
 
   using POST = Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM, LBMSolver<DEBUG_LEVEL, LBTYPE>>;
 
   // give postprocessing access to all data
   friend POST;
   using POST::executePostprocess;
+
+  using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
 
  public:
   LBMSolver(GInt32 domainId, GInt32 noDomains) : POST(), m_domainId(domainId), m_noDomains(noDomains){};
@@ -108,15 +110,15 @@ class LBMSolver : public SolverInterface,
 
   auto inline rho(const GInt cellId) -> GDouble& {
     if(DEBUG_LEVEL > Debug_Level::min_debug) {
-      if(NVARS < PV::rho<NDIM>()) {
+      if(NVARS < VAR::rho()) {
         TERMM(-1, "Invalid number of variables (" + std::to_string(NVARS) + ")");
       }
-      return m_vars.at(cellId * NVARS + PV::rho<NDIM>());
+      return m_vars.at(cellId * NVARS + VAR::rho());
     }
-    return m_vars[cellId * NVARS + PV::rho<NDIM>()];
+    return m_vars[cellId * NVARS + VAR::rho()];
   }
 
-  auto inline velocity(const GInt cellId, const GInt dir) -> GDouble& { return m_vars[cellId * NVARS + PV::velocities<NDIM>()[dir]]; }
+  auto inline velocity(const GInt cellId, const GInt dir) -> GDouble& { return m_vars[cellId * NVARS + VAR::velocities()[dir]]; }
 
   auto inline vars(const GInt cellId, const GInt varId) -> GDouble& { return m_vars[cellId * NVARS + varId]; }
 

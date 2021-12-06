@@ -1,6 +1,6 @@
 #include "lbm_solver.h"
 #include "analytical_solutions.h"
-#include "lbm_pv.h"
+#include "lbm_variables.h"
 
 #include <set>
 
@@ -107,7 +107,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   cerr0 << "<<<<<<<<<<<<>>>>>>>>>>>>>" << std::endl;
   cerr0 << "LBM Type "
         << "BGK" << std::endl; // todo: fix me
-  cerr0 << "LBM Model " << method::m_name << std::endl;
+  cerr0 << "LBM Model " << METH::m_name << std::endl;
   cerr0 << "No. of variables " << std::to_string(NVARS) << std::endl;
   cerr0 << "No. Leaf cells: " << noLeafCells() << std::endl;
   cerr0 << "No. Bnd cells: " << noBndCells() << std::endl;
@@ -176,10 +176,10 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::convergenceCondition() -> GBool {
     cerr0 << m_timeStep << ": ";
     logger << m_timeStep << ": ";
 
-    const GDouble convUx  = sumAbsDiff(PV::velocitiy(0));
-    const GDouble convUy  = sumAbsDiff(PV::velocitiy(1));
-    const GDouble convUz  = (NDIM == 3) ? sumAbsDiff(PV::velocitiy(2)) : NAN;
-    const GDouble convRho = sumAbsDiff(PV::rho<NDIM>());
+    const GDouble convUx  = sumAbsDiff(VAR::velocity(0));
+    const GDouble convUy  = sumAbsDiff(VAR::velocity(1));
+    const GDouble convUz  = (NDIM == 3) ? sumAbsDiff(VAR::velocity(2)) : NAN;
+    const GDouble convRho = sumAbsDiff(VAR::rho());
 
     cerr0 << "u_x: " << convUx << " ";
     cerr0 << "u_y: " << convUy << " ";
@@ -221,7 +221,7 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 void LBMSolver<DEBUG_LEVEL, LBTYPE>::initialCondition() {
   // init to zero:
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
-    for(const auto dir : PV::velocities<NDIM>()) {
+    for(const auto dir : VAR::velocities()) {
       m_vars[cellId * NVARS + dir]    = 0;
       m_varsold[cellId * NVARS + dir] = 0;
     }
@@ -229,7 +229,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::initialCondition() {
 
     // assuming initial zero velocity and density 1
     for(GInt dist = 0; dist < NDIST; ++dist) {
-      m_feq[cellId * NDIST + dist]  = method::m_weights[dist];
+      m_feq[cellId * NDIST + dist]  = METH::m_weights[dist];
       m_f[cellId * NDIST + dist]    = m_feq[cellId * NDIST + dist];
       m_fold[cellId * NDIST + dist] = m_feq[cellId * NDIST + dist];
     }
@@ -284,7 +284,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced, const GString& p
 
     for(GInt dir = 0; dir < NDIM; ++dir) {
       // todo: fix type
-      index.emplace_back(IOIndex{static_cast<GString>(PV::VELSTR[dir]), "float32"});
+      index.emplace_back(IOIndex{static_cast<GString>(VAR::VELSTR[dir]), "float32"});
       values.emplace_back(toStringVector(tmpVel[dir], size()));
     }
     // todo: fix type
@@ -390,7 +390,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::updateMacroscopicValues() {
       for(GInt dir = 0; dir < NDIM; ++dir) {
         velocity(cellId, dir) = 0;
         for(GInt dist = 0; dist < NDIST - 1; ++dist) {
-          velocity(cellId, dir) += method::m_dirs[dist][dir] * fold(cellId, dist);
+          velocity(cellId, dir) += METH::m_dirs[dist][dir] * fold(cellId, dist);
         }
         velocity(cellId, dir) /= rho(cellId);
       }
@@ -416,7 +416,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::calcEquilibriumMoments() {
     const GDouble d = rho(cellId);
 
     for(GInt dist = 0; dist < NDIST; ++dist) {
-      m_feq[cellId * NDIST + dist] = method::m_weights[dist] * d * (1 + 3 * (u * method::m_dirs[dist][0] + v * method::m_dirs[dist][1]));
+      m_feq[cellId * NDIST + dist] = METH::m_weights[dist] * d * (1 + 3 * (u * METH::m_dirs[dist][0] + v * METH::m_dirs[dist][1]));
       //      const GDouble cu             = velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist];
       //      m_feq[cellId * NDIST + dist] = LBMethod<LBTYPE>::m_weights[dist] * rho<NDIM>(cellId) * (1 + 3 * cu + 4.5 * cu * cu - 1.5 *
       //      squaredV);
@@ -476,7 +476,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::forcing() {
             f(outletCellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * outletPressure
                                         * (1
                                            + 3
-                                                 * (vars(valueCellId, PV::velocitiy(0)) * LBMethod<LBTYPE>::m_dirs[dist][0]
+                                                 * (vars(valueCellId, VAR::velocity(0)) * LBMethod<LBTYPE>::m_dirs[dist][0]
                                                     + 0 * LBMethod<LBTYPE>::m_dirs[dist][1]))
                                     + f(valueCellId, dist) - feq(valueCellId, dist);
           }
@@ -495,7 +495,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::forcing() {
             f(inletCellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * inletPressure
                                        * (1
                                           + 3
-                                                * (vars(valueCellId, PV::velocitiy(0)) * LBMethod<LBTYPE>::m_dirs[dist][0]
+                                                * (vars(valueCellId, VAR::velocity(0)) * LBMethod<LBTYPE>::m_dirs[dist][0]
                                                    + 0 * LBMethod<LBTYPE>::m_dirs[dist][1]))
                                    + f(valueCellId, dist) - feq(valueCellId, dist);
           }

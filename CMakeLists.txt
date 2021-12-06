@@ -27,7 +27,7 @@ add_executable(lbm
         src/globaltimers.h src/cartesiangrid.h
         src/gridcell_properties.h src/loadbalancing_weights.h src/geometry.h src/functions.h src/common/IO.h src/common/term.h
         src/interface/grid_interface.h src/gridgenerator/cartesiangrid_generation.h src/lbm/lbm_solver.h
-        src/lbm/lbm_constants.h src/lbm/lbm_pv.h src/interface/lbm_interface.h src/lbm/lbm_bnd.h src/common/surface.h src/lbm/lbm_solverExe.h src/common/configuration.h src/lbm/lbm_bnd_wall.h src/lbm/lbm_bnd_interface.h src/lbm/lbm_bnd_in_out.h src/lbm/lbm_bnd_periodic.h src/postprocessing.h src/postprocessing_cartesian.h src/lbm/lbm_postprocessing.h src/postprocessing_func.h src/common/line.h src/common/mesh.h)
+        src/lbm/lbm_constants.h src/lbm/lbm_variables.h src/interface/lbm_interface.h src/lbm/lbm_bnd.h src/common/surface.h src/lbm/lbm_solverExe.h src/common/configuration.h src/lbm/lbm_bnd_wall.h src/lbm/lbm_bnd_interface.h src/lbm/lbm_bnd_in_out.h src/lbm/lbm_bnd_periodic.h src/postprocessing.h src/postprocessing_cartesian.h src/lbm/lbm_postprocessing.h src/postprocessing_func.h src/common/line.h src/common/mesh.h)
 
 #TARGET_LINK_LIBRARIES(lbm PUBLIC mpi)
 target_link_libraries(lbm PUBLIC MPI::MPI_CXX dl tinfo pthread)
