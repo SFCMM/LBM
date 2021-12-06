@@ -18,7 +18,7 @@ class LBMSolver : public SolverInterface,
   // Type declarations and template variables only
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
-  static constexpr GInt NVARS = NDIM + 1 + static_cast<GInt>(LBMethod<LBTYPE>::m_isThermal);
+  static constexpr GInt NVARS = noVars<LBTYPE>(LBEquation::Navier_Stokes);
 
   using method = LBMethod<LBTYPE>;
 

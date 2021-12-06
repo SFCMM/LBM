@@ -17,6 +17,8 @@ static constexpr GInt defaultInfoOutInterval  = 10;
 static constexpr GInt defaultSolutionInterval = 100;
 static constexpr GInt maxNumberDistributions  = 30;
 
+enum class LBEquation { Navier_Stokes, Poisson, Navier_Stokes_Poisson };
+
 enum class LBInitialConditions {
   MEI06 // as per https://doi.org/10.1016/j.compfluid.2005.08.008
 };
@@ -169,12 +171,14 @@ class LBMethod<LBMethodType::D1Q3> {
   /// look-up table for opposite direction
   static constexpr auto oppositeDist(const GInt dist) -> GInt { return m_oppositeDist[dist]; }
 
-  static constexpr std::array<GDouble, 3> m_weights = {1.0 / 6.0, 1.0 / 6.0, 2.0 / 3.0};
+  static constexpr std::array<GDouble, 3> m_weights        = {1.0 / 6.0, 1.0 / 6.0, 2.0 / 3.0};
+  static constexpr std::array<GDouble, 3> m_poissonWeights = {0.5, 0.5, 0};
 
-  static constexpr GInt             m_dim       = 1;
-  static constexpr GInt             m_noDists   = 3;
-  static constexpr GBool            m_isThermal = false;
-  static constexpr std::string_view m_name      = "D1Q3";
+  static constexpr GInt             m_dim        = 1;
+  static constexpr GInt             m_noDists    = 3;
+  static constexpr GBool            m_isThermal  = false;
+  static constexpr GBool            m_canPoisson = true;
+  static constexpr std::string_view m_name       = "D1Q3";
 };
 
 template <>
@@ -214,6 +218,23 @@ class LBMethod<LBMethodType::D2Q9> {
   static constexpr GBool            m_isThermal = false;
   static constexpr std::string_view m_name      = "D2Q9";
 };
+
+template <LBMethodType LBTYPE>
+static constexpr auto noVars(const LBEquation equation) -> GInt {
+  switch(equation) {
+    case LBEquation::Navier_Stokes:
+      // Velocities + Density + Temperature
+      return LBMethod<LBTYPE>::m_dim + 1 + static_cast<GInt>(LBMethod<LBTYPE>::m_isThermal);
+    case LBEquation::Poisson:
+      // Potential
+      return 1;
+    case LBEquation::Navier_Stokes_Poisson:
+      // Velocities + Density + Temperature + Potential
+      return LBMethod<LBTYPE>::m_dim + 1 + static_cast<GInt>(LBMethod<LBTYPE>::m_isThermal) + 1;
+    default:
+      TERMM(-1, "Invalid equation type!");
+  }
+}
 
 
 #endif // LBM_CONSTANTS_H
