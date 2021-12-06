@@ -237,8 +237,12 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::timeStep() {
   executePostprocess(pp::HOOK::BEFORETIMESTEP);
   currToOldVars();
   updateMacroscopicValues();
-
-  
+  calcEquilibriumMoments();
+  collisionStep();
+  forcing();
+  prePropBoundaryCnd();
+  propagationStep();
+  boundaryCnd();
   executePostprocess(pp::HOOK::AFTERTIMESTEP);
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMCalc]);
 }
