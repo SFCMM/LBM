@@ -6,8 +6,8 @@
 
 using namespace std;
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::init(int argc, GChar** argv) {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::init(int argc, GChar** argv) {
   m_exe = argv[0]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
 #ifndef GRIDGEN_SINGLE_FILE_LOG
@@ -24,8 +24,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::init(int argc, GChar** argv) {
   initTimers();
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::init(int argc, GChar** argv, GString config_file) {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::init(int argc, GChar** argv, GString config_file) {
   setConfiguration(config_file);
   init(argc, argv);
   logger << "LBM Solver started ||>" << endl;
@@ -35,8 +35,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::init(int argc, GChar** argv, GString config
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::initBenchmark(int argc, GChar** argv) {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initBenchmark(int argc, GChar** argv) {
   m_benchmark = true;
   init(argc, argv);
 
@@ -45,8 +45,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::initBenchmark(int argc, GChar** argv) {
   TERMM(-1, "Not implemented!");
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::initTimers() {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initTimers() {
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMSolverTotal], "Total run time of the LBM Solver.", TimeKeeper[Timers::timertotal]);
   RECORD_TIMER_START(TimeKeeper[Timers::LBMSolverTotal]);
 
@@ -67,9 +67,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::initTimers() {
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMIo], "IO", TimeKeeper[Timers::LBMMainLoop]);
 }
 
-
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   m_solverType = LBSolverType::BGK; // todo: load from file
 
   m_outputInfoInterval     = opt_config_value<GInt>("info_interval", m_outputInfoInterval);
@@ -119,9 +118,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::loadConfiguration() {
   cerr0 << "+++++++++++++++++++++++++" << std::endl;
 }
 
-
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::allocateMemory() {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::allocateMemory() {
   // allocate memory
   m_f.resize(grid().size() * NDIST);
   m_feq.resize(grid().size() * NDIST);
@@ -130,8 +128,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::allocateMemory() {
   m_varsold.resize(grid().size() * NVARS);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::run() -> GInt {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
   loadConfiguration();
   allocateMemory();
@@ -170,8 +168,8 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::run() -> GInt {
   return 0;
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-auto LBMSolver<DEBUG_LEVEL, LBTYPE>::convergenceCondition() -> GBool {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::convergenceCondition() -> GBool {
   if(m_timeStep > 0 && m_timeStep % m_outputInfoInterval == 0) {
     cerr0 << m_timeStep << ": ";
     logger << m_timeStep << ": ";
@@ -216,9 +214,8 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::convergenceCondition() -> GBool {
   return false;
 }
 
-
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::initialCondition() {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
   // init to zero:
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     for(const auto dir : VAR::velocities()) {
@@ -236,8 +233,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::initialCondition() {
   }
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::timeStep() {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::timeStep() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMCalc]);
   executePostprocess(pp::HOOK::BEFORETIMESTEP);
   currToOldVars();
@@ -252,8 +249,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::timeStep() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMCalc]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced, const GString& postfix) {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GString& postfix) {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMIo]);
 
   if(m_diverged) {
@@ -296,8 +293,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::output(const GBool forced, const GString& p
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMIo]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::compareToAnalyticalResult() {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
   // for an analytical testcase the value "analyticalSolution" needs to be defined
   const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");
   // from the analyticalSolutionName we can get a functional representation of the solution
@@ -363,16 +360,16 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::compareToAnalyticalResult() {
   }
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::currToOldVars() {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::currToOldVars() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMMacro]);
   std::copy(m_vars.begin(), m_vars.end(), m_varsold.begin());
   //  std::copy(m_f.begin(), m_f.end(), m_fold.begin());
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMMacro]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::updateMacroscopicValues() {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::updateMacroscopicValues() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMMacro]);
 
 #ifdef _OPENMP
@@ -402,8 +399,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::updateMacroscopicValues() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMMacro]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::calcEquilibriumMoments() {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::calcEquilibriumMoments() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMEq]);
 
 #ifdef _OPENMP
@@ -425,8 +422,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::calcEquilibriumMoments() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMEq]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::collisionStep() {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMColl]);
 
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
@@ -439,8 +436,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::collisionStep() {
 }
 
 // todo:refactor
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::forcing() {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::forcing() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMForce]);
 
   static GBool info        = true;
@@ -506,8 +503,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::forcing() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMForce]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::prePropBoundaryCnd() {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::prePropBoundaryCnd() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMBnd]);
 
   // todo: replace by lambda function
@@ -520,8 +517,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::prePropBoundaryCnd() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMBnd]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::propagationStep() {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::propagationStep() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMProp]);
 #ifdef _OPENMP
 #pragma omp parallel for default(none)
@@ -538,8 +535,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::propagationStep() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMProp]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::boundaryCnd() {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::boundaryCnd() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMBnd]);
 
   // todo: replace by lambda function
@@ -553,8 +550,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::boundaryCnd() {
 }
 
 // todo: simplify (move somewhere else?!)
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-void LBMSolver<DEBUG_LEVEL, LBTYPE>::transferGrid(const GridInterface& grid) {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::transferGrid(const GridInterface& grid) {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
   cerr0 << "Transferring " + std::to_string(NDIM) + "D Grid to LBM solver" << std::endl;
   logger << "Transferring " + std::to_string(NDIM) + "D Grid to LBM solver" << std::endl;
@@ -594,13 +591,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE>::transferGrid(const GridInterface& grid) {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-constexpr auto LBMSolver<DEBUG_LEVEL, LBTYPE>::isThermal() -> GBool {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+constexpr auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::isThermal() -> GBool {
   return false;
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-auto LBMSolver<DEBUG_LEVEL, LBTYPE>::sumAbsDiff(const GInt var) const -> GDouble {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::sumAbsDiff(const GInt var) const -> GDouble {
   GDouble conv = 0.0;
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     conv += std::abs(m_vars[cellId * NVARS + var] - m_varsold[cellId * NVARS + var]);
@@ -608,23 +605,29 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE>::sumAbsDiff(const GInt var) const -> GDouble
   return conv;
 }
 
-template class LBMSolver<Debug_Level::no_debug, LBMethodType::D1Q3>;
-template class LBMSolver<Debug_Level::min_debug, LBMethodType::D1Q3>;
-template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3>;
-template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3>;
-template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3>;
+template class LBMSolver<Debug_Level::no_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes>;
+template class LBMSolver<Debug_Level::min_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes>;
+template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes>;
+template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes>;
+template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes>;
 
-template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q5>;
-template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q5>;
-template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q5>;
-template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q5>;
-template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q5>;
+template class LBMSolver<Debug_Level::no_debug, LBMethodType::D1Q3, LBEquation::Poisson>;
+template class LBMSolver<Debug_Level::min_debug, LBMethodType::D1Q3, LBEquation::Poisson>;
+template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3, LBEquation::Poisson>;
+template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3, LBEquation::Poisson>;
+template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3, LBEquation::Poisson>;
 
-template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q9>;
-template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q9>;
-template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q9>;
-template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q9>;
-template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q9>;
+template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q5, LBEquation::Navier_Stokes>;
+template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q5, LBEquation::Navier_Stokes>;
+template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q5, LBEquation::Navier_Stokes>;
+template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q5, LBEquation::Navier_Stokes>;
+template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q5, LBEquation::Navier_Stokes>;
+
+template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
+template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
+template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
+template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
+template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
 
 // template class LBMSolver<Debug_Level::no_debug, LBMethodType::D3Q15>;
 // template class LBMSolver<Debug_Level::min_debug, LBMethodType::D3Q15>;

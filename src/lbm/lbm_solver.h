@@ -10,10 +10,10 @@
 #include "lbm_variables.h"
 #include "postprocessing.h"
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 class LBMSolver : public SolverInterface,
                   private Configuration,
-                  private Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM, LBMSolver<DEBUG_LEVEL, LBTYPE>> {
+                  private Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM, LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>> {
  private:
   // Type declarations and template variables only
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
@@ -22,13 +22,13 @@ class LBMSolver : public SolverInterface,
 
   using METH = LBMethod<LBTYPE>;
 
-  using POST = Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM, LBMSolver<DEBUG_LEVEL, LBTYPE>>;
+  using POST = Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM, LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>>;
 
   // give postprocessing access to all data
   friend POST;
   using POST::executePostprocess;
 
-  using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
+  using VAR = LBMVariables<EQ, NDIM>;
 
  public:
   LBMSolver(GInt32 domainId, GInt32 noDomains) : POST(), m_domainId(domainId), m_noDomains(noDomains){};

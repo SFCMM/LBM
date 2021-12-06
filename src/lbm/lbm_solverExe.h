@@ -29,13 +29,13 @@ class LBMSolverExecutor : public SolverInterface {
 
     switch(modelType) {
       case LBMethodType::D1Q3:
-        m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3>>(m_domainId, m_noDomains);
+        m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3, LBEquation::Navier_Stokes>>(m_domainId, m_noDomains);
         break;
       case LBMethodType::D2Q5:
-        m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q5>>(m_domainId, m_noDomains);
+        m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q5, LBEquation::Navier_Stokes>>(m_domainId, m_noDomains);
         break;
       case LBMethodType::D2Q9:
-        m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q9>>(m_domainId, m_noDomains);
+        m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q9, LBEquation::Navier_Stokes>>(m_domainId, m_noDomains);
         break;
       default:
         TERMM(-1, "Unsupported model");
