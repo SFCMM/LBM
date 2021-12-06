@@ -1,0 +1,57 @@
+{
+  "dry-run": true,
+  "dim": 1,
+  "partitionLevel": 5,
+  "uniformLevel": 5,
+  "maxRfnmtLvl": 5,
+  "maxNoCells": 1000000,
+  "outputDir": "out",
+  "gridFileName": "gridD",
+  "gridOutput": {
+    "format": "VTKB",
+    "cellFilter": "leafCells",
+    "type": "points",
+    "outputValues": [
+      "level",
+      "noChildren"
+    ]
+  },
+  "geometry": {
+    "cube": {
+      "type": "box",
+      "A": [
+        0.0
+      ],
+      "B": [
+        1.0
+      ]
+    }
+  },
+  "solver": {
+    "type": "lbm",
+    "model": "D1Q3",
+    "relaxation": 0.933,
+    "reynoldsnumber": 0.7,
+    "maxSteps": 10,
+    "info_interval": 1,
+    "solution_interval": 1,
+    "convergence": 2E-11,
+    "errorL2": 5E-3,
+    "errorMax": 1.1E-3,
+    "assumeAxisAligned": true,
+    "boundary": {
+      "cube": {
+        "+x": {
+          "type": "periodic",
+          "generateBndry": false,
+          "connection": "-x"
+        },
+        "-x": {
+          "type": "periodic",
+          "generateBndry": false,
+          "connection": "+x"
+        }
+      }
+    }
+  }
+}

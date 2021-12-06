@@ -61,8 +61,7 @@
 - add prefix names and output folder configuration options
 - warn when overwritting files
 - give option to not overwrite files
-- [BUG] tangential velocity is not set correctly for D2Q5
-- [BUG] fix poiseuille test for D2Q5
+- [BUG] tangential velocity is not set correctly for D2Q5 for the couette case
 
 ### moved:
 - switch analytical solution over to vector results!

@@ -28,8 +28,8 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::init(int argc, GChar** argv, GString config_file) {
   setConfiguration(config_file);
   init(argc, argv);
-  logger << "LBM Solver started ||>" << endl;
-  cout << "LBM Solver started ||>" << endl;
+  logger << NDIM << "D LBM Solver started ||>" << endl;
+  cout << NDIM << "D LBM Solver started ||>" << endl;
   Configuration::load("solver");
   POST::setConfAccessor(Configuration::getAccessor("postprocessing"));
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
@@ -153,9 +153,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::run() -> GInt {
     output(m_timeStep == noTimesteps || converged);
   }
 
-  // todo: make settable
-  static constexpr GBool analyticalTest = true;
-  if(analyticalTest) {
+  if(has_config_value("analyticalSolution")) {
     compareToAnalyticalResult();
   }
 
@@ -239,12 +237,12 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::timeStep() {
   executePostprocess(pp::HOOK::BEFORETIMESTEP);
   currToOldVars();
   updateMacroscopicValues();
-  calcEquilibriumMoments();
-  collisionStep();
-  forcing();
-  prePropBoundaryCnd();
-  propagationStep();
-  boundaryCnd();
+  //  calcEquilibriumMoments();
+  //  collisionStep();
+  //  forcing();
+  //  prePropBoundaryCnd();
+  //  propagationStep();
+  //  boundaryCnd();
   executePostprocess(pp::HOOK::AFTERTIMESTEP);
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMCalc]);
 }
@@ -295,7 +293,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
-  // for an analytical testcase the value "analyticalSolution" needs to be defined
+  // todo: fix for 1D/3D
+  //  for an analytical testcase the value "analyticalSolution" needs to be defined
   const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");
   // from the analyticalSolutionName we can get a functional representation of the solution
   const auto anaSolution = analytical::ns::getAnalyticalSolution(analyticalSolutionName);
@@ -555,6 +554,10 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::transferGrid(const GridInterface& grid)
   RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
   cerr0 << "Transferring " + std::to_string(NDIM) + "D Grid to LBM solver" << std::endl;
   logger << "Transferring " + std::to_string(NDIM) + "D Grid to LBM solver" << std::endl;
+
+  if(grid.dim() != NDIM) {
+    TERMM(-1, "Invalid configuration the grid dimensionality is not matching!");
+  }
 
 
   switch(NDIM) {
