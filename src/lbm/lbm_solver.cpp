@@ -406,13 +406,21 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::calcEquilibriumMoments() {
 #pragma omp parallel for default(none)
 #endif
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
+    std::array<GDouble, NDIM> velos; // NOLINT(cppcoreguidelines-pro-type-member-init)
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      velos[dir] = velocity(cellId, dir);
+    }
+
     //    const GDouble squaredV = gcem::pow(velocity<NDIM>(cellId, 0), 2) + gcem::pow(velocity<NDIM>(cellId, 1), 2);
-    const GDouble u = velocity(cellId, 0);
-    const GDouble v = velocity(cellId, 1);
-    const GDouble d = rho(cellId);
+    const GDouble density = rho(cellId);
 
     for(GInt dist = 0; dist < NDIST; ++dist) {
-      m_feq[cellId * NDIST + dist] = METH::m_weights[dist] * d * (1 + 3 * (u * METH::m_dirs[dist][0] + v * METH::m_dirs[dist][1]));
+      feq(cellId, dist) = 1.0;
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        feq(cellId, dist) += 3 * METH::m_dirs[dist][dir] * velos[dir];
+      }
+      feq(cellId, dist) *= METH::m_weights[dist] * density;
+      //      feq(cellId, dist) = METH::m_weights[dist] * density * (1 + 3 * (u * METH::m_dirs[dist][0] + v * METH::m_dirs[dist][1]));
       //      const GDouble cu             = velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist];
       //      m_feq[cellId * NDIST + dist] = LBMethod<LBTYPE>::m_weights[dist] * rho<NDIM>(cellId) * (1 + 3 * cu + 4.5 * cu * cu - 1.5 *
       //      squaredV);
@@ -427,7 +435,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
 
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST; ++dist) {
-      m_f[cellId * NDIST + dist] = (1 - m_omega) * m_fold[cellId * NDIST + dist] + m_omega * m_feq[cellId * NDIST + dist];
+      f(cellId, dist) = (1 - m_omega) * fold(cellId, dist) + m_omega * feq(cellId, dist);
     }
   }
 
@@ -526,7 +534,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::propagationStep() {
     for(GInt dist = 0; dist < NDIST - 1; ++dist) {
       const GInt neighborId = m_grid->neighbor(cellId, dist);
       if(neighborId != INVALID_CELLID) {
-        m_fold[neighborId * NDIST + dist] = m_f[cellId * NDIST + dist];
+        fold(neighborId, dist) = f(cellId, dist);
       }
     }
     fold(cellId, NDIST - 1) = f(cellId, NDIST - 1);

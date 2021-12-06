@@ -62,6 +62,7 @@
 - warn when overwritting files
 - give option to not overwrite files
 - [BUG] tangential velocity is not set correctly for D2Q5 for the couette case
+- automatically run all the testcases and produce report
 
 ### moved:
 - switch analytical solution over to vector results!
