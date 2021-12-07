@@ -29,6 +29,7 @@
   },
   "solver": {
     "type": "lbm",
+    "equation": "poisson",
     "model": "D1Q3",
     "relaxation": 0.933,
     "reynoldsnumber": 0.7,

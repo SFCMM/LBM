@@ -107,6 +107,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   cerr0 << "LBM Type "
         << "BGK" << std::endl; // todo: fix me
   cerr0 << "LBM Model " << METH::m_name << std::endl;
+  cerr0 << "Equation " << LBEquationName[static_cast<GInt>(EQ)] << std::endl;
   cerr0 << "No. of variables " << std::to_string(NVARS) << std::endl;
   cerr0 << "No. Leaf cells: " << noLeafCells() << std::endl;
   cerr0 << "No. Bnd cells: " << noBndCells() << std::endl;
@@ -172,29 +173,16 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::convergenceCondition() -> GBool {
     cerr0 << m_timeStep << ": ";
     logger << m_timeStep << ": ";
 
-    const GDouble convUx  = sumAbsDiff(VAR::velocity(0));
-    const GDouble convUy  = sumAbsDiff(VAR::velocity(1));
-    const GDouble convUz  = (NDIM == 3) ? sumAbsDiff(VAR::velocity(2)) : NAN;
-    const GDouble convRho = sumAbsDiff(VAR::rho());
-
-    cerr0 << "u_x: " << convUx << " ";
-    cerr0 << "u_y: " << convUy << " ";
-    if(NDIM == 3) {
-      cerr0 << "u_z: " << convUz << " ";
+    std::array<GDouble, NVARS> conv;
+    for(GInt vid = 0; vid < NVARS; ++vid) {
+      conv[vid] = sumAbsDiff(vid);
+      cerr0 << "d" << VAR::varStr(vid) << "=" << conv[vid] << " ";
+      logger << "d" << VAR::varStr(vid) << "=" << conv[vid] << " ";
     }
-    cerr0 << "rho: " << convRho << " ";
     cerr0 << std::endl;
-
-    logger << "u_x: " << convUx << " ";
-    logger << "u_y: " << convUy << " ";
-    if(NDIM == 3) {
-      logger << "u_z: " << convUz << " ";
-    }
-    logger << "rho: " << convRho << " ";
     logger << std::endl;
 
-    // todo: make independent of output
-    const GDouble maxConv         = std::max(std::max(std::max(convUx, convUy), convUz), convRho);
+    const GDouble maxConv         = *std::max_element(conv.begin(), conv.end());
     const GDouble convergenceCrit = opt_config_value("convergence", 1E-12);
     if(m_timeStep > 1 && maxConv < convergenceCrit) {
       logger << "Reached convergence to: " << maxConv << std::endl;
@@ -212,6 +200,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::convergenceCondition() -> GBool {
   return false;
 }
 
+// todo: refactor
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
   // init to zero:
@@ -220,7 +209,11 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
       m_vars[cellId * NVARS + dir]    = 0;
       m_varsold[cellId * NVARS + dir] = 0;
     }
-    rho(cellId) = 1.0;
+    if(EQ == LBEquation::Navier_Stokes) {
+      rho(cellId) = 1.0;
+    } else if(EQ == LBEquation::Poisson || EQ == LBEquation::Navier_Stokes_Poisson) {
+      electricPotential(cellId) = 0.0;
+    }
 
     // assuming initial zero velocity and density 1
     for(GInt dist = 0; dist < NDIST; ++dist) {
@@ -251,40 +244,57 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GString& postfix) {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMIo]);
 
+  // todo: make the output values settable
   if(m_diverged) {
     // output the values before updating the macroscopic values in case the solution diverged
     output(true, "bdiv");
   }
   //  updateMacroscopicValues();
   if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || forced) {
-    std::array<std::vector<GDouble>, NDIM> tmpVel;
-    std::vector<GDouble>                   tmpRho;
-    std::vector<IOIndex>                   index;
-    std::vector<std::vector<GString>>      values;
+    std::vector<IOIndex>              index;
+    std::vector<std::vector<GString>> values;
 
     // only output leaf cells (i.e. cells without children)
     std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return noChildren(cellId) == 0; };
 
-    for(GInt dir = 0; dir < NDIM; ++dir) {
-      tmpVel[dir].resize(size());
-    }
-    tmpRho.resize(size());
+    if(EQ != LBEquation::Poisson) {
+      std::array<std::vector<GDouble>, NDIM> tmpVel;
+      std::vector<GDouble>                   tmpRho;
 
-    for(GInt cellId = 0; cellId < size(); ++cellId) {
+
       for(GInt dir = 0; dir < NDIM; ++dir) {
-        tmpVel[dir][cellId] = velocity(cellId, dir);
+        tmpVel[dir].resize(size());
       }
-      tmpRho[cellId] = rho(cellId);
+      tmpRho.resize(size());
+
+      for(GInt cellId = 0; cellId < size(); ++cellId) {
+        for(GInt dir = 0; dir < NDIM; ++dir) {
+          tmpVel[dir][cellId] = velocity(cellId, dir);
+        }
+        tmpRho[cellId] = rho(cellId);
+      }
+
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        // todo: fix type
+        index.emplace_back(IOIndex{static_cast<GString>(VAR::VELSTR[dir]), "float32"});
+        values.emplace_back(toStringVector(tmpVel[dir], size()));
+      }
+      // todo: fix type
+      index.emplace_back(IOIndex{"rho", "float32"});
+      values.emplace_back(toStringVector(tmpRho, size()));
     }
 
-    for(GInt dir = 0; dir < NDIM; ++dir) {
+    if(EQ == LBEquation::Poisson || EQ == LBEquation::Navier_Stokes_Poisson) {
+      std::vector<GDouble> tmpV;
+      tmpV.resize(size());
+
+      for(GInt cellId = 0; cellId < size(); ++cellId) {
+        tmpV[cellId] = electricPotential(cellId);
+      }
       // todo: fix type
-      index.emplace_back(IOIndex{static_cast<GString>(VAR::VELSTR[dir]), "float32"});
-      values.emplace_back(toStringVector(tmpVel[dir], size()));
+      index.emplace_back(IOIndex{"V", "float32"});
+      values.emplace_back(toStringVector(tmpV, size()));
     }
-    // todo: fix type
-    index.emplace_back(IOIndex{"rho", "float32"});
-    values.emplace_back(toStringVector(tmpRho, size()));
 
     VTK::ASCII::writePoints<NDIM>("test_" + std::to_string(m_timeStep) + postfix, size(), center(), index, values, isLeaf);
   }
@@ -381,14 +391,20 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::updateMacroscopicValues() {
 #endif
     for(GInt cellId = 0; cellId < noCells(); ++cellId) {
       // todo:skip non-leaf cells!
-      rho(cellId) = std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST), 0.0);
+      if(EQ == LBEquation::Navier_Stokes || EQ == LBEquation::Navier_Stokes_Poisson) {
+        rho(cellId) = std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST), 0.0);
 
-      for(GInt dir = 0; dir < NDIM; ++dir) {
-        velocity(cellId, dir) = 0;
-        for(GInt dist = 0; dist < NDIST - 1; ++dist) {
-          velocity(cellId, dir) += METH::m_dirs[dist][dir] * fold(cellId, dist);
+        for(GInt dir = 0; dir < NDIM; ++dir) {
+          velocity(cellId, dir) = 0;
+          for(GInt dist = 0; dist < NDIST - 1; ++dist) {
+            velocity(cellId, dir) += METH::m_dirs[dist][dir] * fold(cellId, dist);
+          }
+          velocity(cellId, dir) /= rho(cellId);
         }
-        velocity(cellId, dir) /= rho(cellId);
+      }
+
+      if(EQ == LBEquation::Poisson || EQ == LBEquation::Navier_Stokes_Poisson) {
+        electricPotential(cellId) = std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST - 1), 0.0);
       }
     }
 #ifdef _OPENMP
@@ -406,24 +422,33 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::calcEquilibriumMoments() {
 #pragma omp parallel for default(none)
 #endif
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
-    std::array<GDouble, NDIM> velos; // NOLINT(cppcoreguidelines-pro-type-member-init)
-    for(GInt dir = 0; dir < NDIM; ++dir) {
-      velos[dir] = velocity(cellId, dir);
-    }
-
-    //    const GDouble squaredV = gcem::pow(velocity<NDIM>(cellId, 0), 2) + gcem::pow(velocity<NDIM>(cellId, 1), 2);
-    const GDouble density = rho(cellId);
-
-    for(GInt dist = 0; dist < NDIST; ++dist) {
-      feq(cellId, dist) = 1.0;
+    if(EQ != LBEquation::Poisson) {
+      std::array<GDouble, NDIM> velos; // NOLINT(cppcoreguidelines-pro-type-member-init)
       for(GInt dir = 0; dir < NDIM; ++dir) {
-        feq(cellId, dist) += 3 * METH::m_dirs[dist][dir] * velos[dir];
+        velos[dir] = velocity(cellId, dir);
       }
-      feq(cellId, dist) *= METH::m_weights[dist] * density;
-      //      feq(cellId, dist) = METH::m_weights[dist] * density * (1 + 3 * (u * METH::m_dirs[dist][0] + v * METH::m_dirs[dist][1]));
-      //      const GDouble cu             = velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist];
-      //      m_feq[cellId * NDIST + dist] = LBMethod<LBTYPE>::m_weights[dist] * rho<NDIM>(cellId) * (1 + 3 * cu + 4.5 * cu * cu - 1.5 *
-      //      squaredV);
+
+      //    const GDouble squaredV = gcem::pow(velocity<NDIM>(cellId, 0), 2) + gcem::pow(velocity<NDIM>(cellId, 1), 2);
+      const GDouble density = rho(cellId);
+
+      for(GInt dist = 0; dist < NDIST; ++dist) {
+        feq(cellId, dist) = 1.0;
+        for(GInt dir = 0; dir < NDIM; ++dir) {
+          feq(cellId, dist) += 3 * METH::m_dirs[dist][dir] * velos[dir];
+        }
+        feq(cellId, dist) *= METH::m_weights[dist] * density;
+        //      feq(cellId, dist) = METH::m_weights[dist] * density * (1 + 3 * (u * METH::m_dirs[dist][0] + v * METH::m_dirs[dist][1]));
+        //      const GDouble cu             = velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist];
+        //      m_feq[cellId * NDIST + dist] = LBMethod<LBTYPE>::m_weights[dist] * rho<NDIM>(cellId) * (1 + 3 * cu + 4.5 * cu * cu - 1.5 *
+        //      squaredV);
+      }
+    }
+    if(EQ == LBEquation::Poisson || EQ == LBEquation::Navier_Stokes_Poisson) {
+      const GDouble potential = electricPotential(cellId);
+      for(GInt dist = 0; dist < NDIST - 1; ++dist) {
+        feq(cellId, dist) = METH::m_weights[dist] * potential;
+      }
+      feq(cellId, NDIST - 1) = (METH::m_weights[NDIST - 1] - 1.0) * potential;
     }
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMEq]);
@@ -436,6 +461,12 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST; ++dist) {
       f(cellId, dist) = (1 - m_omega) * fold(cellId, dist) + m_omega * feq(cellId, dist);
+      if(EQ == LBEquation::Poisson) {
+        // todo: make settable
+        static constexpr GDouble k  = 27.79;
+        static constexpr GDouble dt = 0.001;
+        f(cellId, dist) += dt * METH::m_poissonWeights[dist] * k * k * electricPotential(cellId);
+      }
     }
   }
 
@@ -627,6 +658,12 @@ template class LBMSolver<Debug_Level::min_debug, LBMethodType::D1Q3, LBEquation:
 template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3, LBEquation::Poisson>;
 template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3, LBEquation::Poisson>;
 template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3, LBEquation::Poisson>;
+
+template class LBMSolver<Debug_Level::no_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes_Poisson>;
+template class LBMSolver<Debug_Level::min_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes_Poisson>;
+template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes_Poisson>;
+template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes_Poisson>;
+template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes_Poisson>;
 
 template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q5, LBEquation::Navier_Stokes>;
 template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q5, LBEquation::Navier_Stokes>;

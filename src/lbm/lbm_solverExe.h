@@ -17,19 +17,37 @@ class LBMSolverExecutor : public SolverInterface {
     // default model
     GString model = "D2Q9";
 
+    // default equation
+    GString equation = "navierstokes";
+
     if(MPI::isRoot()) {
       std::ifstream configFileStream(config_file);
       json          config;
       configFileStream >> config;
-      // check for solvers for solver-> type
-      model = config::opt_config_value(config["solver"], "model", model);
+      // determine which model to use and equation to solve
+      model    = config::opt_config_value(config["solver"], "model", model);
+      equation = config::opt_config_value(config["solver"], "equation", equation);
     }
     LBMethodType modelType = getLBMethodType(model);
     // todo: communicate the model
+    LBEquation equationType = getLBEquationType(equation);
 
     switch(modelType) {
       case LBMethodType::D1Q3:
-        m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3, LBEquation::Navier_Stokes>>(m_domainId, m_noDomains);
+        switch(equationType) {
+          case LBEquation::Navier_Stokes:
+            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3, LBEquation::Navier_Stokes>>(m_domainId, m_noDomains);
+            break;
+          case LBEquation::Poisson:
+            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3, LBEquation::Poisson>>(m_domainId, m_noDomains);
+            break;
+          case LBEquation::Navier_Stokes_Poisson:
+            m_lbmSolver =
+                std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3, LBEquation::Navier_Stokes_Poisson>>(m_domainId, m_noDomains);
+            break;
+          default:
+            TERMM(-1, "Unsupported equation type");
+        }
         break;
       case LBMethodType::D2Q5:
         m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q5, LBEquation::Navier_Stokes>>(m_domainId, m_noDomains);

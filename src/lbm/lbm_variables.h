@@ -51,10 +51,10 @@ class LBMVariables {
     if(dir == 0) {
       return U();
     }
-    if(dir == 1) {
+    if(dir == 1 && NDIM > 1) {
       return V();
     }
-    if(dir == 2) {
+    if(dir == 2 && NDIM > 2) {
       return W();
     }
     TERMM(-1, "Not implemented!");
@@ -65,7 +65,13 @@ class LBMVariables {
 
   /// Get the position of the density.
   /// \return Position of rho within the variable array.
-  static constexpr auto rho() -> GInt { return velocity(NDIM - 1) + 1; }
+  static constexpr auto rho() -> GInt {
+    //    if(EQ == LBEquation::Poisson) {
+    //      TERMM(-1, "Invalid variable used");
+    //    }
+    return velocity(NDIM - 1) + 1;
+  }
+
 
   // todo: fix for thermal
   static constexpr auto temperature() -> GInt { return rho() + 1; }
@@ -76,6 +82,29 @@ class LBMVariables {
       return 0;
     }
     return rho() + 1;
+  }
+
+  static constexpr auto varStr(const GInt VID) -> std::string_view {
+    if(VID == electricPotential()) {
+      return "P";
+    }
+
+    if(VID == U()) {
+      return "U";
+    }
+
+    if(VID == V()) {
+      return "V";
+    }
+
+    if(VID == W()) {
+      return "W";
+    }
+
+    if(VID == rho()) {
+      return "rho";
+    }
+    TERMM(-1, "Invalid VID");
   }
 };
 

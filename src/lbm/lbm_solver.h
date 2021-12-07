@@ -18,7 +18,7 @@ class LBMSolver : public SolverInterface,
   // Type declarations and template variables only
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
-  static constexpr GInt NVARS = noVars<LBTYPE>(LBEquation::Navier_Stokes);
+  static constexpr GInt NVARS = noVars<LBTYPE>(EQ);
 
   using METH = LBMethod<LBTYPE>;
 
@@ -116,6 +116,16 @@ class LBMSolver : public SolverInterface,
       return m_vars.at(cellId * NVARS + VAR::rho());
     }
     return m_vars[cellId * NVARS + VAR::rho()];
+  }
+
+  auto inline electricPotential(const GInt cellId) -> GDouble& {
+    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+      if(NVARS < VAR::electricPotential()) {
+        TERMM(-1, "Invalid number of variables (" + std::to_string(NVARS) + ")");
+      }
+      return m_vars.at(cellId * NVARS + VAR::electricPotential());
+    }
+    return m_vars[cellId * NVARS + VAR::electricPotential()];
   }
 
   auto inline velocity(const GInt cellId, const GInt dir) -> GDouble& { return m_vars[cellId * NVARS + VAR::velocities()[dir]]; }

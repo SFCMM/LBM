@@ -18,6 +18,19 @@ static constexpr GInt defaultSolutionInterval = 100;
 static constexpr GInt maxNumberDistributions  = 30;
 
 enum class LBEquation { Navier_Stokes, Poisson, Navier_Stokes_Poisson };
+static constexpr std::array<std::string_view, 3> LBEquationName = {"Navier-Stokes", "Poisson", "Navier-Stokes-Poisson"};
+
+static constexpr auto getLBEquationType(const std::string_view equationName) -> LBEquation {
+  if(equationName == "navierstokes") {
+    return LBEquation::Navier_Stokes;
+  }
+  if(equationName == "poisson") {
+    return LBEquation::Poisson;
+  }
+  if(equationName == "navierstokespoisson") {
+    return LBEquation::Navier_Stokes_Poisson;
+  }
+}
 
 enum class LBInitialConditions {
   MEI06 // as per https://doi.org/10.1016/j.compfluid.2005.08.008
@@ -154,11 +167,14 @@ class LBMethod {
  public:
   static constexpr std::array<std::array<GDouble, dim(LBTYPE)>, noDists(LBTYPE)> m_dirs{};
   static constexpr auto                                                          oppositeDist(const GInt /*dist*/) -> GInt { return 0; }
-  static constexpr GInt                                                          m_dim       = 0;
-  static constexpr GInt                                                          m_noDists   = 0;
-  static constexpr std::array<GDouble, 1>                                        m_weights   = {0};
-  static constexpr GBool                                                         m_isThermal = false;
-  static constexpr std::string_view                                              m_name      = "INVALID";
+  static constexpr GInt                                                          m_dim            = 0;
+  static constexpr GInt                                                          m_noDists        = 0;
+  static constexpr std::array<GDouble, 1>                                        m_weights        = {0};
+  static constexpr std::array<GDouble, 1>                                        m_poissonWeights = {0};
+
+  static constexpr GBool            m_isThermal  = false;
+  static constexpr GBool            m_canPoisson = false;
+  static constexpr std::string_view m_name       = "INVALID";
 };
 
 template <>
@@ -191,7 +207,8 @@ class LBMethod<LBMethodType::D2Q5> {
   /// look-up table for opposite direction
   static constexpr auto oppositeDist(const GInt dist) -> GInt { return m_oppositeDist[dist]; }
 
-  static constexpr std::array<GDouble, 5> m_weights = {1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 3.0};
+  static constexpr std::array<GDouble, 5> m_weights        = {1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 3.0};
+  static constexpr std::array<GDouble, 5> m_poissonWeights = {0.0, 0.0, 0.0, 0.0, 0.0};
 
   static constexpr GInt             m_dim       = 2;
   static constexpr GInt             m_noDists   = 5;
@@ -210,8 +227,10 @@ class LBMethod<LBMethodType::D2Q9> {
   /// look-up table for opposite direction
   static constexpr auto oppositeDist(const GInt dist) -> GInt { return m_oppositeDist[dist]; }
 
-  static constexpr std::array<GDouble, 9> m_weights = {1.0 / 9.0,  1.0 / 9.0,  1.0 / 9.0,  1.0 / 9.0, 1.0 / 36.0,
+  static constexpr std::array<GDouble, 9> m_weights        = {1.0 / 9.0,  1.0 / 9.0,  1.0 / 9.0,  1.0 / 9.0, 1.0 / 36.0,
                                                        1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 4.0 / 9.0};
+  static constexpr std::array<GDouble, 9> m_poissonWeights = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+
 
   static constexpr GInt             m_dim       = 2;
   static constexpr GInt             m_noDists   = 9;
