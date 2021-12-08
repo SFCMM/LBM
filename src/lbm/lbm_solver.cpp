@@ -487,7 +487,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
         // todo: make settable
         static constexpr GDouble k              = 27.79;
         static constexpr GDouble alpha          = 1.0 / 3.0;
-        static constexpr GDouble speed_of_sound = 1.0;
         static const GDouble     D              = alpha * gcem::pow(m_speedOfSound, 2) * (0.5 - m_relaxTime) * m_dt;
         f(cellId, dist) += m_dt * D * METH::m_poissonWeights[dist] * k * k * electricPotential(cellId);
       }

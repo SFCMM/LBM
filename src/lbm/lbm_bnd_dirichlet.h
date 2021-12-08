@@ -41,7 +41,6 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
 
   void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& vars) override {
-    static constexpr GDouble coeff = 1.0 / (1.0 - LBMethod<LBTYPE>::m_weights[NDIST - 1]);
     for(const auto cellId : m_bndCells) {
       GInt extraPolationCellId = 0;
       if(cellId == 0) {
