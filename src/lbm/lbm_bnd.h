@@ -8,6 +8,7 @@
 #include "lbm_bnd_interface.h"
 #include "lbm_bnd_periodic.h"
 #include "lbm_bnd_wall.h"
+#include "lbm_bnd_dirichlet.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, GBool TANGENTIALVELO>
 class LBMBnd_wallBB;
@@ -68,6 +69,11 @@ class LBMBndManager : private Configuration {
           addBndry(BndryType::Inlet_BounceBack_ConstPressure, surfBndConfig, bndrySrf);
           continue;
         }
+        if(bndType == "dirichlet") {
+          logger << " dirichlet boundary condition using neem" << std::endl;
+          addBndry(BndryType::Dirichlet_NEEM, surfBndConfig, bndrySrf);
+          continue;
+        }
         TERMM(-1, "Invalid bndCndType: " + bndType);
       }
     }
@@ -98,6 +104,9 @@ class LBMBndManager : private Configuration {
           break;
         case BndryType::Periodic:
           m_bndrys.emplace_back(std::make_unique<LBMBnd_Periodic<DEBUG_LEVEL, LBTYPE>>(surf[0], surf[1], properties));
+          break;
+        case BndryType::Dirichlet_NEEM:
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_DirichletNEEM<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
           break;
         default:
           TERMM(-1, "Invalid bndry Type!");

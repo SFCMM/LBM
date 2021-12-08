@@ -68,7 +68,8 @@ enum class BndryType {
   Wall_BounceBack_TangentialVelocity, // BounceBack Boundary condition 1st order accurate with tangential velocity
   Inlet_BounceBack_ConstPressure,     // BounceBack Boundary condition 1st order accurate with tangential velocity
   Outlet_BounceBack_ConstPressure,    // BounceBack Boundary condition 1st order accurate with tangential velocity
-  Periodic
+  Periodic,                           // Periodic boundary condition handled through boundary class
+  Dirichlet_NEEM                      // Dirichlet boundary condition using Non-equilibrium extrapolation method
 };
 
 enum class LBMethodType { D1Q3, D2Q5, D2Q9, D3Q15, D4Q20, INVALID };

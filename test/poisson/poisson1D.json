@@ -17,7 +17,7 @@
     ]
   },
   "geometry": {
-    "cube": {
+    "line": {
       "type": "box",
       "A": [
         0.0
@@ -31,26 +31,25 @@
     "type": "lbm",
     "equation": "poisson",
     "model": "D1Q3",
-    "relaxation": 0.933,
-    "reynoldsnumber": 0.7,
-    "maxSteps": 10,
+    "relaxation": 1.0,
+    "maxSteps": 100,
     "info_interval": 1,
     "solution_interval": 1,
-    "convergence": 2E-11,
+    "convergence": 1E-14,
     "errorL2": 5E-3,
     "errorMax": 1.1E-3,
     "assumeAxisAligned": true,
     "boundary": {
-      "cube": {
+      "line": {
         "+x": {
-          "type": "periodic",
-          "generateBndry": false,
-          "connection": "-x"
+          "type": "dirichlet",
+          "model": "neem",
+          "value": 1.0
         },
         "-x": {
-          "type": "periodic",
-          "generateBndry": false,
-          "connection": "+x"
+          "type": "dirichlet",
+          "model": "neem",
+          "value": 1.0
         }
       }
     }

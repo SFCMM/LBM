@@ -83,7 +83,11 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   //  m_nu = m_ma / gcem::sqrt(3) / m_re * m_refLength;
   // todo: add option to define nu
   m_relaxTime = opt_config_value<GDouble>("relaxation", m_relaxTime);
-  m_re        = required_config_value<GDouble>("reynoldsnumber");
+  if(EQ == LBEquation::Navier_Stokes || EQ == LBEquation::Navier_Stokes_Poisson) {
+    m_re = required_config_value<GDouble>("reynoldsnumber");
+  } else {
+    m_re = 0;
+  }
 
 
   /// todo: 1.73205080756887729352??? (F1BCS)
@@ -136,7 +140,6 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::run() -> GInt {
   allocateMemory();
   POST::init();
   initialCondition();
-  output(true); // todo: just for debugging
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
 
   RECORD_TIMER_START(TimeKeeper[Timers::LBMMainLoop]);
@@ -150,8 +153,8 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::run() -> GInt {
     converged = convergenceCondition();
     timeStep();
 
-    // also write an output if its the last time step or if the solution has converged
-    output(m_timeStep == noTimesteps || converged);
+    // also write an output if it's the last time step or if the solution has converged
+    output(m_timeStep == noTimesteps - 1 || converged);
   }
 
   if(has_config_value("analyticalSolution")) {
@@ -214,12 +217,28 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
     } else if(EQ == LBEquation::Poisson || EQ == LBEquation::Navier_Stokes_Poisson) {
       electricPotential(cellId) = 0.0;
     }
+    // initBndryValues();
 
-    // assuming initial zero velocity and density 1
-    for(GInt dist = 0; dist < NDIST; ++dist) {
-      m_feq[cellId * NDIST + dist]  = METH::m_weights[dist];
-      m_f[cellId * NDIST + dist]    = m_feq[cellId * NDIST + dist];
-      m_fold[cellId * NDIST + dist] = m_feq[cellId * NDIST + dist];
+    if(EQ == LBEquation::Navier_Stokes) {
+      // assuming initial zero velocity and density 1
+      for(GInt dist = 0; dist < NDIST; ++dist) {
+        feq(cellId, dist)  = METH::m_weights[dist];
+        f(cellId, dist)    = feq(cellId, dist);
+        fold(cellId, dist) = feq(cellId, dist);
+      }
+    }
+    if(EQ == LBEquation::Poisson) {
+      electricPotential(0)          = 1.0; // todo: just for testing
+      electricPotential(size() - 1) = 1.0; // todo: just for testing
+      for(GInt dist = 0; dist < NDIST - 1; ++dist) {
+        feq(cellId, dist)  = METH::m_weights[dist] * electricPotential(cellId);
+        f(cellId, dist)    = feq(cellId, dist);
+        fold(cellId, dist) = feq(cellId, dist);
+      }
+      const GDouble centerFeq = (METH::m_weights[NDIST - 1] - 1.0) * electricPotential(cellId);
+      feq(cellId, NDIST - 1)  = centerFeq;
+      f(cellId, NDIST - 1)    = centerFeq;
+      fold(cellId, NDIST - 1) = centerFeq;
     }
   }
 }
@@ -404,12 +423,14 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::updateMacroscopicValues() {
       }
 
       if(EQ == LBEquation::Poisson || EQ == LBEquation::Navier_Stokes_Poisson) {
-        electricPotential(cellId) = std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST - 1), 0.0);
+        electricPotential(cellId) = 1.0 / (1.0 - METH::m_weights[NDIST - 1])
+                                    * std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST - 1), 0.0);
       }
     }
 #ifdef _OPENMP
   }
 #endif
+  cerr0 << "poti " << m_timeStep << " " << electricPotential(1) << std::endl;
 
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMMacro]);
 }
@@ -461,14 +482,21 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
   for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST; ++dist) {
       f(cellId, dist) = (1 - m_omega) * fold(cellId, dist) + m_omega * feq(cellId, dist);
-      if(EQ == LBEquation::Poisson) {
+      if(EQ == LBEquation::Poisson && dist != NDIST - 1) {
         // todo: make settable
-        static constexpr GDouble k  = 27.79;
-        static constexpr GDouble dt = 0.001;
-        f(cellId, dist) += dt * METH::m_poissonWeights[dist] * k * k * electricPotential(cellId);
+        static constexpr GDouble k              = 27.79;
+        static constexpr GDouble dt             = 0.03125;
+        static constexpr GDouble tau            = 1.0;
+        static constexpr GDouble alpha          = 1.0 / 3.0;
+        static constexpr GDouble speed_of_sound = 1.0;
+        static constexpr GDouble D              = alpha * gcem::pow(speed_of_sound, 2) * (0.5 - tau) * dt;
+        f(cellId, dist) += dt * D * METH::m_poissonWeights[dist] * k * k * electricPotential(cellId);
       }
     }
   }
+  cerr0 << "colissionStep " << f(0, 0) << " " << f(0, 1) << std::endl; // todo:remove
+  cerr0 << "feq " << feq(0, 0) << " " << feq(0, 1) << std::endl;       // todo:remove
+  cerr0 << "f " << f(0, 0) << " " << f(0, 1) << std::endl;             // todo:remove
 
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMColl]);
 }

@@ -63,19 +63,25 @@
 - give option to not overwrite files
 - [BUG] tangential velocity is not set correctly for D2Q5 for the couette case
 - automatically run all the testcases and produce report
+- simplify boundary by not making it necessary to copy the cellIds for each boundary separately
+- generalize NEEM bounary condition
 
 ### moved:
+
 - switch analytical solution over to vector results!
 
-
 # V0.0.1
+
 ## Ongoing:
 
 - solve 2D poisson equation
 - fix D2Q5 poiseuille case
+- Non-equilibrium extrapolation method based dirichlet boundary condition
 
 ## Done:
+
 ### Features
+
 - load grid generated from the generator
 - setup diagonal neighbor connection for D2Q9 and similar methods
 - periodic boundaries
