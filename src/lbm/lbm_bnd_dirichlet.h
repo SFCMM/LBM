@@ -39,7 +39,7 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
                 const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+  void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& vars) override {
     static constexpr GDouble coeff = 1.0 / (1.0 - LBMethod<LBTYPE>::m_weights[NDIST - 1]);
     for(const auto cellId : m_bndCells) {
@@ -49,10 +49,6 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
       } else {
         extraPolationCellId = cellId - 1;
       }
-      static constexpr GInt noVars = 1;
-      cerr0 << "macro " << vars(extraPolationCellId, 0) << std::endl;
-      cerr0 << "fold0 " << fold(extraPolationCellId, 0) << std::endl;
-      cerr0 << "fold1 " << fold(extraPolationCellId, 1) << std::endl;
       for(GInt dist = 0; dist < NDIST - 1; ++dist) {
         const GDouble weight = LBMethod<LBTYPE>::m_weights[dist];
         // todo: fix this with correct access to the variables

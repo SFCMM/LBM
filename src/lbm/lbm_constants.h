@@ -30,6 +30,7 @@ static constexpr auto getLBEquationType(const std::string_view equationName) -> 
   if(equationName == "navierstokespoisson") {
     return LBEquation::Navier_Stokes_Poisson;
   }
+  TERMM(-1, "Invalid equation configuration!");
 }
 
 enum class LBInitialConditions {
@@ -108,6 +109,7 @@ static constexpr auto getLBMethodType(const std::string_view modelName) -> LBMet
   if(modelName == "D2Q9") {
     return LBMethodType::D2Q9;
   }
+  TERMM(-1, "Invalid model configuration!");
 }
 
 static constexpr auto getLBMethodType(const GInt noDims, const GInt noDistributions) -> LBMethodType {

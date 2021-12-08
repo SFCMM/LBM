@@ -94,9 +94,11 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   //  m_nu    = m_ma / 1.73205080756887729352 / m_re * m_referenceLength; //* (FFPOW2[maxLevel() - a_level(pCellId)]);
   //  m_omega = 2.0 / (1.0 + 6.0 * m_nu);
 
-  m_omega = 1.0 / m_relaxTime;
-  m_nu    = (2.0 * m_relaxTime - 1) / 6.0;
-  m_refU  = m_re * m_nu / m_refLength;
+  m_omega                         = 1.0 / m_relaxTime;
+  m_nu                            = (2.0 * m_relaxTime - 1) / 6.0;
+  m_refU                          = m_re * m_nu / m_refLength;
+  const GDouble minLatticeSpacing = grid().lengthOnLvl(grid().maxLvl());
+  m_dt                            = minLatticeSpacing / m_speedOfSound;
 
   m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL, LBTYPE>>();
 
@@ -430,7 +432,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::updateMacroscopicValues() {
 #ifdef _OPENMP
   }
 #endif
-  cerr0 << "poti " << m_timeStep << " " << electricPotential(1) << std::endl;
 
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMMacro]);
 }
@@ -485,18 +486,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
       if(EQ == LBEquation::Poisson && dist != NDIST - 1) {
         // todo: make settable
         static constexpr GDouble k              = 27.79;
-        static constexpr GDouble dt             = 0.03125;
-        static constexpr GDouble tau            = 1.0;
         static constexpr GDouble alpha          = 1.0 / 3.0;
         static constexpr GDouble speed_of_sound = 1.0;
-        static constexpr GDouble D              = alpha * gcem::pow(speed_of_sound, 2) * (0.5 - tau) * dt;
-        f(cellId, dist) += dt * D * METH::m_poissonWeights[dist] * k * k * electricPotential(cellId);
+        static const GDouble     D              = alpha * gcem::pow(m_speedOfSound, 2) * (0.5 - m_relaxTime) * m_dt;
+        f(cellId, dist) += m_dt * D * METH::m_poissonWeights[dist] * k * k * electricPotential(cellId);
       }
     }
   }
-  cerr0 << "colissionStep " << f(0, 0) << " " << f(0, 1) << std::endl; // todo:remove
-  cerr0 << "feq " << feq(0, 0) << " " << feq(0, 1) << std::endl;       // todo:remove
-  cerr0 << "f " << f(0, 0) << " " << f(0, 1) << std::endl;             // todo:remove
 
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMColl]);
 }

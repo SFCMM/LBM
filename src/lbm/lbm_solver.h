@@ -172,11 +172,13 @@ class LBMSolver : public SolverInterface,
 
   GDouble m_nu = 0;
   GDouble m_re = 1;
-  GDouble m_ma = defaultMachNumber;
+  GDouble m_ma           = defaultMachNumber;
+  GDouble m_speedOfSound = 1.0;
 
   // todo: move to method impl
   GDouble m_relaxTime = defaultRelaxT;
   GDouble m_omega     = 1.0 / m_relaxTime;
+  GDouble m_dt        = NAN;
 };
 
 #endif // LBM_SOLVER_H
