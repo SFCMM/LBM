@@ -219,8 +219,10 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
     } else if(EQ == LBEquation::Poisson || EQ == LBEquation::Navier_Stokes_Poisson) {
       electricPotential(cellId) = 0.0;
     }
-    // initBndryValues();
+  }
+  initBndryValues();
 
+  for(GInt cellId = 0; cellId < noCells(); ++cellId) {
     if(EQ == LBEquation::Navier_Stokes) {
       // assuming initial zero velocity and density 1
       for(GInt dist = 0; dist < NDIST; ++dist) {
@@ -230,8 +232,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
       }
     }
     if(EQ == LBEquation::Poisson) {
-      electricPotential(0)          = 1.0; // todo: just for testing
-      electricPotential(size() - 1) = 1.0; // todo: just for testing
       for(GInt dist = 0; dist < NDIST - 1; ++dist) {
         feq(cellId, dist)  = METH::m_weights[dist] * electricPotential(cellId);
         f(cellId, dist)    = feq(cellId, dist);
@@ -243,6 +243,15 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
       fold(cellId, NDIST - 1) = centerFeq;
     }
   }
+}
+
+/// Set the initial values on the boundaries
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initBndryValues() {
+  using namespace std::placeholders;
+  std::function<GDouble&(GInt, GInt)> _v = std::bind(&LBMSolver::vars, this, _1, _2);
+
+  m_bndManager->initCndBnd(_v);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
@@ -485,10 +494,10 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
       f(cellId, dist) = (1 - m_omega) * fold(cellId, dist) + m_omega * feq(cellId, dist);
       if(EQ == LBEquation::Poisson && dist != NDIST - 1) {
         // todo: make settable
-        static constexpr GDouble k              = 27.79;
-        static constexpr GDouble alpha          = 1.0 / 3.0;
-        static const GDouble     D              = alpha * gcem::pow(m_speedOfSound, 2) * (0.5 - m_relaxTime) * m_dt;
-        f(cellId, dist) += m_dt * D * METH::m_poissonWeights[dist] * k * k * electricPotential(cellId);
+        static constexpr GDouble k           = 27.79;
+        static constexpr GDouble alpha       = 1.0 / 3.0;
+        static const GDouble     diffusivity = alpha * gcem::pow(m_speedOfSound, 2) * (0.5 - m_relaxTime) * m_dt;
+        f(cellId, dist) += m_dt * diffusivity * METH::m_poissonWeights[dist] * k * k * electricPotential(cellId);
       }
     }
   }

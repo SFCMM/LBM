@@ -28,6 +28,8 @@ class LBMBnd_InOutBB : public LBMBndInterface {
 
   //  void init() override {}
 
+  void initCnd(const std::function<GDouble&(GInt, GInt)>& vars) override {}
+
   void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
                 const std::function<GDouble&(GInt, GInt)>& vars) override {
     //    const GDouble diffRho   = 0.15;

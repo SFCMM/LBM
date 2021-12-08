@@ -95,6 +95,7 @@ class LBMSolver : public SolverInterface,
   void output(const GBool forced = false, const GString& postfix = "");
   void compareToAnalyticalResult();
   void initialCondition();
+  void initBndryValues();
   auto convergenceCondition() -> GBool;
   void forcing();
   void prePropBoundaryCnd();

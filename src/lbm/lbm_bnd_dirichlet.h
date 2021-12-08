@@ -39,6 +39,13 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
   auto operator=(const LBMBnd_DirichletNEEM&) -> LBMBnd_DirichletNEEM& = delete;
   auto operator=(LBMBnd_DirichletNEEM&&) -> LBMBnd_DirichletNEEM& = delete;
 
+  void initCnd(const std::function<GDouble&(GInt, GInt)>& vars) override {
+    for(const auto cellId : m_bndCells) {
+      vars(cellId, VAR::electricPotential()) = m_value;
+    }
+  }
+
+
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
                 const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
