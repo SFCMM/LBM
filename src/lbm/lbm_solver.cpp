@@ -100,7 +100,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   const GDouble minLatticeSpacing = grid().lengthOnLvl(grid().maxLvl());
   m_dt                            = minLatticeSpacing / m_speedOfSound;
 
-  m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL, LBTYPE>>();
+  m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL, LBTYPE, EQ>>();
 
   // todo: doesn't work??
   //   std::function<const Surface<NDIM>&(GInt)> _bndrySurface = [this](const GInt id) { return bndrySurface(id); };

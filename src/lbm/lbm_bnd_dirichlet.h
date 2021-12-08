@@ -9,14 +9,14 @@
 
 using json = nlohmann::json;
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 class LBMBnd_DirichletNEEM : public LBMBndInterface {
  private:
   using method                = LBMethod<LBTYPE>;
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
 
-  using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
+  using VAR = LBMVariables<EQ, NDIM>;
 
  public:
   // todo: allow setting specified variables
@@ -25,6 +25,9 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
       m_bndCells.emplace_back(cellId);
     }
     if(NDIM == 2) {
+      TERMM(-1, "FIX ME");
+    }
+    if(EQ != LBEquation::Poisson) {
       TERMM(-1, "FIX ME");
     }
   }
@@ -43,6 +46,7 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
              const std::function<GDouble&(GInt, GInt)>& vars) override {
     for(const auto cellId : m_bndCells) {
       GInt extraPolationCellId = 0;
+      // todo: do this correctly
       if(cellId == 0) {
         extraPolationCellId = 1;
       } else {
@@ -50,11 +54,11 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
       }
       for(GInt dist = 0; dist < NDIST - 1; ++dist) {
         const GDouble weight = LBMethod<LBTYPE>::m_weights[dist];
-        // todo: fix this with correct access to the variables
-        fold(cellId, dist) = weight * m_value + fold(extraPolationCellId, dist) - weight * vars(extraPolationCellId, 0);
+        fold(cellId, dist) =
+            weight * m_value + fold(extraPolationCellId, dist) - weight * vars(extraPolationCellId, VAR::electricPotential());
       }
       fold(cellId, NDIST - 1) = (LBMethod<LBTYPE>::m_weights[NDIST - 1] - 1.0) * m_value + fold(extraPolationCellId, NDIST - 1)
-                                - (LBMethod<LBTYPE>::m_weights[NDIST - 1] - 1.0) * vars(extraPolationCellId, 0);
+                                - (LBMethod<LBTYPE>::m_weights[NDIST - 1] - 1.0) * vars(extraPolationCellId, VAR::electricPotential());
     }
   }
 

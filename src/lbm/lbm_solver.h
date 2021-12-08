@@ -140,9 +140,9 @@ class LBMSolver : public SolverInterface,
 
   [[nodiscard]] auto inline noCells() const -> GInt { return m_grid->noCells(); }
 
-  std::unique_ptr<GridInterface>                      m_grid;
-  std::unique_ptr<LBMethodInterface>                  m_lbm;        // todo:implement
-  std::unique_ptr<LBMBndManager<DEBUG_LEVEL, LBTYPE>> m_bndManager; // todo:implement
+  std::unique_ptr<GridInterface>                          m_grid;
+  std::unique_ptr<LBMethodInterface>                      m_lbm; // todo: implmenent
+  std::unique_ptr<LBMBndManager<DEBUG_LEVEL, LBTYPE, EQ>> m_bndManager;
 
   GString m_exe;
   GString m_configurationFileName;
