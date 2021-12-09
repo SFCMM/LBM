@@ -50,10 +50,38 @@ class LBMSolverExecutor : public SolverInterface {
         }
         break;
       case LBMethodType::D2Q5:
-        m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q5, LBEquation::Navier_Stokes>>(m_domainId, m_noDomains);
+        switch(equationType) {
+          case LBEquation::Navier_Stokes:
+            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q5, LBEquation::Navier_Stokes>>(m_domainId, m_noDomains);
+            break;
+          case LBEquation::Poisson:
+            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q5, LBEquation::Poisson>>(m_domainId, m_noDomains);
+            break;
+            //          case LBEquation::Navier_Stokes_Poisson:
+            //            m_lbmSolver =
+            //                std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q5, LBEquation::Navier_Stokes_Poisson>>(m_domainId,
+            //                m_noDomains);
+            //            break;
+          default:
+            TERMM(-1, "Unsupported equation type");
+        }
         break;
       case LBMethodType::D2Q9:
-        m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q9, LBEquation::Navier_Stokes>>(m_domainId, m_noDomains);
+        switch(equationType) {
+          case LBEquation::Navier_Stokes:
+            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q9, LBEquation::Navier_Stokes>>(m_domainId, m_noDomains);
+            break;
+          case LBEquation::Poisson:
+            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q9, LBEquation::Poisson>>(m_domainId, m_noDomains);
+            break;
+            //          case LBEquation::Navier_Stokes_Poisson:
+            //            m_lbmSolver =
+            //                std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q9, LBEquation::Navier_Stokes_Poisson>>(m_domainId,
+            //                m_noDomains);
+            //            break;
+          default:
+            TERMM(-1, "Unsupported equation type");
+        }
         break;
       default:
         TERMM(-1, "Unsupported model");

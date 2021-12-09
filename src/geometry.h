@@ -705,10 +705,17 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     type() = GeomType::box;
     checkValid();
   }
-  GeomBox(const json& box, const GString& _name)
-    : GeometryAnalytical<DEBUG_LEVEL, NDIM>(box),
-      m_A(static_cast<std::vector<GDouble>>(box["A"]).data()),
-      m_B(static_cast<std::vector<GDouble>>(box["B"]).data()) {
+  GeomBox(const json& box, const GString& _name) : GeometryAnalytical<DEBUG_LEVEL, NDIM>(box) {
+    const auto A = std::vector<GDouble>(box["A"]);
+    const auto B = std::vector<GDouble>(box["B"]);
+
+    if(A.size() != NDIM || B.size() != NDIM) {
+      TERMM(-1, "Invalid dimensionality given for box corner points");
+    }
+
+    m_A = Point<NDIM>(A.data());
+    m_B = Point<NDIM>(B.data());
+
     name() = _name;
     type() = GeomType::box;
     checkValid();

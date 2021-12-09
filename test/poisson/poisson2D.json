@@ -1,0 +1,59 @@
+{
+  "dry-run": true,
+  "dim": 2,
+  "partitionLevel": 6,
+  "uniformLevel": 6,
+  "maxRfnmtLvl": 6,
+  "maxNoCells": 1000000,
+  "outputDir": "out",
+  "gridFileName": "gridD",
+  "gridOutput": {
+    "format": "VTKB",
+    "cellFilter": "leafCells",
+    "type": "points",
+    "outputValues": [
+      "level",
+      "noChildren"
+    ]
+  },
+  "geometry": {
+    "line": {
+      "type": "box",
+      "A": [
+        0.0,
+        0.0
+      ],
+      "B": [
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "solver": {
+    "type": "lbm",
+    "equation": "poisson",
+    "model": "D2Q9",
+    "relaxation": 1.0,
+    "maxSteps": 1000,
+    "info_interval": 100,
+    "solution_interval": 100,
+    "convergence": 1E-14,
+    "errorL2": 5E-3,
+    "errorMax": 1.1E-3,
+    "assumeAxisAligned": true,
+    "boundary": {
+      "line": {
+        "+x": {
+          "type": "dirichlet",
+          "model": "neem",
+          "value": 1.0
+        },
+        "-x": {
+          "type": "dirichlet",
+          "model": "neem",
+          "value": 1.0
+        }
+      }
+    }
+  }
+}

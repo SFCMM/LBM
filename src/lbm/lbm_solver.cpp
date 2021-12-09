@@ -703,11 +703,23 @@ template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q5, LBEquation::Nav
 template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q5, LBEquation::Navier_Stokes>;
 template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q5, LBEquation::Navier_Stokes>;
 
+template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q5, LBEquation::Poisson>;
+template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q5, LBEquation::Poisson>;
+template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q5, LBEquation::Poisson>;
+template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q5, LBEquation::Poisson>;
+template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q5, LBEquation::Poisson>;
+
 template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
 template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
 template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
 template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
 template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
+
+template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q9, LBEquation::Poisson>;
+template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q9, LBEquation::Poisson>;
+template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q9, LBEquation::Poisson>;
+template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q9, LBEquation::Poisson>;
+template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q9, LBEquation::Poisson>;
 
 // template class LBMSolver<Debug_Level::no_debug, LBMethodType::D3Q15>;
 // template class LBMSolver<Debug_Level::min_debug, LBMethodType::D3Q15>;
