@@ -17,10 +17,19 @@ struct IOIndex {
   GString type;
 };
 
+/// Namespace containing definitions to write ASCII
 namespace ASCII {
 // using namespace csv;
 using namespace std;
 
+/// Write out a point-based CSV-file.
+/// \tparam DIM Dimensionality of the data and points
+/// \param fileName Name of the file to write.
+/// \param noValues The number of values to write.
+/// \param coordinates The coordinates of the points to write.
+/// \param index Index for the name of the columns in the csv file.
+/// \param values Values to be written to the csv-file.
+/// \param filter Filter function to reduce the output points, e.g., only write points on a surface and so on.
 template <GInt DIM>
 inline void writePointsCSV(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
                            const std::vector<IOIndex>& index = {}, const std::vector<std::vector<GString>>& values = {},
@@ -69,26 +78,38 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
 
 } // namespace ASCII
 
+/// Namespace to write ParaView files in  VTK format.
 namespace VTK {
 using namespace std;
 
+/// Write the VTK header.
+/// \return  VTK-header string.
 static constexpr auto header() -> string_view {
   return "<VTKFile type=\"PolyData\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\">\n"
          "  <PolyData>\n";
 }
 
+/// Write the VTK footer.
+/// \return VTK-footer string.
 static constexpr auto footer() -> string_view {
   return "    </Piece>\n"
          "  </PolyData>\n"
          "</VTKFile> \n";
 }
 
+/// Header for a piece of the polydata field.
+/// \param noOfPoints Number of points to be written in this piece.
+/// \return Piece-header string.
 static inline auto piece_header(const GInt noOfPoints) -> GString {
   return "<Piece NumberOfPoints=\"" + to_string(noOfPoints)
          + "\" NumberOfVerts=\"1\" NumberOfLines=\"0\" NumberOfStrips=\"0\" "
            "NumberOfPolys=\"0\" > \n";
 }
 
+/// Point-field header.
+/// \tparam DIM Number of dimensions of the points
+/// \tparam BINARY Is this field in binary format?
+/// \return Return point-header string.
 template <GInt DIM, GBool BINARY = false>
 static inline auto point_header() -> GString {
   // todo: it seems that number of components is ignored by paraview
@@ -102,11 +123,16 @@ static inline auto point_header() -> GString {
   return "<Points>\n<DataArray type=\"Float64\" Name=\"Points\" NumberOfComponents=\"3\" format=\"ascii\"> \n";
 }
 
+/// Footer of the point-field
+/// \return String point-field footer.
 static constexpr auto point_footer() -> string_view {
   return "        </DataArray>\n"
          "      </Points>\n";
 }
 
+/// Vertice field header
+/// \tparam BINARY Are the vertices in binary format?
+/// \return String of the Vertices-field header.
 template <GBool BINARY = false>
 static constexpr auto vert_header() -> string_view {
   if(BINARY) {
@@ -117,16 +143,28 @@ static constexpr auto vert_header() -> string_view {
          "        <DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\"> \n";
 }
 
+/// Return the offset-field data header
+/// \return String of the offset-field data header.
 static constexpr auto offset_data_header() -> string_view {
   return "        <DataArray type=\"Int64\" Name=\"offsets\" format=\"ascii\"> \n";
 }
 
+/// Footer of the data-header.
+/// \return Return the string data-header.
 static constexpr auto data_footer() -> string_view { return "        </DataArray> \n"; }
 
+/// Vertice-field footer.
+/// \return String of the vertice-field footer.
 static constexpr auto vert_footer() -> string_view { return "        </Verts> \n"; }
 
+/// Point-data-header.
+/// \return String of the Point-data-header
 static constexpr auto point_data_header() -> string_view { return "      <PointData> \n"; }
 
+/// Point-data-array definition for an int32 type.
+/// \tparam binary Is this data-array in binary format?
+/// \param name Name of the data-array
+/// \return String of the data-array header.
 template <GBool binary = false>
 static inline auto point_data_int32(const GString& name) -> GString {
   if(binary) {
@@ -135,6 +173,10 @@ static inline auto point_data_int32(const GString& name) -> GString {
   return "<DataArray type=\"Int32\" Name=\"" + name + "\" format=\"ascii\">\n";
 }
 
+/// Point-data-array definition for an float64 type.
+/// \tparam binary Is this data-array in binary format?
+/// \param name Name of the data-array
+/// \return String of the data-array header.
 template <GBool binary = false>
 static inline auto point_data_float64(const GString& name) -> GString {
   if(binary) {
@@ -143,11 +185,22 @@ static inline auto point_data_float64(const GString& name) -> GString {
   return "<DataArray type=\"Float64\" Name=\"" + name + "\" format=\"ascii\">\n";
 }
 
+/// Point data-array footer
+/// \return String for the point data-array footer.
 static constexpr auto point_data_footer() -> string_view { return "      </PointData> \n"; }
 
-
+/// Namespace for functions to write VTK in ASCII format.
 namespace ASCII {
 // todo: combine to functions ASCII and binary!!
+
+/// Write out a point-based VTK-file in ASCII-format.
+/// \tparam DIM Dimensionality of the data and points
+/// \param fileName Name of the file to write.
+/// \param noValues The number of values to write.
+/// \param coordinates The coordinates of the points to write.
+/// \param index Index for the name of the columns in the csv file.
+/// \param values Values to be written to the csv-file.
+/// \param filter Filter function to reduce the output points, e.g., only write points on a surface and so on.
 template <GInt DIM>
 inline void writePoints(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
                         const std::vector<IOIndex>& index = {}, const std::vector<std::vector<GString>>& values = {},
@@ -224,8 +277,18 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
 }
 } // namespace ASCII
 
+/// Namespace for functions to write VTK in binary format.
 namespace BINARY {
 // todo: combine to functions ASCII and binary!!
+
+/// Write out a point-based VTK-file in binary-format.
+/// \tparam DIM Dimensionality of the data and points
+/// \param fileName Name of the file to write.
+/// \param noValues The number of values to write.
+/// \param coordinates The coordinates of the points to write.
+/// \param index Index for the name of the columns in the csv file.
+/// \param values Values to be written to the csv-file.
+/// \param filter Filter function to reduce the output points, e.g., only write points on a surface and so on.
 template <GInt DIM>
 inline void writePoints(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
                         const std::vector<IOIndex>& index = {}, const std::vector<std::vector<GString>>& values = {},

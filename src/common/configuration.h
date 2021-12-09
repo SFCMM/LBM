@@ -116,11 +116,11 @@ class Configuration {
   /// \param value The value
   /// \return The key-value pair exits -> true
   auto has_any_key_value(const GString& key, const GString& value) const -> GBool {
-    auto has_config_value_key = [=](const json& cc, const GString& _key, const GString& val) {
+    auto has_config_value_key = [=](const json& configurationObj, const GString& _key, const GString& val) {
       // entry exists
-      if(cc.contains(_key)) {
+      if(configurationObj.contains(_key)) {
         // value matches
-        if(cc[_key] == val) {
+        if(configurationObj[_key] == val) {
           return true;
         }
       }
@@ -215,11 +215,11 @@ class Configuration {
 
   /// Print out a list of unused configuration values
   void unusedConfigValues() {
-    GInt i = 0;
+    GInt noUnusedConfigValues = 0;
     logger << "The following values in the configuration file are unused: \n";
     for(const auto& configKey : m_unusedKeys) {
       if(!configKey.second) {
-        logger << "[" << ++i << "] " << configKey.first << "\n";
+        logger << "[" << ++noUnusedConfigValues << "] " << configKey.first << "\n";
       }
     }
     logger << std::endl;
