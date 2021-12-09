@@ -50,6 +50,7 @@ class CartesianGridData {
       m_center(initGrid.center()),
       m_properties(initGrid.props()),
       m_level(initGrid.level()),
+      m_nghbrIds(initGrid.neighbor()),
       m_lengthOnLevel(initGrid.lengthOnLvl()) {}
 
   // todo: add asserts
@@ -71,6 +72,8 @@ class CartesianGridData {
 
   [[nodiscard]] inline auto boundingBox() const -> const BoundingBoxInterface& { return m_boundingBox; }
 
+  inline auto neighbor(const GInt id, const GInt dir) const -> GInt { return m_nghbrIds[id * cartesian::maxNoNghbrsDiag<NDIM>() + dir]; }
+
 
  private:
   const GInt m_noCells;
@@ -79,6 +82,7 @@ class CartesianGridData {
   const std::vector<Point<NDIM>>&        m_center;
   const std::vector<PropertyBitsetType>& m_properties;
   const std::vector<std::byte>&          m_level;
+  const std::vector<GInt>&               m_nghbrIds;
   const std::array<GDouble, MAX_LVL>     m_lengthOnLevel{NAN_LIST<MAX_LVL>()};
 };
 
@@ -291,7 +295,7 @@ class BaseCartesianGrid : public GridInterface {
   [[nodiscard]] inline auto props() const -> const std::vector<PropertyBitsetType>& { return m_properties; }
 
 
-  auto getCartesianGridData() const -> CartesianGridData<NDIM> { return CartesianGridData<NDIM>(*this); }
+  //  virtual auto getCartesianGridData() const -> CartesianGridData<NDIM> { return CartesianGridData<NDIM>(*this); }
 
  protected:
   inline auto currentHighestLvl() -> GInt& { return m_currentHighestLvl; }

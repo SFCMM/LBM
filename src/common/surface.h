@@ -35,8 +35,22 @@ class Surface : public SurfaceInterface {
   [[nodiscard]] auto getCellList() const -> const std::vector<GInt>& override { return m_cellId; }
 
   void setCellList(const std::vector<GInt>& cellList) override {
+    if(cellList.empty()) {
+      TERMM(-1, "Invalid cellList ");
+    }
+
     m_cellId.clear();
+    m_nghbrIds.clear();
     std::copy(cellList.begin(), cellList.end(), std::back_inserter(m_cellId));
+
+
+    for(const auto cellId : m_cellId) {
+      std::array<GInt, cartesian::maxNoNghbrsDiag<NDIM>()> tmpNghbr;
+      for(GInt dir = 0; dir < cartesian::maxNoNghbrsDiag<NDIM>(); ++dir) {
+        tmpNghbr[dir] = m_grid.neighbor(cellId, dir);
+      }
+      m_nghbrIds.insert({cellId, tmpNghbr});
+    }
   }
 
   void addCell(const GInt cellId, const GInt dir) override {
@@ -44,6 +58,12 @@ class Surface : public SurfaceInterface {
     m_normal.emplace_back();
     m_normal.back().fill(0);
     m_normal.back()[dir / 2] = 2 * (dir % 2) - 1;
+
+    std::array<GInt, cartesian::maxNoNghbrsDiag<NDIM>()> tmpNghbr;
+    for(GInt dir = 0; dir < cartesian::maxNoNghbrsDiag<NDIM>(); ++dir) {
+      tmpNghbr[dir] = m_grid.neighbor(cellId, dir);
+    }
+    m_nghbrIds.insert({cellId, tmpNghbr});
   }
 
   auto normal(const GInt surfCellId) const -> const VectorD<NDIM>& { return m_normal[surfCellId]; }
@@ -59,8 +79,22 @@ class Surface : public SurfaceInterface {
 
   auto grid() const -> CartesianGridData<NDIM> { return m_grid; }
 
+  [[nodiscard]] auto neighbor(const GInt cellId, const GInt dir) const -> GInt {
+    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+      if(m_nghbrIds.empty()) {
+        TERMM(-1, "Surface not initialized!");
+      }
+    }
+    for(auto [first, second] : m_nghbrIds) {
+      cerr0 << first << " " << second[0] << std::endl;
+    }
+    return m_nghbrIds.at(cellId)[dir];
+  }
+
  private:
-  std::vector<GInt>             m_cellId;
+  std::vector<GInt>                                                              m_cellId;
+  std::unordered_map<GInt, std::array<GInt, cartesian::maxNoNghbrsDiag<NDIM>()>> m_nghbrIds;
+
   std::vector<VectorD<NDIM>>    m_normal;
   const CartesianGridData<NDIM> m_grid = nullptr;
 };

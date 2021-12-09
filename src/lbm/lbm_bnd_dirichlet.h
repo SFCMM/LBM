@@ -20,10 +20,22 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
 
  public:
   // todo: allow setting specified variables
-  LBMBnd_DirichletNEEM(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) : m_value(properties["value"]) {
+  LBMBnd_DirichletNEEM(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
+    : m_value(properties["value"]), m_normal(surf->normal(0)) {
+    // todo: more general impl
+    GInt nghbrDir = -1;
+    if(m_normal[0] < 0) {
+      nghbrDir = 1;
+    }
+    if(m_normal[0] > 0) {
+      nghbrDir = 0;
+    }
+
     for(const GInt cellId : surf->getCellList()) {
       m_bndCells.emplace_back(cellId);
+      m_extrapolationCellId.emplace_back(surf->neighbor(cellId, nghbrDir));
     }
+
     if(NDIM == 2) {
       TERMM(-1, "FIX ME");
     }
@@ -51,14 +63,10 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
 
   void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& vars) override {
-    for(const auto cellId : m_bndCells) {
-      GInt extraPolationCellId = 0;
-      // todo: do this correctly
-      if(cellId == 0) {
-        extraPolationCellId = 1;
-      } else {
-        extraPolationCellId = cellId - 1;
-      }
+    for(GInt id = 0; id < m_bndCells.size(); ++id) {
+      const GInt cellId              = m_bndCells[id];
+      const GInt extraPolationCellId = m_extrapolationCellId[id];
+
       for(GInt dist = 0; dist < NDIST - 1; ++dist) {
         const GDouble weight = LBMethod<LBTYPE>::m_weights[dist];
         fold(cellId, dist) =
@@ -72,6 +80,8 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
 
  private:
   GDouble           m_value = 1.0;
+  VectorD<NDIM>     m_normal;
   std::vector<GInt> m_bndCells;
+  std::vector<GInt> m_extrapolationCellId;
 };
 #endif // LBM_LBM_BND_DIRICHLET_H

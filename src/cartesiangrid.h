@@ -101,6 +101,24 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   }
 
   // Neighbors
+  inline auto neighbor() const -> const auto& { return m_nghbrIds; }
+
+  // todo: make diagonal neighbors a template parameter
+  [[nodiscard]] inline auto neighbor(const GInt id, const GInt dir) const -> GInt override {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      //      checkDir(dir);
+      if(m_diagonalNghbrs) {
+        return m_nghbrIds.at(id * cartesian::maxNoNghbrsDiag<NDIM>() + dir);
+      }
+      return m_nghbrIds.at(id * cartesian::maxNoNghbrs<NDIM>() + dir);
+    }
+    if(m_diagonalNghbrs) {
+      return m_nghbrIds[id * cartesian::maxNoNghbrsDiag<NDIM>() + dir];
+    }
+    return m_nghbrIds[id * cartesian::maxNoNghbrs<NDIM>() + dir];
+  }
+
   inline auto neighbor(const GInt id, const GInt dir) -> GInt& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
@@ -116,20 +134,6 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     return m_nghbrIds[id * cartesian::maxNoNghbrs<NDIM>() + dir];
   }
 
-  [[nodiscard]] inline auto neighbor(const GInt id, const GInt dir) const -> GInt override {
-    if(DEBUG_LEVEL >= Debug_Level::debug) {
-      checkBounds(id);
-      //      checkDir(dir);
-      if(m_diagonalNghbrs) {
-        return m_nghbrIds.at(id * cartesian::maxNoNghbrsDiag<NDIM>() + dir);
-      }
-      return m_nghbrIds.at(id * cartesian::maxNoNghbrs<NDIM>() + dir);
-    }
-    if(m_diagonalNghbrs) {
-      return m_nghbrIds[id * cartesian::maxNoNghbrsDiag<NDIM>() + dir];
-    }
-    return m_nghbrIds[id * cartesian::maxNoNghbrs<NDIM>() + dir];
-  }
 
   [[nodiscard]] inline auto hasNeighbor(const GInt id, const GInt dir) const -> GBool {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
@@ -351,6 +355,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
       }
     }
   }
+
+  auto getCartesianGridData() const -> CartesianGridData<NDIM> { return CartesianGridData<NDIM>(*this); }
 
  private:
   void setProperties() {

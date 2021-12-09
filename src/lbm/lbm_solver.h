@@ -73,7 +73,9 @@ class LBMSolver : public SolverInterface,
     return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->center(cellId, dir);
   }
 
-  auto getCartesianGridData() -> CartesianGridData<NDIM> { return grid().getCartesianGridData(); }
+  auto getCartesianGridData() -> CartesianGridData<NDIM> {
+    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->getCartesianGridData();
+  }
 
 
  private:
@@ -171,8 +173,8 @@ class LBMSolver : public SolverInterface,
   GDouble m_refT      = defaultT20C;
   GDouble m_refU      = 1.0;
 
-  GDouble m_nu = 0;
-  GDouble m_re = 1;
+  GDouble m_nu           = 0;
+  GDouble m_re           = 1;
   GDouble m_ma           = defaultMachNumber;
   GDouble m_speedOfSound = 1.0;
 
