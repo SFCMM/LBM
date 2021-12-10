@@ -65,10 +65,11 @@
 - automatically run all the testcases and produce report
 - simplify boundary by not making it necessary to copy the cellIds for each boundary separately
 - generalize NEEM bounary condition
+- fix poisson method to allow changes of relaxation
+- check if poisson method error rates with case CHAI08_1 can be improved over with level 8+
 
 ### moved:
 
-- switch analytical solution over to vector results!
 
 # V0.0.1
 

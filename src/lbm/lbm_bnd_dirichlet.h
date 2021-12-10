@@ -6,6 +6,7 @@
 #include "lbm_bnd_interface.h"
 #include "lbm_constants.h"
 #include "lbm_variables.h"
+#include "analytical_solutions.h"
 
 using json = nlohmann::json;
 
@@ -21,7 +22,7 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
  public:
   // todo: allow setting specified variables
   LBMBnd_DirichletNEEM(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
-    : m_value(properties["value"]), m_normal(surf->normal(0)) {
+    : m_value(config::opt_config_value(properties, "value", NAN)), m_normal(surf->normal(0)) {
     // todo: more general impl
     GInt nghbrDir = -1;
     if(m_normal[0] < 0) {
@@ -36,6 +37,13 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
       m_extrapolationCellId.emplace_back(surf->neighbor(cellId, nghbrDir));
     }
 
+    const GBool setAnalyticalValue = config::opt_config_value(properties, "setAnalyticalValue", false);
+
+    if(setAnalyticalValue) {
+      if constexpr(NDIM == 1) {
+        m_value = analytical::poisson::poissonCHAI08_1(surf->center(m_bndCells[0]))[0];
+      }
+    }
     if(NDIM == 2) {
       TERMM(-1, "FIX ME");
     }

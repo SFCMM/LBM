@@ -60,8 +60,8 @@ class Surface : public SurfaceInterface {
     m_normal.back()[dir / 2] = 2 * (dir % 2) - 1;
 
     std::array<GInt, cartesian::maxNoNghbrsDiag<NDIM>()> tmpNghbr;
-    for(GInt dir = 0; dir < cartesian::maxNoNghbrsDiag<NDIM>(); ++dir) {
-      tmpNghbr[dir] = m_grid.neighbor(cellId, dir);
+    for(GInt nghbrId = 0; nghbrId < cartesian::maxNoNghbrsDiag<NDIM>(); ++nghbrId) {
+      tmpNghbr[nghbrId] = m_grid.neighbor(cellId, nghbrId);
     }
     m_nghbrIds.insert({cellId, tmpNghbr});
   }

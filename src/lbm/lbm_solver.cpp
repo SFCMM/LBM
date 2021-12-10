@@ -98,7 +98,9 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   m_nu                            = (2.0 * m_relaxTime - 1) / 6.0;
   m_refU                          = m_re * m_nu / m_refLength;
   const GDouble minLatticeSpacing = grid().lengthOnLvl(grid().maxLvl());
-  m_dt                            = minLatticeSpacing / m_speedOfSound;
+  m_dt                            = ((center(size() - 1)[0] - center(0)[0]) / size()) / m_speedOfSound; // 0.00775146 -> 0.000632549 (max)
+  //  m_dt                            = 0.998 * ((center(size()-1)[0]-center(0)[0])/size()) / m_speedOfSound; // 0.00773596 -> 4.11959e-05
+  //  (max)
 
   m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL, LBTYPE, EQ>>();
 
@@ -118,6 +120,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   cerr0 << "No. Leaf cells: " << noLeafCells() << std::endl;
   cerr0 << "No. Bnd cells: " << noBndCells() << std::endl;
   cerr0 << "Relaxation Time: " << m_relaxTime << std::endl;
+  cerr0 << "Timestep: " << m_dt << std::endl;
   cerr0 << "Omega: " << m_omega << std::endl;
   cerr0 << "Reynolds Number: " << m_re << std::endl;
   cerr0 << "Viscosity: " << m_nu << std::endl;
@@ -337,7 +340,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
   //  for an analytical testcase the value "analyticalSolution" needs to be defined
   const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");
   // from the analyticalSolutionName we can get a functional representation of the solution
-  const auto anaSolution = analytical::ns::getAnalyticalSolution(analyticalSolutionName);
+  const auto anaSolution = analytical::getAnalyticalSolution<NDIM>(analyticalSolutionName);
 
   // determine the error
   GDouble              maxError = 0;
@@ -351,6 +354,9 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
       m_excludedCells.emplace_back(bndrySurface(exclSurfName).getCellList());
     }
   }
+
+  GDouble sumError    = 0;
+  GDouble sumSolution = 0;
   for(GInt cellId = 0; cellId < grid().size(); ++cellId) {
     GBool excluded = false;
     if(!m_excludedCells.empty()) {
@@ -364,23 +370,32 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
     if(excluded) {
       continue;
     }
-    const GDouble solution = anaSolution(center(cellId, 1));
-    const GDouble delta    = velocity(cellId, 0) - solution;
-    maxError               = std::max(std::abs(delta), maxError);
-    error.emplace_back(std::sqrt(delta * delta / (solution * solution)));
+    VectorD<NDIM> v(&velocity(cellId, 0));
+
+    const VectorD<NDIM> solution = anaSolution(center(cellId));
+    const GDouble       delta    = (v - solution).norm();
+    sumError += delta;
+    sumSolution += solution.norm();
+    maxError = std::max(delta, maxError);
+    error.emplace_back(std::sqrt(delta * delta / solution.dot(solution)));
   }
   const GDouble L2error = 1.0 / grid().size() * std::accumulate(error.begin(), error.end(), 0.0);
 
   // if that compare with the maximum expected error to give a pass/no-pass result
-  const GDouble maximumExpectedError   = opt_config_value("errorMax", 1.0);
-  const GDouble maximumExpectedErrorL2 = opt_config_value("errorL2", 1.0);
+  const GDouble maximumExpectedError    = opt_config_value("errorMax", 1.0);
+  const GDouble maximumExpectedErrorL2  = opt_config_value("errorL2", 1.0);
+  const GDouble maximumExpectedErrorGRE = opt_config_value("errorGRE", 1.0);
 
-  cerr0 << "Comparing to analytical result:" << std::endl;
-  logger << "Comparing to analytical result:" << std::endl;
+  const GDouble gre = sumError / sumSolution;
+
+  cerr0 << "Comparing to analytical result " << analyticalSolutionName << std::endl;
+  logger << "Comparing to analytical result " << analyticalSolutionName << std::endl;
   cerr0 << "max. Error: " << maxError << std::endl;
   logger << "max. Error: " << maxError << std::endl;
   cerr0 << "avg. L2: " << L2error << std::endl;
   logger << "avg. L2: " << L2error << std::endl;
+  cerr0 << "global relative error: " << gre << std::endl;
+  logger << "global relative error: " << L2error << std::endl;
 
   GBool failedErrorCheck = false;
   if(maximumExpectedError < maxError) {
@@ -392,6 +407,11 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
     failedErrorCheck = true;
     cerr0 << "Error bounds for the L2 error have failed!!! ( < " << maximumExpectedErrorL2 << ")" << std::endl;
     logger << "Error bounds for the L2 error have failed!!! ( < " << maximumExpectedErrorL2 << ")" << std::endl;
+  }
+  if(maximumExpectedErrorGRE < gre) {
+    failedErrorCheck = true;
+    cerr0 << "Error bounds for the global relative error have failed!!! ( < " << maximumExpectedErrorGRE << ")" << std::endl;
+    logger << "Error bounds for the global relative error have failed!!! ( < " << maximumExpectedErrorGRE << ")" << std::endl;
   }
 
   if(failedErrorCheck) {
@@ -495,8 +515,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
       if(EQ == LBEquation::Poisson && dist != NDIST - 1) {
         // todo: make settable
         static constexpr GDouble k           = 27.79;
-        static constexpr GDouble alpha       = 1.0 / 3.0;
-        static const GDouble     diffusivity = alpha * gcem::pow(m_speedOfSound, 2) * (0.5 - m_relaxTime) * m_dt;
+        static const GDouble     diffusivity = METH::m_poissonAlpha * gcem::pow(m_speedOfSound, 2) * (0.5 - m_relaxTime) * m_dt;
         f(cellId, dist) += m_dt * diffusivity * METH::m_poissonWeights[dist] * k * k * electricPotential(cellId);
       }
     }
