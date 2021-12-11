@@ -55,6 +55,19 @@ class Configuration {
     TERMM(-1, "The required configuration value is missing: " + key);
   }
 
+  /// Get a required configuration value (exit if it doesn't exist) [const version]
+  /// \tparam T Type of the value
+  /// \param key Key of the value
+  /// \return Configuration value if it exist or exit
+  template <typename T>
+  auto required_config_value(const GString& key) const -> T {
+    // todo: check for types
+    if(m_config.template contains(key)) {
+      return static_cast<T>(m_config[key]);
+    }
+    TERMM(-1, "The required configuration value is missing: " + key);
+  }
+
   /// Get a required configuration value (exit if it doesn't exist) [Point Version]
   /// \tparam NDIM Dimensionality of the point
   /// \param key Key of the value

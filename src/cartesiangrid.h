@@ -259,8 +259,12 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     setConfiguration(properties);
     // grid.balance(); //todo: implement
     setCapacity(grid.capacity()); // todo: change for adaptation
-    m_geometry = grid.geometry();
-    size()     = grid.size();
+    m_geometry          = grid.geometry();
+    size()              = grid.size();
+    currentHighestLvl() = grid.currentHighestLvl();
+    partitionLvl()      = grid.partitionLvl();
+    setMaxLvl(grid.maxLvl());
+    setBoundingBox(grid.boundingBox());
 
 #ifdef _OPENMP
 #pragma omp parallel default(none) shared(grid)
@@ -293,22 +297,41 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     }
     m_periodic = has_any_key_value("type", "periodic");
 
-    currentHighestLvl() = grid.currentHighestLvl();
-    partitionLvl()      = grid.partitionLvl();
-    setMaxLvl(grid.maxLvl());
-    setBoundingBox(grid.boundingBox());
-
 
     setProperties();
 
     determineBoundaryCells();
     identifyBndrySurfaces();
     setupPeriodicConnections();
+    addGhostCells();
     addDiagonalNghbrs();
     //    if(m_loadBalancing) {
     //      setWorkload();
     //      calculateOffspringsAndWeights();
     //    }
+  }
+
+  /// Add ghost cells
+  void addGhostCells() {
+    // todo: make settable
+    const GBool addGhostLayers = false;
+    if(addGhostLayers) {
+      // check all surfaces and add ghostcells in all missing dist directions
+      for(const auto& [srfName, srf] : m_bndrySurfaces) {
+        for(GInt cellId : srf.getCellList()) {
+          for(GInt nghbrDir = 0; nghbrDir < cartesian::maxNoNghbrs<NDIM>(); ++nghbrDir) {
+            if(neighbor(cellId, nghbrDir) == INVALID_CELLID) {
+              const GInt ghostCellId = size() + m_noGhostsCells;
+              cerr0 << "adding cell " << ghostCellId << " as neighbor to " << cellId << std::endl; // todo: remove
+              neighbor(cellId, nghbrDir)                              = ghostCellId;
+              neighbor(ghostCellId, cartesian::oppositeDir(nghbrDir)) = cellId;
+              property(ghostCellId, CellProperties::ghost);
+              ++m_noGhostsCells;
+            }
+          }
+        }
+      }
+    }
   }
 
   /// Add the diagonal(2D/3D) and/or tridiagonal (3D) to the neighbor connections of each cell.
@@ -357,6 +380,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   }
 
   auto getCartesianGridData() const -> CartesianGridData<NDIM> { return CartesianGridData<NDIM>(*this); }
+
+  auto totalSize() const -> GInt { return size() + m_noGhostsCells; }
 
  private:
   void setProperties() {
@@ -618,8 +643,9 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   //  cartesian::Tree<DEBUG_LEVEL, NDIM> m_tree{};
   std::shared_ptr<GeometryManager<DEBUG_LEVEL, NDIM>> m_geometry;
 
-  GInt m_noLeafCells = 0;
-  GInt m_noBndCells  = 0;
+  GInt m_noLeafCells   = 0;
+  GInt m_noBndCells    = 0;
+  GInt m_noGhostsCells = 0;
 
   GBool m_loadBalancing  = false;
   GBool m_diagonalNghbrs = false;

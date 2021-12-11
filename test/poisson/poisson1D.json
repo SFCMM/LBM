@@ -34,22 +34,22 @@
     "analyticalSolution": "poissonCHAI08_1",
     "relaxation": 1,
     "maxSteps": 1000000,
-    "info_interval": 1000,
+    "info_interval": 100,
     "solution_interval": 1000,
     "convergence": 1E-12,
-    "errorGRE": 2E-3,
+    "errorGRE": 9E-3,
     "assumeAxisAligned": true,
     "boundary": {
       "line": {
         "+x": {
           "type": "dirichlet",
           "model": "neem",
-          "setAnalyticalValue": true
+          "value": 1
         },
         "-x": {
           "type": "dirichlet",
           "model": "neem",
-          "setAnalyticalValue": true
+          "value": 1
         }
       }
     }

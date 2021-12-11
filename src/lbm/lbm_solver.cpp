@@ -94,13 +94,10 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   //  m_nu    = m_ma / 1.73205080756887729352 / m_re * m_referenceLength; //* (FFPOW2[maxLevel() - a_level(pCellId)]);
   //  m_omega = 2.0 / (1.0 + 6.0 * m_nu);
 
-  m_omega                         = 1.0 / m_relaxTime;
-  m_nu                            = (2.0 * m_relaxTime - 1) / 6.0;
-  m_refU                          = m_re * m_nu / m_refLength;
-  const GDouble minLatticeSpacing = grid().lengthOnLvl(grid().maxLvl());
-  m_dt                            = ((center(size() - 1)[0] - center(0)[0]) / size()) / m_speedOfSound; // 0.00775146 -> 0.000632549 (max)
-  //  m_dt                            = 0.998 * ((center(size()-1)[0]-center(0)[0])/size()) / m_speedOfSound; // 0.00773596 -> 4.11959e-05
-  //  (max)
+  m_omega = 1.0 / m_relaxTime;
+  m_nu    = (2.0 * m_relaxTime - 1) / 6.0;
+  m_refU  = m_re * m_nu / m_refLength;
+  m_dt    = 1.0 / (size() - 1); // todo:test
 
   m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL, LBTYPE, EQ>>();
 
@@ -131,11 +128,11 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::allocateMemory() {
   // allocate memory
-  m_f.resize(grid().size() * NDIST);
-  m_feq.resize(grid().size() * NDIST);
-  m_fold.resize(grid().size() * NDIST);
-  m_vars.resize(grid().size() * NVARS);
-  m_varsold.resize(grid().size() * NVARS);
+  m_f.resize(grid().totalSize() * NDIST);
+  m_feq.resize(grid().totalSize() * NDIST);
+  m_fold.resize(grid().totalSize() * NDIST);
+  m_vars.resize(grid().totalSize() * NVARS);
+  m_varsold.resize(grid().totalSize() * NVARS);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
@@ -212,7 +209,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::convergenceCondition() -> GBool {
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
   // init to zero:
-  for(GInt cellId = 0; cellId < noCells(); ++cellId) {
+  for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     for(const auto dir : VAR::velocities()) {
       m_vars[cellId * NVARS + dir]    = 0;
       m_varsold[cellId * NVARS + dir] = 0;
@@ -225,7 +222,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
   }
   initBndryValues();
 
-  for(GInt cellId = 0; cellId < noCells(); ++cellId) {
+  for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     if(EQ == LBEquation::Navier_Stokes) {
       // assuming initial zero velocity and density 1
       for(GInt dist = 0; dist < NDIST; ++dist) {
@@ -336,7 +333,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
-  // todo: fix for 1D/3D
+  // todo: fix for 3D
   //  for an analytical testcase the value "analyticalSolution" needs to be defined
   const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");
   // from the analyticalSolutionName we can get a functional representation of the solution
@@ -372,8 +369,9 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
     }
     VectorD<NDIM> v(&velocity(cellId, 0));
 
-    const VectorD<NDIM> solution = anaSolution(center(cellId));
-    const GDouble       delta    = (v - solution).norm();
+    const Point<NDIM>   shiftedCenter = shiftCenter(center(cellId));
+    const VectorD<NDIM> solution      = anaSolution(shiftedCenter);
+    const GDouble       delta         = (v - solution).norm();
     sumError += delta;
     sumSolution += solution.norm();
     maxError = std::max(delta, maxError);
@@ -420,6 +418,26 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::shiftCenter(const Point<NDIM>& centerPoint) const -> Point<NDIM> {
+  const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");
+
+  if(NDIM > 1) {
+    TERMM(-1, "FIX ME");
+  }
+
+  Point<NDIM> shiftedCenter = centerPoint;
+  if(analyticalSolutionName == analytical::getStr(analytical::ANALYTICAL_CASE_INDEX::poissonCHAI08_1)) {
+    // align points equidistantly between (0, 1)
+    const GDouble actualExtent    = std::abs(center(0, 0) - center(size() - 1, 0));
+    const GDouble correctedExtent = 1.0;
+    const GInt    pos             = std::floor(shiftedCenter[0] / (actualExtent / (size() - 1)));
+    shiftedCenter[0]              = pos * correctedExtent / (size() - 1);
+  }
+
+  return shiftedCenter;
+}
+
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::currToOldVars() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMMacro]);
   std::copy(m_vars.begin(), m_vars.end(), m_varsold.begin());
@@ -439,7 +457,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::updateMacroscopicValues() {
 #ifdef _OPENMP
 #pragma omp for
 #endif
-    for(GInt cellId = 0; cellId < noCells(); ++cellId) {
+    for(GInt cellId = 0; cellId < allCells(); ++cellId) {
       // todo:skip non-leaf cells!
       if(EQ == LBEquation::Navier_Stokes || EQ == LBEquation::Navier_Stokes_Poisson) {
         rho(cellId) = std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST), 0.0);
@@ -472,7 +490,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::calcEquilibriumMoments() {
 #ifdef _OPENMP
 #pragma omp parallel for default(none)
 #endif
-  for(GInt cellId = 0; cellId < noCells(); ++cellId) {
+  for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     if(EQ != LBEquation::Poisson) {
       std::array<GDouble, NDIM> velos; // NOLINT(cppcoreguidelines-pro-type-member-init)
       for(GInt dir = 0; dir < NDIM; ++dir) {
@@ -509,7 +527,7 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMColl]);
 
-  for(GInt cellId = 0; cellId < noCells(); ++cellId) {
+  for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST; ++dist) {
       f(cellId, dist) = (1 - m_omega) * fold(cellId, dist) + m_omega * feq(cellId, dist);
       if(EQ == LBEquation::Poisson && dist != NDIST - 1) {
@@ -612,7 +630,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::propagationStep() {
 #ifdef _OPENMP
 #pragma omp parallel for default(none)
 #endif
-  for(GInt cellId = 0; cellId < noCells(); ++cellId) {
+  for(GInt cellId = 0; cellId < noInternalCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST - 1; ++dist) {
       const GInt neighborId = m_grid->neighbor(cellId, dist);
       if(neighborId != INVALID_CELLID) {
@@ -692,7 +710,7 @@ constexpr auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::isThermal() -> GBool {
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::sumAbsDiff(const GInt var) const -> GDouble {
   GDouble conv = 0.0;
-  for(GInt cellId = 0; cellId < noCells(); ++cellId) {
+  for(GInt cellId = 0; cellId < noInternalCells(); ++cellId) {
     conv += std::abs(m_vars[cellId * NVARS + var] - m_varsold[cellId * NVARS + var]);
   }
   return conv;

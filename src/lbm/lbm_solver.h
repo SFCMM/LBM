@@ -42,8 +42,8 @@ class LBMSolver : public SolverInterface,
   void initBenchmark(int argc, GChar** argv) override;
   auto run() -> GInt override;
 
-  [[nodiscard]] auto grid() const -> const BaseCartesianGrid<DEBUG_LEVEL, NDIM>& override {
-    return *static_cast<BaseCartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get());
+  [[nodiscard]] auto grid() const -> const CartesianGrid<DEBUG_LEVEL, NDIM>& override {
+    return *static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get());
   };
   void transferGrid(const GridInterface& grid) override;
 
@@ -96,6 +96,7 @@ class LBMSolver : public SolverInterface,
   void timeStep();
   void output(const GBool forced = false, const GString& postfix = "");
   void compareToAnalyticalResult();
+  auto shiftCenter(const Point<NDIM>& center) const -> Point<NDIM>;
   void initialCondition();
   void initBndryValues();
   auto convergenceCondition() -> GBool;
@@ -139,9 +140,18 @@ class LBMSolver : public SolverInterface,
 
   auto inline feq(const GInt cellId, const GInt dir) -> GDouble& { return m_feq[cellId * NDIST + dir]; }
 
-  auto inline fold(const GInt cellId, const GInt dir) -> GDouble& { return m_fold[cellId * NDIST + dir]; }
+  auto inline fold(const GInt cellId, const GInt dir) -> GDouble& {
+    const GInt entryId = cellId * NDIST + dir;
+    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+      if(entryId > m_fold.size()) {
+        TERMM(-1, "Out of bounds!");
+      }
+    }
+    return m_fold[entryId];
+  }
 
-  [[nodiscard]] auto inline noCells() const -> GInt { return m_grid->noCells(); }
+  [[nodiscard]] auto inline noInternalCells() const -> GInt { return m_grid->noCells(); }
+  [[nodiscard]] auto inline allCells() const -> GInt { return grid().totalSize(); }
 
   std::unique_ptr<GridInterface>                          m_grid;
   std::unique_ptr<LBMethodInterface>                      m_lbm; // todo: implmenent

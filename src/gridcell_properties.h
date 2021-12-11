@@ -18,6 +18,7 @@ enum class CellProperties {
   hasBeenCoarsened,      /// cell has been coarsened
   hasBeenRefined,        /// cell has been refined
   marked,                /// cell has been marked
+  ghost,
   leaf,
   // <<< add new properties here
   NumProperties

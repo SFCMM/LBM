@@ -1,9 +1,9 @@
 {
   "dry-run": true,
   "dim": 2,
-  "partitionLevel": 6,
-  "uniformLevel": 6,
-  "maxRfnmtLvl": 6,
+  "partitionLevel": 4,
+  "uniformLevel": 4,
+  "maxRfnmtLvl": 4,
   "maxNoCells": 1000000,
   "outputDir": "out",
   "gridFileName": "gridD",
@@ -33,6 +33,7 @@
     "type": "lbm",
     "equation": "poisson",
     "model": "D2Q9",
+    "analyticalSolution": "poissonCHAI08_1",
     "relaxation": 1.0,
     "maxSteps": 1000,
     "info_interval": 100,
@@ -46,12 +47,12 @@
         "+x": {
           "type": "dirichlet",
           "model": "neem",
-          "value": 1.0
+          "setAnalyticalValue": true
         },
         "-x": {
           "type": "dirichlet",
           "model": "neem",
-          "value": 1.0
+          "setAnalyticalValue": true
         }
       }
     }

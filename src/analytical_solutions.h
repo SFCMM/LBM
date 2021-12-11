@@ -81,6 +81,11 @@ auto getAnalyticalSolution(const GString& name) -> std::function<Point<NDIM>(Poi
   TERMM(-1, "Invalid analyticalSolution selected!");
 }
 
+enum class ANALYTICAL_CASE_INDEX { poissonCHAI08_1, couette2D, poiseuille2D };
+static constexpr std::array<std::string_view, 3> analyticalNames{"poissonCHAI08_1", "couette2D_1_5", "poiseuille2D_1"};
+
+static constexpr auto getStr(ANALYTICAL_CASE_INDEX caseId) -> std::string_view { return analyticalNames[static_cast<GInt>(caseId)]; }
+
 } // namespace analytical
 
 #endif // LBM_ANALYTICAL_SOLUTIONS_H
