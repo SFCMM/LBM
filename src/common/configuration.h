@@ -1,9 +1,34 @@
 #ifndef LBM_CONFIGURATION_H
 #define LBM_CONFIGURATION_H
 #include "json.h"
-
+#include <sfcmm_common.h>
 #include <utility>
 using json = nlohmann::json;
+
+template <GInt NDIM>
+using Point = VectorD<NDIM>;
+
+namespace config {
+template <typename T>
+static constexpr inline auto required_config_value(const json& config, const GString& key) -> T {
+  // todo: check for types
+  if(config.template contains(key)) {
+    return static_cast<T>(config[key]);
+  }
+  TERMM(-1, "The required configuration value is missing: " + key);
+}
+
+template <typename T>
+static constexpr inline auto opt_config_value(const json& config, const GString& key, const T& defaultValue) -> T {
+  // todo: check for types
+  if(config.template contains(key)) {
+    return static_cast<T>(config[key]);
+  }
+  return defaultValue;
+}
+
+static inline auto has_config_value(const json& config, const GString& key) -> GBool { return config.contains(key); }
+} // namespace config
 
 class ConfigurationAccess;
 

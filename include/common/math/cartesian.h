@@ -4,13 +4,31 @@
 #define SFCMM_CARTESIAN_H
 
 #include <gcem.hpp>
+#include <cassert>
 
 namespace cartesian {
 
-/// The direction opposite to the given dir.
+template <GInt NDIM>
+static constexpr inline auto maxNoNghbrsDiag() -> GInt;
+
+/// The direction opposite to the given dir. [Main directions only]
 /// \param dir Direction for which to obtain opposite direction.
 /// \return The opposite direction to dir.
 static constexpr inline auto oppositeDir(const GInt dir) -> GInt { return dir + 1 - 2 * (dir % 2); }
+
+/// The direction opposite to the given dir. [Including diagonals]
+/// \param dir Direction for which to obtain opposite direction.
+/// \return The opposite direction to dir.
+template <GInt NDIM>
+static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
+  assert(dir < 2 * maxNoNghbrsDiag<NDIM>() && "Invalid direction");
+  if(dir < 2 * NDIM) {
+    return dir + 1 - 2 * (dir % 2);
+  }
+  if constexpr(NDIM == 2) {
+    return dir > 5 ? dir - 2 : dir + 2;
+  }
+}
 
 /// Return maximum number of children per cell
 /// \tparam NDIM Number of dimension of the Cartesian grid

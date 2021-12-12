@@ -97,7 +97,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   m_omega = 1.0 / m_relaxTime;
   m_nu    = (2.0 * m_relaxTime - 1) / 6.0;
   m_refU  = m_re * m_nu / m_refLength;
-  m_dt    = 1.0 / (size() - 1); // todo:test
+  m_dt    = 1.0 / (std::pow(size(), 1.0 / NDIM) - 1); // todo:test
 
   m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL, LBTYPE, EQ>>();
 
@@ -527,6 +527,18 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMColl]);
 
+  if(DEBUG_LEVEL > Debug_Level::debug) {
+    if(hasNAN(m_fold) >= 0) {
+      TERMM(-1, "NAN within fold");
+    }
+    if(hasNAN(m_feq) >= 0) {
+      TERMM(-1, "NAN within feq");
+    }
+    if(hasNAN(m_vars) >= 0) {
+      TERMM(-1, "NAN within vars");
+    }
+  }
+
   for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST; ++dist) {
       f(cellId, dist) = (1 - m_omega) * fold(cellId, dist) + m_omega * feq(cellId, dist);
@@ -536,6 +548,12 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
         static const GDouble     diffusivity = METH::m_poissonAlpha * gcem::pow(m_speedOfSound, 2) * (0.5 - m_relaxTime) * m_dt;
         f(cellId, dist) += m_dt * diffusivity * METH::m_poissonWeights[dist] * k * k * electricPotential(cellId);
       }
+    }
+  }
+
+  if(DEBUG_LEVEL > Debug_Level::debug) {
+    if(hasNAN(m_f) >= 0) {
+      TERMM(-1, "NAN within f");
     }
   }
 
@@ -627,6 +645,16 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::prePropBoundaryCnd() {
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::propagationStep() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMProp]);
+
+  if(DEBUG_LEVEL > Debug_Level::debug) {
+    if(hasNAN(m_fold) >= 0) {
+      TERMM(-1, "NAN within fold");
+    }
+    if(hasNAN(m_f) >= 0) {
+      TERMM(-1, "NAN within f");
+    }
+  }
+
 #ifdef _OPENMP
 #pragma omp parallel for default(none)
 #endif
@@ -715,48 +743,6 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::sumAbsDiff(const GInt var) const -> GDo
   }
   return conv;
 }
-
-template class LBMSolver<Debug_Level::no_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes>;
-template class LBMSolver<Debug_Level::min_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes>;
-template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes>;
-template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes>;
-template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes>;
-
-template class LBMSolver<Debug_Level::no_debug, LBMethodType::D1Q3, LBEquation::Poisson>;
-template class LBMSolver<Debug_Level::min_debug, LBMethodType::D1Q3, LBEquation::Poisson>;
-template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3, LBEquation::Poisson>;
-template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3, LBEquation::Poisson>;
-template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3, LBEquation::Poisson>;
-
-template class LBMSolver<Debug_Level::no_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes_Poisson>;
-template class LBMSolver<Debug_Level::min_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes_Poisson>;
-template class LBMSolver<Debug_Level::debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes_Poisson>;
-template class LBMSolver<Debug_Level::more_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes_Poisson>;
-template class LBMSolver<Debug_Level::max_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes_Poisson>;
-
-template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q5, LBEquation::Navier_Stokes>;
-template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q5, LBEquation::Navier_Stokes>;
-template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q5, LBEquation::Navier_Stokes>;
-template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q5, LBEquation::Navier_Stokes>;
-template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q5, LBEquation::Navier_Stokes>;
-
-template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q5, LBEquation::Poisson>;
-template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q5, LBEquation::Poisson>;
-template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q5, LBEquation::Poisson>;
-template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q5, LBEquation::Poisson>;
-template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q5, LBEquation::Poisson>;
-
-template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
-template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
-template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
-template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
-template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q9, LBEquation::Navier_Stokes>;
-
-template class LBMSolver<Debug_Level::no_debug, LBMethodType::D2Q9, LBEquation::Poisson>;
-template class LBMSolver<Debug_Level::min_debug, LBMethodType::D2Q9, LBEquation::Poisson>;
-template class LBMSolver<Debug_Level::debug, LBMethodType::D2Q9, LBEquation::Poisson>;
-template class LBMSolver<Debug_Level::more_debug, LBMethodType::D2Q9, LBEquation::Poisson>;
-template class LBMSolver<Debug_Level::max_debug, LBMethodType::D2Q9, LBEquation::Poisson>;
 
 // template class LBMSolver<Debug_Level::no_debug, LBMethodType::D3Q15>;
 // template class LBMSolver<Debug_Level::min_debug, LBMethodType::D3Q15>;

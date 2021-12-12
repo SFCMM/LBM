@@ -44,13 +44,7 @@ class Surface : public SurfaceInterface {
     std::copy(cellList.begin(), cellList.end(), std::back_inserter(m_cellId));
 
 
-    for(const auto cellId : m_cellId) {
-      std::array<GInt, cartesian::maxNoNghbrsDiag<NDIM>()> tmpNghbr;
-      for(GInt dir = 0; dir < cartesian::maxNoNghbrsDiag<NDIM>(); ++dir) {
-        tmpNghbr[dir] = m_grid.neighbor(cellId, dir);
-      }
-      m_nghbrIds.insert({cellId, tmpNghbr});
-    }
+    updateNeighbors();
   }
 
   void addCell(const GInt cellId, const GInt dir) override {
@@ -58,12 +52,16 @@ class Surface : public SurfaceInterface {
     m_normal.emplace_back();
     m_normal.back().fill(0);
     m_normal.back()[dir / 2] = 2 * (dir % 2) - 1;
+  }
 
-    std::array<GInt, cartesian::maxNoNghbrsDiag<NDIM>()> tmpNghbr;
-    for(GInt nghbrId = 0; nghbrId < cartesian::maxNoNghbrsDiag<NDIM>(); ++nghbrId) {
-      tmpNghbr[nghbrId] = m_grid.neighbor(cellId, nghbrId);
+  void updateNeighbors() {
+    for(const auto cellId : m_cellId) {
+      std::array<GInt, cartesian::maxNoNghbrsDiag<NDIM>()> tmpNghbr;
+      for(GInt nghbrId = 0; nghbrId < cartesian::maxNoNghbrsDiag<NDIM>(); ++nghbrId) {
+        tmpNghbr[nghbrId] = m_grid.neighbor(cellId, nghbrId);
+      }
+      m_nghbrIds.insert({cellId, tmpNghbr});
     }
-    m_nghbrIds.insert({cellId, tmpNghbr});
   }
 
   auto normal(const GInt surfCellId) const -> const VectorD<NDIM>& { return m_normal[surfCellId]; }
@@ -85,9 +83,10 @@ class Surface : public SurfaceInterface {
         TERMM(-1, "Surface not initialized!");
       }
     }
-    for(auto [first, second] : m_nghbrIds) {
-      cerr0 << first << " " << second[0] << std::endl;
-    }
+    //    cerr0 << "surface neighbor ";
+    //    for(auto [first, second] : m_nghbrIds) {
+    //      cerr0 << first << " " << second[0] << std::endl; //todo:remove
+    //    }
     return m_nghbrIds.at(cellId)[dir];
   }
 

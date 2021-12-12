@@ -32,7 +32,8 @@
   "solver": {
     "type": "lbm",
     "equation": "poisson",
-    "model": "D2Q5",
+    "model": "D2Q9",
+    "analyticalSolution": "poissonCHAI08_1",
     "relaxation": 1.0,
     "maxSteps": 1000,
     "info_interval": 1,

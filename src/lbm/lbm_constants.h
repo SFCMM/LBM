@@ -173,10 +173,13 @@ template <LBMethodType LBTYPE>
 class LBMethod {
  public:
   static constexpr std::array<std::array<GDouble, dim(LBTYPE)>, noDists(LBTYPE)> m_dirs{};
-  static constexpr auto                                                          oppositeDist(const GInt /*dist*/) -> GInt { return 0; }
-  static constexpr GInt                                                          m_dim     = 0;
-  static constexpr GInt                                                          m_noDists = 0;
-  static constexpr std::array<GDouble, 1>                                        m_weights = {0};
+  static constexpr auto                                                          oppositeDist(const GInt /*dist*/) -> GInt {
+    TERMM(-1, "Invalid call");
+    return 0;
+  }
+  static constexpr GInt                   m_dim     = 0;
+  static constexpr GInt                   m_noDists = 0;
+  static constexpr std::array<GDouble, 1> m_weights = {0};
 
   static constexpr GDouble                m_poissonAlpha   = NAN;
   static constexpr std::array<GDouble, 1> m_poissonWeights = {0};
@@ -248,8 +251,9 @@ class LBMethod<LBMethodType::D2Q9> {
   static constexpr std::array<GDouble, 9> m_weights = {1.0 / 9.0,  1.0 / 9.0,  1.0 / 9.0,  1.0 / 9.0, 1.0 / 36.0,
                                                        1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 4.0 / 9.0};
 
-  static constexpr GDouble                m_poissonAlpha   = NAN;
-  static constexpr std::array<GDouble, 9> m_poissonWeights = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  static constexpr GDouble                m_poissonAlpha   = 1.0 / 3.0;
+  static constexpr std::array<GDouble, 9> m_poissonWeights = {1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0,
+                                                              1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 0.0};
 
 
   static constexpr GInt             m_dim        = 2;

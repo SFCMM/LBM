@@ -67,17 +67,18 @@
 - generalize NEEM bounary condition
 - fix poisson method to allow changes of relaxation
 - allow setting write out precision for doubles for ASCII
+- determine analytical solution for 2D poisson cases
 
 ### moved:
 
+- [BUG] fix Poisson D2Q9
 
 # V0.0.1
 
 ## Ongoing:
 
-- solve 2D poisson equation
 - fix D2Q5 poiseuille case
-- Non-equilibrium extrapolation method based dirichlet boundary condition
+
 
 ## Done:
 
@@ -88,12 +89,14 @@
 - periodic boundaries
 - general bounce back "no-slip" wall boundary condition
 - general bounce back "no-slip" wall boundary condition with tangential velocity
+- Poisson Non-equilibrium extrapolation method based dirichlet boundary condition
 - load bnd conditions from configuration file
 - added forcing
 - Postprocessing
   - Lines
 - basic openMP
 - supports D1Q3, D2Q5 and D2Q9
+- Support the solution of Navier-Stokes and Poisson-Boltzmann equation
 
 ### Buildsystem
 

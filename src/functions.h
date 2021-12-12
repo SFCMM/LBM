@@ -10,29 +10,6 @@
 #include <sfcmm_common.h>
 #include "common/term.h"
 
-namespace config {
-using json = nlohmann::json;
-template <typename T>
-static constexpr inline auto required_config_value(const json& config, const GString& key) -> T {
-  // todo: check for types
-  if(config.template contains(key)) {
-    return static_cast<T>(config[key]);
-  }
-  TERMM(-1, "The required configuration value is missing: " + key);
-}
-
-template <typename T>
-static constexpr inline auto opt_config_value(const json& config, const GString& key, const T& defaultValue) -> T {
-  // todo: check for types
-  if(config.template contains(key)) {
-    return static_cast<T>(config[key]);
-  }
-  return defaultValue;
-}
-
-static inline auto has_config_value(const json& config, const GString& key) -> GBool { return config.contains(key); }
-} // namespace config
-
 template <GInt NDIM, class T, class U>
 static constexpr inline void assign(T& lhs, U& rhs) {
   for(int i = 0; i < NDIM; i++) {
@@ -74,5 +51,15 @@ inline void removeDuplicates(std::vector<GInt>& id) {
     s.insert(i);
   }
   id.assign(s.begin(), s.end());
+}
+
+template <class T>
+inline auto hasNAN(T& arrayToCheck) -> GInt {
+  for(GInt id = 0; id < arrayToCheck.size(); ++id) {
+    if(std::isnan(arrayToCheck[id])) {
+      return id;
+    }
+  }
+  return -1;
 }
 #endif // GRIDGENERATOR_FUNCTIONS_H

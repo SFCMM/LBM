@@ -303,8 +303,12 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     determineBoundaryCells();
     identifyBndrySurfaces();
     setupPeriodicConnections();
-    addGhostCells();
+    //    addGhostCells();
     addDiagonalNghbrs();
+
+    for(auto& [name, srf] : m_bndrySurfaces) {
+      srf.updateNeighbors();
+    }
     //    if(m_loadBalancing) {
     //      setWorkload();
     //      calculateOffspringsAndWeights();
