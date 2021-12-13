@@ -341,7 +341,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
 
   // determine the error
   GDouble              maxError = 0;
-  std::vector<GDouble> error;
 
   // exclude cells from error calculation, for example, the boundary surfaces
   std::vector<std::vector<GInt>> m_excludedCells;
@@ -352,9 +351,11 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
     }
   }
 
-  GDouble sumError    = 0;
-  GDouble sumSolution = 0;
-  for(GInt cellId = 0; cellId < grid().size(); ++cellId) {
+  GDouble sumError      = 0;
+  GDouble sumErrorSq    = 0;
+  GDouble sumSolution   = 0;
+  GDouble sumSolutionSq = 0;
+  for(GInt cellId = 0; cellId < noInternalCells(); ++cellId) {
     GBool excluded = false;
     if(!m_excludedCells.empty()) {
       for(const auto& cellList : m_excludedCells) {
@@ -373,11 +374,12 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
     const VectorD<NDIM> solution      = anaSolution(shiftedCenter);
     const GDouble       delta         = (v - solution).norm();
     sumError += delta;
+    sumErrorSq += gcem::pow(delta, 2);
     sumSolution += solution.norm();
+    sumSolutionSq += gcem::pow(solution.norm(), 2);
     maxError = std::max(delta, maxError);
-    error.emplace_back(std::sqrt(delta * delta / solution.dot(solution)));
   }
-  const GDouble L2error = 1.0 / grid().size() * std::accumulate(error.begin(), error.end(), 0.0);
+  const GDouble L2error = (gcem::sqrt(sumErrorSq) / gcem::sqrt(sumSolutionSq)) / gcem::pow(noInternalCells(), 1.0 / NDIM);
 
   // if that compare with the maximum expected error to give a pass/no-pass result
   const GDouble maximumExpectedError    = opt_config_value("errorMax", 1.0);
@@ -421,12 +423,12 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::shiftCenter(const Point<NDIM>& centerPoint) const -> Point<NDIM> {
   const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");
 
-  if(NDIM > 1) {
-    TERMM(-1, "FIX ME");
-  }
-
   Point<NDIM> shiftedCenter = centerPoint;
   if(analyticalSolutionName == analytical::getStr(analytical::ANALYTICAL_CASE_INDEX::poissonCHAI08_1)) {
+    if(NDIM > 1) {
+      TERMM(-1, "FIX ME");
+    }
+
     // align points equidistantly between (0, 1)
     const GDouble actualExtent    = std::abs(center(0, 0) - center(size() - 1, 0));
     const GDouble correctedExtent = 1.0;

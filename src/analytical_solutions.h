@@ -5,7 +5,7 @@ namespace analytical {
 
 namespace ns {
 inline auto couette2D(const GDouble couette_wallV, const GDouble couette_channelHeight, const Point<2> coord) -> Point<2> {
-  return Point<2>({0, couette_wallV / couette_channelHeight * coord[1]});
+  return Point<2>({couette_wallV / couette_channelHeight * coord[1], 0});
 }
 
 inline auto couette2D_1_5(const Point<2> coord) -> Point<2> {
@@ -24,7 +24,7 @@ inline auto couette2D_1_5(const Point<2> coord) -> Point<2> {
 }
 
 inline auto poiseuille2D(const GDouble ytop, const GDouble ybot, const Point<2> coord, const GDouble maxV) -> Point<2> {
-  return Point<2>({0, -4 * maxV / (gcem::pow(ytop - ybot, 2)) * (coord[1] - ybot) * (coord[1] - ytop)});
+  return Point<2>({-4.0 * maxV / (gcem::pow(ytop - ybot, 2)) * (coord[1] - ybot) * (coord[1] - ytop), 0});
 }
 
 inline auto poiseuille2D_1(const Point<2> coord) -> Point<2> {
