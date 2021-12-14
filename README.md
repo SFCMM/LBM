@@ -2,6 +2,7 @@
 
 ## Features
 - Solve Navier-Stokes equations
+- Solve Poisson-Boltzmann equation
 
 
 ## License
