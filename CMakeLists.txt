@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(lbm)
-project(lbm VERSION "0.0.1")
+project(lbm VERSION "0.0.2")
 
 add_subdirectory(UnitTest)
 add_subdirectory(perf)
@@ -23,11 +23,14 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(lbm
         src/main.cpp src/gridgenerator/gridGenerator.cpp src/lbm/lbm_solver.cpp
-        src/gridgenerator/gridGenerator.h config.h
-        src/globaltimers.h src/cartesiangrid.h
-        src/gridcell_properties.h src/loadbalancing_weights.h src/geometry.h src/functions.h src/common/IO.h src/common/term.h
-        src/interface/grid_interface.h src/gridgenerator/cartesiangrid_generation.h src/lbm/lbm_solver.h
-        src/lbm/lbm_constants.h src/lbm/lbm_variables.h src/lbm/lbm_bnd.h src/common/surface.h src/lbm/lbm_solverExe.h src/common/configuration.h src/lbm/lbm_bnd_wall.h src/lbm/lbm_bnd_interface.h src/lbm/lbm_bnd_in_out.h src/lbm/lbm_bnd_periodic.h src/postprocessing.h src/postprocessing_cartesian.h src/lbm/lbm_postprocessing.h src/postprocessing_func.h src/common/line.h src/common/mesh.h src/lbm/lbm_bnd_dirichlet.h src/lbm/lbm_solver_inst_1d.cpp src/lbm/lbm_solver_inst_2d.cpp)
+        src/gridgenerator/gridGenerator.h config.h src/globaltimers.h src/cartesiangrid.h
+        src/gridcell_properties.h src/loadbalancing_weights.h src/geometry.h src/functions.h src/common/IO.h
+        src/common/term.h src/interface/grid_interface.h src/gridgenerator/cartesiangrid_generation.h
+        src/lbm/lbm_solver.h src/lbm/lbm_constants.h src/lbm/lbm_variables.h src/lbm/lbm_bnd.h src/common/surface.h
+        src/lbm/lbm_solverExe.h src/common/configuration.h src/lbm/lbm_bnd_wall.h src/lbm/lbm_bnd_interface.h
+        src/lbm/lbm_bnd_in_out.h src/lbm/lbm_bnd_periodic.h src/postprocessing.h src/postprocessing_cartesian.h
+        src/lbm/lbm_postprocessing.h src/postprocessing_func.h src/common/line.h src/common/mesh.h
+        src/lbm/lbm_bnd_dirichlet.h src/lbm/lbm_solver_inst_1d.cpp src/lbm/lbm_solver_inst_2d.cpp)
 
 #TARGET_LINK_LIBRARIES(lbm PUBLIC mpi)
 target_link_libraries(lbm PUBLIC MPI::MPI_CXX dl tinfo pthread)
