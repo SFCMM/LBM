@@ -34,15 +34,18 @@
     "relaxation": 0.933,
     "reynoldsnumber": 0.7,
     "analyticalSolution": "poiseuille2D_1",
-    "analyticalSolutionExcludeSurface":["+x", "-x"],
+    "analyticalSolutionExcludeSurface": [
+      "+x",
+      "-x"
+    ],
     "forcing": "poiseuille2D_1",
     "forcing_param": "1.1",
     "maxSteps": 100000,
     "info_interval": 100,
     "solution_interval": 10000,
     "convergence": 2E-11,
-    "errorL2": 5E-3,
-    "errorMax": 1.1E-3,
+    "errorL2": 1.1E-4,
+    "errorMax": 6E-4,
     "assumeAxisAligned": true,
     "boundary": {
       "cube": {

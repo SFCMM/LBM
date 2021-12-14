@@ -494,25 +494,22 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::calcEquilibriumMoments() {
 #endif
   for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     if(EQ != LBEquation::Poisson) {
-      std::array<GDouble, NDIM> velos; // NOLINT(cppcoreguidelines-pro-type-member-init)
-      for(GInt dir = 0; dir < NDIM; ++dir) {
-        velos[dir] = velocity(cellId, dir);
-      }
-
-      //    const GDouble squaredV = gcem::pow(velocity<NDIM>(cellId, 0), 2) + gcem::pow(velocity<NDIM>(cellId, 1), 2);
       const GDouble density = rho(cellId);
-
-      for(GInt dist = 0; dist < NDIST; ++dist) {
-        feq(cellId, dist) = 1.0;
-        for(GInt dir = 0; dir < NDIM; ++dir) {
-          feq(cellId, dist) += 3 * METH::m_dirs[dist][dir] * velos[dir];
-        }
-        feq(cellId, dist) *= METH::m_weights[dist] * density;
-        //      feq(cellId, dist) = METH::m_weights[dist] * density * (1 + 3 * (u * METH::m_dirs[dist][0] + v * METH::m_dirs[dist][1]));
-        //      const GDouble cu             = velocity<NDIM>(cellId, 0) * cx[dist] + velocity<NDIM>(cellId, 1) * cy[dist];
-        //      m_feq[cellId * NDIST + dist] = LBMethod<LBTYPE>::m_weights[dist] * rho<NDIM>(cellId) * (1 + 3 * cu + 4.5 * cu * cu - 1.5 *
-        //      squaredV);
-      }
+      //      GDouble vsq = 0;
+      //      for(GInt dir = 0; dir < NDIM; ++dir) {
+      //        vsq += velocity(cellId, dir) * velocity(cellId, dir);
+      //      }
+      //
+      //      for(GInt dist = 0; dist < NDIST; ++dist) {
+      //        GDouble cu  = 0;
+      //        for(GInt dir = 0; dir < NDIM; ++dir) {
+      //          cu += velocity(cellId, dir) * METH::m_dirs[dist][dir];
+      //        }
+      //        feq(cellId, dist) =
+      //            METH::m_weights[dist] * density * (1.0 + cu / lbm_cssq + cu * cu / (2.0 * lbm_cssq * lbm_cssq) - vsq / (2.0 *
+      //            lbm_cssq));
+      //      }
+      eq::defaultEq<LBTYPE>(feq(cellId), density, velocity(cellId));
     }
     if(EQ == LBEquation::Poisson) {
       eq::poisson<LBTYPE>(feq(cellId), electricPotential(cellId));
@@ -579,10 +576,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::forcing() {
     // const GDouble umax = 0.1;
     //    const GDouble gradP = 0.00011276015; //gradP=8*nu*u_max/(NY)^2;
     const GDouble outletPressure = 1.0;
-    //    const GDouble inletPressure  = 1.010487; //rho_inlet=3*(NX-1)*gradP+outletPressure; //0.092
-    //    const GDouble inletPressure  = 1.011497487;//0.09927
-    const GDouble inletPressure = 1.0115985357; // 0.01 (D2Q9)
-                                                //    const GDouble inletPressure = 1.00055; // 0.01
+    //    const GDouble inletPressure  = 1.010487; //rho_inlet=3*(NX-1)*gradP+outletPressure;
+    const GDouble inletPressure = 1.01102192453;
 
 
     // set Outlet forcing
@@ -594,21 +589,16 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::forcing() {
         const VectorD<NDIM>& centerOutlet = grid().center(outletCellId);
         // todo: improve this since this searches for the outlet cellid every time step!
         if(std::abs(centerInlet[1] - centerOutlet[1]) < GDoubleEps) {
+          GDouble vsq = 0;
+          for(GInt dir = 0; dir < NDIM; ++dir) {
+            vsq += velocity(valueCellId, dir) * velocity(valueCellId, dir);
+          }
+
           for(GInt dist = 0; dist < LBMethod<LBTYPE>::m_noDists; ++dist) {
-            // w(k)*(rho_inlet+ 3*(cx(k)*u(NX-1,:)+cy(k)*v(NX-1,:)))+(f(NX-1,:,k)-feq(NX-1,:,k))
             // recalculate f on the outlet cell using a given outlet pressure
-            //            f(outletCellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * outletPressure
-            //                                        * (1.0
-            //                                           + 3.0 * (vars(valueCellId, VAR::velocity(0)) * LBMethod<LBTYPE>::m_dirs[dist][0]
-            //                                                    + vars(valueCellId, VAR::velocity(1)) *
-            //                                                    LBMethod<LBTYPE>::m_dirs[dist][1]))
-            //                                    + f(valueCellId, dist) - feq(valueCellId, dist);
-            f(outletCellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * outletPressure
-                                        * (1
-                                           + 3
-                                                 * (vars(valueCellId, VAR::velocity(0)) * LBMethod<LBTYPE>::m_dirs[dist][0]
-                                                    + 0 * LBMethod<LBTYPE>::m_dirs[dist][1]))
-                                    + f(valueCellId, dist) - feq(valueCellId, dist);
+            GDouble cu = velocity(valueCellId, 0) * LBMethod<LBTYPE>::m_dirs[dist][0];
+            f(outletCellId, dist) =
+                eq::defaultEq(LBMethod<LBTYPE>::m_weights[dist], outletPressure, cu, vsq) + f(valueCellId, dist) - feq(valueCellId, dist);
           }
         }
       }
@@ -621,13 +611,15 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::forcing() {
       for(const GInt inletCellId : inlet.getCellList()) {
         const VectorD<NDIM>& centerInlet = grid().center(inletCellId);
         if(std::abs(centerInlet[1] - centerOutlet[1]) < GDoubleEps) {
+          GDouble vsq = 0;
+          for(GInt dir = 0; dir < NDIM; ++dir) {
+            vsq += velocity(valueCellId, dir) * velocity(valueCellId, dir);
+          }
+
           for(GInt dist = 0; dist < LBMethod<LBTYPE>::m_noDists; ++dist) {
-            f(inletCellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * inletPressure
-                                       * (1
-                                          + 3
-                                                * (vars(valueCellId, VAR::velocity(0)) * LBMethod<LBTYPE>::m_dirs[dist][0]
-                                                   + 0 * LBMethod<LBTYPE>::m_dirs[dist][1]))
-                                   + f(valueCellId, dist) - feq(valueCellId, dist);
+            GDouble cu = velocity(valueCellId, 0) * LBMethod<LBTYPE>::m_dirs[dist][0];
+            f(inletCellId, dist) =
+                eq::defaultEq(LBMethod<LBTYPE>::m_weights[dist], inletPressure, cu, vsq) + f(valueCellId, dist) - feq(valueCellId, dist);
           }
         }
       }

@@ -17,6 +17,10 @@ static constexpr GInt defaultInfoOutInterval  = 10;
 static constexpr GInt defaultSolutionInterval = 100;
 static constexpr GInt maxNumberDistributions  = 30;
 
+// default speed of sound
+static constexpr GDouble lbm_cs   = 1.0 / gcem::sqrt(3.0);
+static constexpr GDouble lbm_cssq = 1.0 / 3.0;
+
 enum class LBEquation { Navier_Stokes, Poisson, Navier_Stokes_Poisson };
 static constexpr std::array<std::string_view, 3> LBEquationName = {"Navier-Stokes",
                                                                    // Implementation based on "A novel lattice Boltzmann model for the

@@ -131,6 +131,9 @@ class LBMSolver : public Runnable,
     return m_vars[cellId * NVARS + VAR::electricPotential()];
   }
 
+  // todo: this should be mapped...
+  auto inline velocity(const GInt cellId) -> GDouble* { return &m_vars[cellId * NVARS + VAR::velocities()[0]]; }
+
   auto inline velocity(const GInt cellId, const GInt dir) -> GDouble& { return m_vars[cellId * NVARS + VAR::velocities()[dir]]; }
 
   auto inline vars(const GInt cellId, const GInt varId) -> GDouble& { return m_vars[cellId * NVARS + varId]; }
