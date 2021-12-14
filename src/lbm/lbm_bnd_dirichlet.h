@@ -34,7 +34,8 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
           if(extrapolationDir < 0) {
             extrapolationDir = dist;
           } else {
-            // we are at a corner so we have to use a diagonal neighbor
+            // todo: move to function
+            //  we are at a corner so we have to use a diagonal neighbor
             if(extrapolationDir == 0 && dist == 2) {
               extrapolationDir = 6;
             }
@@ -90,7 +91,7 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
 
   void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& vars) override {
-    for(GInt id = 0; id < m_bndCells.size(); ++id) {
+    for(GUint id = 0; id < m_bndCells.size(); ++id) {
       const GInt cellId              = m_bndCells[id];
       const GInt extraPolationCellId = m_extrapolationCellId[id];
 

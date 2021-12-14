@@ -17,6 +17,11 @@ class LBMBnd_dummy;
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 class LBMBndManager : private Configuration {
+ private:
+  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
+  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+  static constexpr GInt NVARS = noVars<LBTYPE>(EQ);
+
  public:
   LBMBndManager()          = default;
   virtual ~LBMBndManager() = default;
@@ -27,9 +32,13 @@ class LBMBndManager : private Configuration {
   auto operator=(const LBMBndManager&) -> LBMBndManager& = delete;
   auto operator=(LBMBndManager&&) -> LBMBndManager& = delete;
 
-  // todo: cleanup
+
+  /// Setup the boundary conditions.
+  /// \param bndConfig Configuration of the boundaries
+  /// \param bndrySurface List of the boundaries
   void setupBndryCnds(const json& bndConfig, std::function<const Surface<DEBUG_LEVEL, dim(LBTYPE)>&(GString)>& bndrySurface) {
     for(const auto& [geometry, geomBndConfig] : bndConfig.items()) {
+      // todo: cleanup
       // todo: check that geometry exists
       // todo: access only bndrySurfaces of this geometry!
       for(const auto& [surfId, surfBndConfig] : geomBndConfig.items()) {
@@ -79,6 +88,27 @@ class LBMBndManager : private Configuration {
     }
   }
 
+  void initCndBnd(const std::function<GDouble&(GInt, GInt)>& vars) {
+    for(const auto& bndry : m_bndrys) {
+      bndry->initCnd(vars);
+    }
+  }
+
+  void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+                const std::function<GDouble&(GInt, GInt)>& vars) {
+    for(const auto& bndry : m_bndrys) {
+      bndry->preApply(f, fold, vars);
+    }
+  }
+
+  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+             const std::function<GDouble&(GInt, GInt)>& vars) {
+    for(const auto& bndry : m_bndrys) {
+      bndry->apply(f, fold, vars);
+    }
+  }
+
+ private:
   // todo: merge with the function above
   void addBndry(const BndryType bnd, const json& properties, const std::vector<const Surface<DEBUG_LEVEL, dim(LBTYPE)>*>& surf) {
     ASSERT(surf[0]->size() > 0, "Invalid surface");
@@ -116,31 +146,6 @@ class LBMBndManager : private Configuration {
       m_bndrys.emplace_back(std::make_unique<LBMBnd_dummy>());
     }
   }
-
-  void initCndBnd(const std::function<GDouble&(GInt, GInt)>& vars) {
-    for(const auto& bndry : m_bndrys) {
-      bndry->initCnd(vars);
-    }
-  }
-
-  void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-                const std::function<GDouble&(GInt, GInt)>& vars) {
-    for(const auto& bndry : m_bndrys) {
-      bndry->preApply(f, fold, vars);
-    }
-  }
-
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-             const std::function<GDouble&(GInt, GInt)>& vars) {
-    for(const auto& bndry : m_bndrys) {
-      bndry->apply(f, fold, vars);
-    }
-  }
-
- private:
-  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
-  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
-  static constexpr GInt NVARS = NDIM + 1 + static_cast<GInt>(LBMethod<LBTYPE>::m_isThermal);
 
   std::vector<std::unique_ptr<LBMBndInterface>> m_bndrys;
 };

@@ -108,7 +108,7 @@ class AppConfiguration {
   int     m_argc{};
   GChar** m_argv{};
 
-  std::unique_ptr<SolverInterface> m_app;
+  std::unique_ptr<Runnable>        m_app;
   GString                          m_configurationFile = "grid.json";
   GBool                            m_benchmark         = false;
   GBool                            m_init              = false;

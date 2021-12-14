@@ -55,9 +55,9 @@ inline void removeDuplicates(std::vector<GInt>& id) {
 
 template <class T>
 inline auto hasNAN(T& arrayToCheck) -> GInt {
-  for(GInt id = 0; id < arrayToCheck.size(); ++id) {
+  for(GUint id = 0; id < arrayToCheck.size(); ++id) {
     if(std::isnan(arrayToCheck[id])) {
-      return id;
+      return static_cast<GInt>(id);
     }
   }
   return -1;

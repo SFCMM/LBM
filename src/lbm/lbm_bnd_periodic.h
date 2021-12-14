@@ -122,6 +122,7 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
  private:
   using LBMBndCell<LBTYPE>::mapped;
   using LBMBndCell<LBTYPE>::normal;
+  using LBMBndCell<LBTYPE>::init;
 
   std::array<GInt, noDists(LBTYPE)> m_bndIndex{};
   std::array<GInt, noDists(LBTYPE)> m_linkedCell{};
@@ -147,7 +148,7 @@ class LBMBnd_Periodic : public LBMBndInterface {
     }
   }
 
-  void initCnd(const std::function<GDouble&(GInt, GInt)>& vars) override {}
+  void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
                 const std::function<GDouble&(GInt, GInt)>& vars) override {

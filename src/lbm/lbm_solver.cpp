@@ -340,7 +340,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
   const auto anaSolution = analytical::getAnalyticalSolution<NDIM>(analyticalSolutionName);
 
   // determine the error
-  GDouble              maxError = 0;
+  GDouble maxError = 0;
 
   // exclude cells from error calculation, for example, the boundary surfaces
   std::vector<std::vector<GInt>> m_excludedCells;
@@ -591,12 +591,22 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::forcing() {
 
     // set Outlet forcing
     for(const GInt inletCellId : inlet.getCellList()) {
+      // cell to the inside of the boundary used for extrapolation
       const GInt           valueCellId = grid().neighbor(inletCellId, 1);
       const VectorD<NDIM>& centerInlet = grid().center(valueCellId);
       for(const GInt outletCellId : outlet.getCellList()) {
         const VectorD<NDIM>& centerOutlet = grid().center(outletCellId);
+        // todo: improve this since this searches for the outlet cellid every time step!
         if(std::abs(centerInlet[1] - centerOutlet[1]) < GDoubleEps) {
           for(GInt dist = 0; dist < LBMethod<LBTYPE>::m_noDists; ++dist) {
+            // w(k)*(rho_inlet+ 3*(cx(k)*u(NX-1,:)+cy(k)*v(NX-1,:)))+(f(NX-1,:,k)-feq(NX-1,:,k))
+            // recalculate f on the outlet cell using a given outlet pressure
+            //            f(outletCellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * outletPressure
+            //                                        * (1.0
+            //                                           + 3.0 * (vars(valueCellId, VAR::velocity(0)) * LBMethod<LBTYPE>::m_dirs[dist][0]
+            //                                                    + vars(valueCellId, VAR::velocity(1)) *
+            //                                                    LBMethod<LBTYPE>::m_dirs[dist][1]))
+            //                                    + f(valueCellId, dist) - feq(valueCellId, dist);
             f(outletCellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * outletPressure
                                         * (1
                                            + 3

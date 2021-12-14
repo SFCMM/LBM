@@ -16,7 +16,7 @@
 using json = nlohmann::json;
 
 template <Debug_Level DEBUG_LEVEL>
-class GridGenerator : public SolverInterface, private Configuration {
+class GridGenerator : public Runnable, private Configuration {
  public:
   GridGenerator(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
   ~GridGenerator() override           = default;

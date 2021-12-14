@@ -6,13 +6,13 @@
 
 // encapsulation to specialize to LBMethodeType
 template <Debug_Level DEBUG_LEVEL>
-class LBMSolverExecutor : public SolverInterface {
+class LBMSolverExecutor : public Runnable {
  public:
   LBMSolverExecutor(const GInt32 domainId, const GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
 
   void init(int argc, GChar** argv, GString config_file) override {
-    static constexpr GInt nodims = 2;
-    static constexpr GInt ndist  = 9;
+    //    static constexpr GInt nodims = 2;
+    //    static constexpr GInt ndist  = 9;
 
     // default model
     GString model = "D2Q9";
@@ -99,6 +99,6 @@ class LBMSolverExecutor : public SolverInterface {
   GInt32 m_domainId  = -1;
   GInt32 m_noDomains = -1;
 
-  std::unique_ptr<SolverInterface> m_lbmSolver;
+  std::unique_ptr<Runnable> m_lbmSolver;
 };
 #endif // LBM_SOLVEREXE_H

@@ -1,6 +1,7 @@
 # V0.1
 ## Planned
 - add python frontend
+- add gpu acceleration
 
 # V0.0.3
 ## Planned
@@ -17,17 +18,21 @@
 - add multilevel method
 - add github website
 - add images to readme
--allow more than one solver to run at the same time
+- allow more than one solver to run at the same time
+- write out lines as svg
+- [LPT] add simple collision model
 
 # V0.0.2
+
 ## Planned
-- run basic 2D NS Case
+
+- run basic 2D NS sphere case
+- run basic 2D NS obstruction case
 - load grid from disk
 - Couette in 3D
 - Poiseuille flow in 3D
 - add simple LPT solver
 - add simple injection model
-- add simple collision model
 - contact angle
 - output analytical solution if wanted
 - check in periodic boundaries if all cells have been linked
@@ -35,14 +40,11 @@
 - pass all surfaces to the boundary manager
 - store reference to the surfaces in each boundary
 - allow comments in configuration files
-- inflow pressure bc
-- outflow pressure bc
 - refactor forcing setup
 - optionally cancel calculation when any macro value is nan
 - refactor IO code
 - make types definitions in include/common/constant
 - set output separately for the solvers
-- write out lines as svg
 - move comparison with analytical solution to postprocessing
 - fix keys in unused config value detection
 - improve boundary condition with methods that use wet nodes
@@ -52,11 +54,10 @@
 - add documentation for the testcases
 - simplify writing output
 - check in output functions if fileformat ending is already included
-- add openmp
+- add more openmp
 - in cartesiangrid don't use the configuration.json but the accessor to mark the unused values correctly
 - move kdtree to common lib project.
 - move line to common lib project.
-- [BUG] segmentation fault after divergence
 - [BUG] D2Q5 still uses diagonal neighbors also this is not necessary
 - add prefix names and output folder configuration options
 - warn when overwritting files
@@ -68,19 +69,41 @@
 - fix poisson method to allow changes of relaxation
 - allow setting write out precision for doubles for ASCII
 - determine analytical solution for 2D poisson cases
+- reduce to three debug levels
+
+### priority:
+
+- [BUG] segmentation fault after divergence
+- inflow pressure bc
+- outflow pressure bc
 
 ### moved:
 
 - [BUG] fix Poisson D2Q9
-
-# V0.0.1
-
-## Ongoing:
-
-- fix D2Q5 poiseuille case
-
+- [BUG] fix D2Q5 poiseuille case
+- use pressure boundary condition for poiseuille cases
 
 ## Done:
+
+### Features
+
+### Buildsystem
+
+### Testing
+
+### Usability
+
+### IO
+
+### Performance
+
+### Bugs
+
+### Documentation
+
+### Refactoring
+
+# V0.0.1
 
 ### Features
 

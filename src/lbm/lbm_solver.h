@@ -3,7 +3,6 @@
 #include <sfcmm_common.h>
 #include "cartesiangrid.h"
 #include "common/configuration.h"
-#include "interface/lbm_interface.h"
 #include "interface/solver_interface.h"
 #include "lbm_bnd.h"
 #include "lbm_constants.h"
@@ -11,7 +10,7 @@
 #include "postprocessing.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
-class LBMSolver : public SolverInterface,
+class LBMSolver : public Runnable,
                   private Configuration,
                   private Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM, LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>> {
  private:
@@ -143,7 +142,7 @@ class LBMSolver : public SolverInterface,
   auto inline fold(const GInt cellId, const GInt dir) -> GDouble& {
     const GInt entryId = cellId * NDIST + dir;
     if(DEBUG_LEVEL > Debug_Level::min_debug) {
-      if(entryId > m_fold.size()) {
+      if(entryId > static_cast<GInt>(m_fold.size())) {
         TERMM(-1, "Out of bounds!");
       }
     }
@@ -154,7 +153,6 @@ class LBMSolver : public SolverInterface,
   [[nodiscard]] auto inline allCells() const -> GInt { return grid().totalSize(); }
 
   std::unique_ptr<GridInterface>                          m_grid;
-  std::unique_ptr<LBMethodInterface>                      m_lbm; // todo: implmenent
   std::unique_ptr<LBMBndManager<DEBUG_LEVEL, LBTYPE, EQ>> m_bndManager;
 
   GString m_exe;

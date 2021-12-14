@@ -124,7 +124,7 @@ class LBMBnd_wallBB : public LBMBndInterface {
     }
   }
 
-  void initCnd(const std::function<GDouble&(GInt, GInt)>& vars) override {}
+  void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
                 const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}

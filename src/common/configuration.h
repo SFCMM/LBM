@@ -185,6 +185,10 @@ class Configuration {
     return false;
   }
 
+  /// Return the json configuration object of a certain name and mark it as used
+  /// \param object Object to get
+  /// \param pObject Parent object
+  /// \return Object with the name [object]
   auto getObject(const GString& object, const GString& pObject = "") -> json {
     const json& conf = (pObject.empty()) ? m_config : m_config[pObject];
     if(!pObject.empty()) {
@@ -211,14 +215,9 @@ class Configuration {
   /// \param value Value to search for
   /// \return List of keys with the value
   auto get_all_items_with_value(const GString& value) const -> std::vector<json> {
-    auto has_config_value = [=](const json& cc, const GString& val) {
+    auto has_config_value = [=](const json& configObj, const GString& val) {
       // entry exists
-      for(const auto& item : cc) {
-        if(item == val) {
-          return true;
-        }
-      }
-      return false;
+      return std::any_of(configObj.begin(), configObj.end(), [&](const auto& item) { return item == val; });
     };
 
     std::vector<json>   found;
