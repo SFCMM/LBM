@@ -1,6 +1,5 @@
 #include "lbm_solver.h"
 #include "analytical_solutions.h"
-#include "lbm_variables.h"
 
 #include <set>
 

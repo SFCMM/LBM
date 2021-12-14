@@ -10,10 +10,11 @@ class LBMSolverExecutor : public Runnable {
  public:
   LBMSolverExecutor(const GInt32 domainId, const GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
 
+  /// Init the LBM solver and create the correct templated version of the solver.
+  /// \param argc CMD
+  /// \param argv CMD
+  /// \param config_file configuration file to be used
   void init(int argc, GChar** argv, GString config_file) override {
-    //    static constexpr GInt nodims = 2;
-    //    static constexpr GInt ndist  = 9;
-
     // default model
     GString model = "D2Q9";
 
@@ -88,12 +89,23 @@ class LBMSolverExecutor : public Runnable {
     }
     m_lbmSolver->init(argc, argv, config_file);
   }
+
+  /// Init a benchmark run for the LBM solver
+  /// \param argc CMD
+  /// \param argv CMD
   void initBenchmark(int argc, GChar** argv) override { m_lbmSolver->initBenchmark(argc, argv); }
 
+  /// Run the LBM solver
+  /// \return Errorcode
   auto run() -> GInt override { return m_lbmSolver->run(); }
 
+  /// Access to the grid
+  /// \return Return grid access
   [[nodiscard]] auto grid() const -> const GridInterface& override { return m_lbmSolver->grid(); }
-  void               transferGrid(const GridInterface& grid) override { m_lbmSolver->transferGrid(grid); }
+
+  /// Transfer a grid which is already in memory
+  /// \param grid Grid to be transfered
+  void transferGrid(const GridInterface& grid) override { m_lbmSolver->transferGrid(grid); }
 
  private:
   GInt32 m_domainId  = -1;
