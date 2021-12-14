@@ -62,7 +62,6 @@
 - add prefix names and output folder configuration options
 - warn when overwritting files
 - give option to not overwrite files
-- [BUG] tangential velocity is not set correctly for D2Q5 for the couette case
 - automatically run all the testcases and produce report
 - simplify boundary by not making it necessary to copy the cellIds for each boundary separately
 - generalize NEEM bounary condition
@@ -80,7 +79,6 @@
 ### moved:
 
 - [BUG] fix Poisson D2Q9
-- [BUG] fix D2Q5 poiseuille case
 - use pressure boundary condition for poiseuille cases
 
 ## Done:

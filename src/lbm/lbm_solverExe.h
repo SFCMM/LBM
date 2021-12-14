@@ -36,25 +36,26 @@ class LBMSolverExecutor : public Runnable {
     switch(modelType) {
       case LBMethodType::D1Q3:
         switch(equationType) {
-          case LBEquation::Navier_Stokes:
-            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3, LBEquation::Navier_Stokes>>(m_domainId, m_noDomains);
-            break;
+            //          case LBEquation::Navier_Stokes:
+            //            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3, LBEquation::Navier_Stokes>>(m_domainId,
+            //            m_noDomains); break;
           case LBEquation::Poisson:
             m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3, LBEquation::Poisson>>(m_domainId, m_noDomains);
             break;
-          case LBEquation::Navier_Stokes_Poisson:
-            m_lbmSolver =
-                std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3, LBEquation::Navier_Stokes_Poisson>>(m_domainId, m_noDomains);
-            break;
+            //          case LBEquation::Navier_Stokes_Poisson:
+            //            m_lbmSolver =
+            //                std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3, LBEquation::Navier_Stokes_Poisson>>(m_domainId,
+            //                m_noDomains);
+            //            break;
           default:
             TERMM(-1, "Unsupported equation type");
         }
         break;
       case LBMethodType::D2Q5:
         switch(equationType) {
-          case LBEquation::Navier_Stokes:
-            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q5, LBEquation::Navier_Stokes>>(m_domainId, m_noDomains);
-            break;
+            //          case LBEquation::Navier_Stokes:
+            //            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q5, LBEquation::Navier_Stokes>>(m_domainId,
+            //            m_noDomains); break;
           case LBEquation::Poisson:
             m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q5, LBEquation::Poisson>>(m_domainId, m_noDomains);
             break;
@@ -104,7 +105,7 @@ class LBMSolverExecutor : public Runnable {
   [[nodiscard]] auto grid() const -> const GridInterface& override { return m_lbmSolver->grid(); }
 
   /// Transfer a grid which is already in memory
-  /// \param grid Grid to be transfered
+  /// \param grid Grid to be transferred
   void transferGrid(const GridInterface& grid) override { m_lbmSolver->transferGrid(grid); }
 
  private:

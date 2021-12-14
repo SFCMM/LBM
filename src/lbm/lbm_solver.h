@@ -137,6 +137,8 @@ class LBMSolver : public Runnable,
 
   auto inline f(const GInt cellId, const GInt dir) -> GDouble& { return m_f[cellId * NDIST + dir]; }
 
+  auto inline feq(const GInt cellId) -> GDouble* { return &m_feq[cellId * NDIST]; }
+
   auto inline feq(const GInt cellId, const GInt dir) -> GDouble& { return m_feq[cellId * NDIST + dir]; }
 
   auto inline fold(const GInt cellId, const GInt dir) -> GDouble& {

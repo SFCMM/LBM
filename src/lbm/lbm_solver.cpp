@@ -1,5 +1,6 @@
 #include "lbm_solver.h"
 #include "analytical_solutions.h"
+#include "lbm_equilibrium_func.h"
 
 #include <set>
 
@@ -513,12 +514,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::calcEquilibriumMoments() {
         //      squaredV);
       }
     }
-    if(EQ == LBEquation::Poisson || EQ == LBEquation::Navier_Stokes_Poisson) {
-      const GDouble potential = electricPotential(cellId);
-      for(GInt dist = 0; dist < NDIST - 1; ++dist) {
-        feq(cellId, dist) = METH::m_weights[dist] * potential;
-      }
-      feq(cellId, NDIST - 1) = (METH::m_weights[NDIST - 1] - 1.0) * potential;
+    if(EQ == LBEquation::Poisson) {
+      eq::poisson<LBTYPE>(feq(cellId), electricPotential(cellId));
     }
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMEq]);
