@@ -494,22 +494,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::calcEquilibriumMoments() {
 #endif
   for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     if(EQ != LBEquation::Poisson) {
-      const GDouble density = rho(cellId);
-      //      GDouble vsq = 0;
-      //      for(GInt dir = 0; dir < NDIM; ++dir) {
-      //        vsq += velocity(cellId, dir) * velocity(cellId, dir);
-      //      }
-      //
-      //      for(GInt dist = 0; dist < NDIST; ++dist) {
-      //        GDouble cu  = 0;
-      //        for(GInt dir = 0; dir < NDIM; ++dir) {
-      //          cu += velocity(cellId, dir) * METH::m_dirs[dist][dir];
-      //        }
-      //        feq(cellId, dist) =
-      //            METH::m_weights[dist] * density * (1.0 + cu / lbm_cssq + cu * cu / (2.0 * lbm_cssq * lbm_cssq) - vsq / (2.0 *
-      //            lbm_cssq));
-      //      }
-      eq::defaultEq<LBTYPE>(feq(cellId), density, velocity(cellId));
+      eq::defaultEq<LBTYPE>(feq(cellId), rho(cellId), velocity(cellId));
     }
     if(EQ == LBEquation::Poisson) {
       eq::poisson<LBTYPE>(feq(cellId), electricPotential(cellId));
