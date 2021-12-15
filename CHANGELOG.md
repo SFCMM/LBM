@@ -72,7 +72,6 @@
 
 ### priority:
 
-- [BUG] segmentation fault after divergence
 - inflow pressure bc
 - outflow pressure bc
 
@@ -96,6 +95,7 @@
 ### Performance
 
 ### Bugs
+- [BUG] segmentation fault after divergence
 
 ### Documentation
 

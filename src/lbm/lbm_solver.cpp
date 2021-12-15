@@ -194,7 +194,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::convergenceCondition() -> GBool {
       cerr0 << "Reached convergence to: " << maxConv << std::endl;
       return true;
     }
-    if(m_timeStep > 1 && std::isnan(maxConv)) {
+    if(m_timeStep > 1 && (std::isnan(maxConv) || std::isinf(maxConv))) {
       logger << "Solution diverged!" << std::endl;
       cerr0 << "Solution diverged!" << std::endl;
       m_diverged = true;
@@ -275,9 +275,12 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
   RECORD_TIMER_START(TimeKeeper[Timers::LBMIo]);
 
   // todo: make the output values settable
-  if(m_diverged) {
+  static GBool write_out_diverged = false;
+  if(m_diverged && !write_out_diverged) {
+    write_out_diverged = true;
     // output the values before updating the macroscopic values in case the solution diverged
     output(true, "bdiv");
+    return;
   }
   //  updateMacroscopicValues();
   if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || forced) {
