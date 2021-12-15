@@ -13,7 +13,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::init(int argc, GChar** argv) {
 #ifndef GRIDGEN_SINGLE_FILE_LOG
   logger.open("lbm_log" + std::to_string(m_domainId), false, argc, argv, MPI_COMM_WORLD);
 #else
-  if(DEBUG_LEVEL < Debug_Level::more_debug) {
+  if(DEBUG_LEVEL < Debug_Level::max_debug) {
     logger.open("lbm_log", true, argc, argv, MPI_COMM_WORLD);
   } else {
     logger.open("lbm_log", false, argc, argv, MPI_COMM_WORLD);

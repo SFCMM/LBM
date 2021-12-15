@@ -50,11 +50,11 @@ static constexpr GInt    WEEK    = DAY * 7;
 static constexpr GDouble DWEEK   = DDAY * 7;
 } // namespace timeconst
 
-enum class Debug_Level { no_debug, min_debug, debug, more_debug, max_debug };
-static constexpr std::array<std::string_view, 5> DEBUG_LEVEL = {"NO DEBUG", "MINIMAL DEBUG", "DEBUG", "MORE DEBUG", "MAXIMUM DEBUG"};
+enum class Debug_Level { no_debug, debug, max_debug };
+static constexpr std::array<std::string_view, 5> DEBUG_LEVEL = {"NO DEBUG", "DEBUG", "MAXIMUM DEBUG"};
 
 enum class SolverType { NONE, LBM };
-static constexpr std::array<std::string_view, 2> SOLVER_NAME = {"NONE", "LBM"};
+static constexpr std::array<std::string_view, 2> SOLVER_NAME   = {"NONE", "LBM"};
 static constexpr std::array<std::string_view, 2> SOLVER_NAMELC = {"none", "lbm"};
 
 static const std::vector<std::vector<GDouble>> DEFAULT_BOUNDINGBOX = {

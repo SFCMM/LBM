@@ -22,7 +22,7 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv) {
 #ifndef GRIDGEN_SINGLE_FILE_LOG
   logger.open("gridgen_log" + std::to_string(m_domainId), false, argc, argv, MPI_COMM_WORLD);
 #else
-  if(DEBUG_LEVEL < Debug_Level::more_debug) {
+  if(DEBUG_LEVEL < Debug_Level::max_debug) {
     logger.open("gridgen_log", true, argc, argv, MPI_COMM_WORLD);
   } else {
     logger.open("gridgen_log", false, argc, argv, MPI_COMM_WORLD);
@@ -288,7 +288,5 @@ void GridGenerator<DEBUG_LEVEL>::benchmarkSetup() {
 
 
 template class GridGenerator<Debug_Level::no_debug>;
-template class GridGenerator<Debug_Level::min_debug>;
 template class GridGenerator<Debug_Level::debug>;
-template class GridGenerator<Debug_Level::more_debug>;
 template class GridGenerator<Debug_Level::max_debug>;

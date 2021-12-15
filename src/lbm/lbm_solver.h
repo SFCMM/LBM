@@ -112,7 +112,7 @@ class LBMSolver : public Runnable,
   [[nodiscard]] auto sumAbsDiff(const GInt var) const -> GDouble;
 
   auto inline rho(const GInt cellId) -> GDouble& {
-    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
       if(NVARS < VAR::rho()) {
         TERMM(-1, "Invalid number of variables (" + std::to_string(NVARS) + ")");
       }
@@ -122,7 +122,7 @@ class LBMSolver : public Runnable,
   }
 
   auto inline electricPotential(const GInt cellId) -> GDouble& {
-    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
       if(NVARS < VAR::electricPotential()) {
         TERMM(-1, "Invalid number of variables (" + std::to_string(NVARS) + ")");
       }
@@ -146,7 +146,7 @@ class LBMSolver : public Runnable,
 
   auto inline fold(const GInt cellId, const GInt dir) -> GDouble& {
     const GInt entryId = cellId * NDIST + dir;
-    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
       if(entryId > static_cast<GInt>(m_fold.size())) {
         TERMM(-1, "Out of bounds!");
       }

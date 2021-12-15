@@ -67,8 +67,8 @@
 - generalize NEEM bounary condition
 - fix poisson method to allow changes of relaxation
 - allow setting write out precision for doubles for ASCII
-- determine analytical solution for 2D poisson cases
-- reduce to three debug levels
+- determine analytical solutions for 2D poisson cases
+- adjust settings for poisson D2Q9
 
 ### priority:
 
@@ -76,8 +76,6 @@
 - outflow pressure bc
 
 ### moved:
-
-- [BUG] fix Poisson D2Q9
 - use pressure boundary condition for poiseuille cases
 
 ## Done:
@@ -100,6 +98,8 @@
 ### Documentation
 
 ### Refactoring
+
+- reduce the number of debug levels
 
 # V0.0.1
 

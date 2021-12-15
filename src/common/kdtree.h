@@ -370,7 +370,7 @@ class KDTree {
     }
 
     // sort nodes to make debugging simpler
-    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
       sort(nodeList.begin(), nodeList.end());
     }
   };

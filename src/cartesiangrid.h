@@ -244,7 +244,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   void save(const GString& /*fileName*/, const json& /*gridOutConfig*/) const override { TERMM(-1, "Not implemented!"); }
 
   auto bndrySurface(const GString& id) -> Surface<DEBUG_LEVEL, NDIM>& {
-    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
       if(m_bndrySurfaces.count(id) == 0) {
         TERMM(-1, "Invalid bndryId \"" + id + "\"");
       }
@@ -507,7 +507,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
           // identify periodic direction for each cell
           const GInt nghbrDir = 2 * notMatchingDir;
           if(centerA[notMatchingDir] > centerB[notMatchingDir]) {
-            if constexpr(DEBUG_LEVEL > Debug_Level::min_debug) {
+            if constexpr(DEBUG_LEVEL >= Debug_Level::debug) {
               if(neighbor(cellIdB, nghbrDir) != INVALID_CELLID) {
                 TERMM(-1, "Invalid set periodic connection! cellIdB:" + std::to_string(cellIdB) + " dir:" + std::to_string(nghbrDir));
               }
@@ -518,7 +518,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
             neighbor(cellIdB, nghbrDir)     = cellIdA;
             neighbor(cellIdA, nghbrDir + 1) = cellIdB;
           } else {
-            if constexpr(DEBUG_LEVEL > Debug_Level::min_debug) {
+            if constexpr(DEBUG_LEVEL >= Debug_Level::debug) {
               if(neighbor(cellIdA, nghbrDir) != INVALID_CELLID) {
                 TERMM(-1, "Invalid set periodic connection! cellIdA:" + std::to_string(cellIdA) + " dir:" + std::to_string(nghbrDir));
               }

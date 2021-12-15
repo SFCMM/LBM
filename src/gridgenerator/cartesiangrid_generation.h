@@ -448,7 +448,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
               }
             }
 
-            if(DEBUG_LEVEL > Debug_Level::min_debug && neighbors[dir] != INVALID_CELLID
+            if(DEBUG_LEVEL >= Debug_Level::debug && neighbors[dir] != INVALID_CELLID
                && (center(neighbors[dir]) - center(children[childId])).norm()
                       > 1.9 * lengthOnLvl(std::to_integer<GInt>(level(children[childId])))) {
               cerr0 << "neighbors[dir] " << neighbors[dir] << " cellId " << children[childId] << std::endl;
@@ -626,7 +626,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       Point<NDIM> x      = ((center(cellId) - centerOfGravity).array() + HALF * lengthOnLvl(0)) / lengthOnLvl(0);
       hilbertIds[cellId] = hilbert::index<NDIM>(x, hilbertLevel);
     }
-    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
       logger << "checking duplicated Hilbert Ids" << std::endl;
       std::vector<GInt> duplicatedIds = checkDuplicateIds(hilbertIds);
       if(!duplicatedIds.empty()) {

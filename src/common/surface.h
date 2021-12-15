@@ -78,15 +78,12 @@ class Surface : public SurfaceInterface {
   auto grid() const -> CartesianGridData<NDIM> { return m_grid; }
 
   [[nodiscard]] auto neighbor(const GInt cellId, const GInt dir) const -> GInt {
-    if(DEBUG_LEVEL > Debug_Level::min_debug) {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
       if(m_nghbrIds.empty()) {
         TERMM(-1, "Surface not initialized!");
       }
     }
-    //    cerr0 << "surface neighbor ";
-    //    for(auto [first, second] : m_nghbrIds) {
-    //      cerr0 << first << " " << second[0] << std::endl; //todo:remove
-    //    }
+
     return m_nghbrIds.at(cellId)[dir];
   }
 

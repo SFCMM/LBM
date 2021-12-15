@@ -29,14 +29,8 @@ class AppConfiguration {
       case static_cast<GInt>(Debug_Level::no_debug):
         init<Debug_Level::no_debug>();
         return;
-      case static_cast<GInt>(Debug_Level::min_debug):
-        init<Debug_Level::min_debug>();
-        return;
       case static_cast<GInt>(Debug_Level::debug):
         init<Debug_Level::debug>();
-        return;
-      case static_cast<GInt>(Debug_Level::more_debug):
-        init<Debug_Level::more_debug>();
         return;
       case static_cast<GInt>(Debug_Level::max_debug):
         [[fallthrough]];
@@ -160,7 +154,8 @@ auto main(int argc, GChar** argv) -> int {
 #endif
   cxxopts::Options options(tmpBuffer.str(), "A highly parallel grid generator.");
 
-  options.add_options()("d,debug", "Enable debugging with given level.", cxxopts::value<GInt>()->default_value("0"));
+  options.add_options()("d,debug", "Enable debugging with given level. 0=Off, 1=Debug, 2=Large Performance Impact",
+                        cxxopts::value<GInt>()->default_value("0"));
   options.add_options()("h,help", "Print usage");
   options.add_options()("v,version", "Get version information");
   options.add_options()("c,config", "Configuration file (default=grid.json)", cxxopts::value<std::string>()->default_value("grid.json"));
