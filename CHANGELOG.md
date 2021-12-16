@@ -62,7 +62,6 @@
 - add prefix names and output folder configuration options
 - warn when overwritting files
 - give option to not overwrite files
-- automatically run all the testcases and produce report
 - simplify boundary by not making it necessary to copy the cellIds for each boundary separately
 - generalize NEEM bounary condition
 - fix poisson method to allow changes of relaxation
@@ -74,6 +73,7 @@
 
 - inflow pressure bc
 - outflow pressure bc
+- automatically run all the testcases and produce report
 
 ### moved:
 - use pressure boundary condition for poiseuille cases

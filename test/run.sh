@@ -15,17 +15,20 @@ DEFAULT_OMP_THREADS=4
 LOG_PATH="run_log_"$(date +%s)
 
 run_test(){
+  NAME="$(cut -d'.' -f1 <<<"$1")"
   #todo:redirect output output logpath
   if OMP_NUM_THREADS=$DEFAULT_OMP_THREADS $BINPATH "$1"; then
-    SUCCESS=$SUCCESS+1
+    SUCCESS=$((SUCCESS+1))
   else
     echo "Test case failed"
-    FAILED=$FAILED+1
+    FAILED=$((FAILED+1))
   fi
+
+  cp lbm_log ../"$LOG_PATH"/"$NAME"_lbm_log.txt
+  cp gridgen_log ../"$LOG_PATH"/"$NAME"_gridgen_log.txt
 }
 
-#todo: copy log files to log path
-#mkdir $LOG_PATH
+mkdir $LOG_PATH
 
 ./clean.sh
 cd couette || exit
@@ -45,7 +48,7 @@ cd ..
 ./clean.sh
 
 if [ $FAILED == 0 ]; then
-  echo "All testcases have been successful"
+  echo "All $SUCCESS testcases have been successful"
   exit 0
 else
   exit 1
