@@ -160,27 +160,32 @@ class LBMSolver : public Runnable,
   std::unique_ptr<GridInterface>                          m_grid;
   std::unique_ptr<LBMBndManager<DEBUG_LEVEL, LBTYPE, EQ>> m_bndManager;
 
-  GString m_exe;
-  GString m_configurationFileName;
-  GBool   m_benchmark = false;
-  GBool   m_diverged  = false;
+  /// Configuration
+  GString      m_exe;
+  GString      m_configurationFileName;
+  GBool        m_benchmark  = false;
+  GBool        m_diverged   = false;
+  LBSolverType m_solverType = LBSolverType::BGK;
+  GInt         m_noSpecies  = 1;
 
+  /// MPI
   GInt32 m_domainId  = -1;
   GInt32 m_noDomains = -1;
 
-  GInt m_noSpecies              = 1;
-  GInt m_outputInfoInterval     = defaultInfoOutInterval;
-  GInt m_outputSolutionInterval = defaultSolutionInterval;
-  GInt m_timeStep               = 0;
+  /// Output
+  GString m_outputDir              = "out/";
+  GInt    m_outputInfoInterval     = defaultInfoOutInterval;
+  GInt    m_outputSolutionInterval = defaultSolutionInterval;
 
-  LBSolverType         m_solverType = LBSolverType::BGK;
+
+  /// Variables
   std::vector<GDouble> m_f;
   std::vector<GDouble> m_feq;
   std::vector<GDouble> m_fold;
   std::vector<GDouble> m_vars;
   std::vector<GDouble> m_varsold;
 
-  // Reference values
+  /// Reference values
   GDouble m_refLength = 1.0;
   GDouble m_refRho    = 1.0;
   GDouble m_refT      = defaultT20C;
@@ -191,10 +196,11 @@ class LBMSolver : public Runnable,
   GDouble m_ma           = defaultMachNumber;
   GDouble m_speedOfSound = 1.0;
 
-  // todo: move to method impl
   GDouble m_relaxTime = defaultRelaxT;
   GDouble m_omega     = 1.0 / m_relaxTime;
   GDouble m_dt        = NAN;
+
+  GInt m_timeStep = 0;
 };
 
 #endif // LBM_SOLVER_H

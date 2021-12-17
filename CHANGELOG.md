@@ -42,10 +42,8 @@
 - store reference to the surfaces in each boundary
 - allow comments in configuration files
 - refactor forcing setup
-- optionally cancel calculation when any macro value is nan
 - refactor IO code
 - make types definitions in include/common/constant
-- set output separately for the solvers
 - move comparison with analytical solution to postprocessing
 - fix keys in unused config value detection
 - improve boundary condition with methods that use wet nodes
@@ -54,15 +52,12 @@
 - order boundary conditions by type
 - add documentation for the testcases
 - simplify writing output
-- check in output functions if fileformat ending is already included
 - add more openmp
 - in cartesiangrid don't use the configuration.json but the accessor to mark the unused values correctly
 - move kdtree to common lib project.
 - move line to common lib project.
 - [BUG] D2Q5 still uses diagonal neighbors also this is not necessary
-- add prefix names and output folder configuration options
-- warn when overwriting files
-- give option to not overwrite files
+
 - simplify boundary by not making it necessary to copy the cellIds for each boundary separately
 - generalize NEEM bounary condition
 - fix poisson method to allow changes of relaxation
@@ -74,9 +69,14 @@
 - inflow pressure bc
 - outflow pressure bc
 - automatically run all the testcases and produce report
-
-### moved:
 - use pressure boundary condition for poiseuille cases
+
+- set output separately for the solvers
+- check in output functions if fileformat ending is already included
+- optionally cancel calculation when any macro value is nan
+- add prefix names options
+- warn when overwriting files
+- give option to not overwrite files
 
 ## Done:
 
@@ -89,6 +89,8 @@
 ### Usability
 
 ### IO
+
+-set output dir
 
 ### Performance
 

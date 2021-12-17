@@ -71,8 +71,13 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   m_solverType = LBSolverType::BGK; // todo: load from file
 
+  m_outputDir              = opt_config_value<GString>("output_dir", m_outputDir);
   m_outputInfoInterval     = opt_config_value<GInt>("info_interval", m_outputInfoInterval);
   m_outputSolutionInterval = opt_config_value<GInt>("solution_interval", m_outputSolutionInterval);
+
+  if(!isPath(m_outputDir)) {
+    TERMM(-1, "Invalid output directory set! (value: " + m_outputDir + ")");
+  }
 
 
   //  const GDouble m_referenceLength = 1.0;
@@ -329,7 +334,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
       values.emplace_back(toStringVector(tmpV, size()));
     }
 
-    VTK::ASCII::writePoints<NDIM>("test_" + std::to_string(m_timeStep) + postfix, size(), center(), index, values, isLeaf);
+    VTK::ASCII::writePoints<NDIM>(m_outputDir + "test_" + std::to_string(m_timeStep) + postfix, size(), center(), index, values, isLeaf);
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMIo]);
 }
