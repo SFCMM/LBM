@@ -174,9 +174,10 @@ class LBMSolver : public Runnable,
 
   /// Output
   GString m_outputDir              = "out/";
+  GString m_solutionFileName       = "solution";
   GInt    m_outputInfoInterval     = defaultInfoOutInterval;
   GInt    m_outputSolutionInterval = defaultSolutionInterval;
-
+  GBool   m_generatePath           = true;
 
   /// Variables
   std::vector<GDouble> m_f;

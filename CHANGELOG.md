@@ -64,6 +64,9 @@
 - determine analytical solutions for 2D poisson cases
 - adjust settings for poisson D2Q9
 
+- warn when overwriting files
+- give option to not overwrite files
+
 ### priority:
 
 - inflow pressure bc
@@ -74,9 +77,6 @@
 - set output separately for the solvers
 - check in output functions if fileformat ending is already included
 - optionally cancel calculation when any macro value is nan
-- add prefix names options
-- warn when overwriting files
-- give option to not overwrite files
 
 ## Done:
 
@@ -90,7 +90,7 @@
 
 ### IO
 
--set output dir
+-set output dir and solution file name
 
 ### Performance
 
