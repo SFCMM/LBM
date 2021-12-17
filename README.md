@@ -26,6 +26,11 @@
    ```make -j 6```
 4) run bench
    ```./lbm --bench```
+   
+## Tests
+
+Run all testcases:
+1) /tests/run.sh
 
 ## Commandline options
 
@@ -34,10 +39,8 @@
 Set the debug level to run:
 
 - 0 off (default)
-- 1 minimal
-- 2 normal
-- 3 more
-- 4 maximum
+- 1 on
+- 2 all checks
 
 For example to run with the debug level 3:
 ```./gridgenerator --debug 3```
