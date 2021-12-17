@@ -21,6 +21,7 @@
 - allow more than one solver to run at the same time
 - write out lines as svg
 - [LPT] add simple collision model
+- set write out precision
 
 # V0.0.2
 
@@ -60,12 +61,11 @@
 - move line to common lib project.
 - [BUG] D2Q5 still uses diagonal neighbors also this is not necessary
 - add prefix names and output folder configuration options
-- warn when overwritting files
+- warn when overwriting files
 - give option to not overwrite files
 - simplify boundary by not making it necessary to copy the cellIds for each boundary separately
 - generalize NEEM bounary condition
 - fix poisson method to allow changes of relaxation
-- allow setting write out precision for doubles for ASCII
 - determine analytical solutions for 2D poisson cases
 - adjust settings for poisson D2Q9
 
@@ -93,7 +93,9 @@
 ### Performance
 
 ### Bugs
-- [BUG] segmentation fault after divergence
+
+- segmentation fault after divergence
+- write out full double precision
 
 ### Documentation
 

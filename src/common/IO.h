@@ -43,7 +43,7 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
   static constexpr unsigned int N           = 64;
   static constexpr unsigned int buffer_size = 1024 * N;
   std::array<char, buffer_size> buffer{};
-  pointFile.rdbuf()->pubsetbuf(&buffer[0], buffer_size);
+  pointFile.rdbuf()->pubsetbuf(buffer.data(), buffer_size);
   pointFile.open(fileName + ".csv");
 
   for(GInt id = 0; id < DIM; ++id) {
@@ -218,9 +218,10 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   static constexpr unsigned int N           = 64;
   static constexpr unsigned int buffer_size = 1024 * N;
   std::array<char, buffer_size> buffer{};
-  pointFile.rdbuf()->pubsetbuf(&buffer[0], buffer_size);
+  pointFile.rdbuf()->pubsetbuf(buffer.data(), buffer_size);
   pointFile.open(fileName + ".vtp");
 
+  pointFile << setprecision(std::numeric_limits<double>::digits10);
   pointFile << header();
   pointFile << piece_header(noOutCells);
   pointFile << point_header<DIM>();
@@ -309,7 +310,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   static constexpr std::array<std::string_view, 4> padders     = {"", "=", "==", "==="};
 
   std::array<char, buffer_size> buffer{};
-  pointFile.rdbuf()->pubsetbuf(&buffer[0], buffer_size);
+  pointFile.rdbuf()->pubsetbuf(buffer.data(), buffer_size);
   pointFile.open(fileName + ".vtp");
 
   pointFile << header();
@@ -341,7 +342,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     pointFile << base64::encodeLE<GInt, 1>(&header_coord_size);
     //    pointFile.write(base64::encodeLE<GFloat, 2>(&tmp_coords[0], actualValues).c_str(), number_chars); //todo: some how broken??
     //    pointFile << padders[padding];
-    pointFile << base64::encodeLE<GFloat, 2>(&tmp_coords[0], actualValues) << padders[padding];
+    pointFile << base64::encodeLE<GFloat, 2>(tmp_coords.data(), actualValues) << padders[padding];
   }
 
   pointFile << "\n" << point_footer();
@@ -358,7 +359,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     pointFile << base64::encodeLE<GInt, 1>(&header_coord_size);
     //    pointFile.write(base64::encodeLE<GInt, 2>(&tmp_id[0], noOutCells).c_str(), number_chars); //todo: some how broken??
     //    pointFile << padders[padding];
-    pointFile << base64::encodeLE<GInt, 2>(&tmp_id[0], noOutCells) << padders[padding];
+    pointFile << base64::encodeLE<GInt, 2>(tmp_id.data(), noOutCells) << padders[padding];
   }
   pointFile << "\n";
   pointFile << data_footer();
@@ -390,7 +391,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
       pointFile << base64::encodeLE<GInt, 1>(&header_val_size);
       //      pointFile.write(base64::encodeLE<GInt32, 2>(&tmp_val[0], noOutCells).c_str(), number_chars); //todo: some how broken??
       //      pointFile << padders[padding];
-      pointFile << base64::encodeLE<GInt32, 2>(&tmp_val[0], noOutCells) << padders[padding];
+      pointFile << base64::encodeLE<GInt32, 2>(tmp_val.data(), noOutCells) << padders[padding];
       pointFile << "\n" << data_footer();
     }
   }

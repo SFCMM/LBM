@@ -82,7 +82,12 @@ static inline auto toStringVector(const std::vector<T>& in, GInt size = -1) -> s
     size = in.size();
   }
 
-  std::transform(in.begin(), in.begin() + size, std::back_inserter(string_vector), [](T b) -> GString { return std::to_string(b); });
+  std::transform(in.begin(), in.begin() + size, std::back_inserter(string_vector), [](T b) -> GString {
+    std::ostringstream out;
+    out.precision(std::numeric_limits<T>::digits10);
+    out << std::fixed << b;
+    return out.str();
+  });
   return string_vector;
 }
 
