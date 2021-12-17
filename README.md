@@ -45,8 +45,8 @@ Set the debug level to run:
 - 1 on
 - 2 all checks
 
-For example to run with the debug level 3:
-```./gridgenerator --debug 3```
+For example to run with all debug checks:
+```./gridgenerator --debug 2```
 
 Determines how many extra checks and output is produced!
 
