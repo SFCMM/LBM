@@ -6,8 +6,8 @@
 
 
 ## License
-- Code is BSD v3 licensed
-- Data and Documentation is CC-BY-NC ![license](https://creativecommons.org/licenses/by-nc/4.0/ "CC-BY-NC)")
+- Code: [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+- Data/Documentation: [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC_BY--NC_4.0-blue.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 
 ## Requirements
 
@@ -30,7 +30,10 @@
 ## Tests
 
 Run all testcases:
-1) /tests/run.sh
+* /test/run.sh
+
+Clean testcase directories:
+* /test/clean.sh
 
 ## Commandline options
 
