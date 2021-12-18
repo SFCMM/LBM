@@ -496,6 +496,9 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::updateMacroscopicValues() {
   }
 #endif
 
+  if constexpr(DEBUG_LEVEL > Debug_Level::no_debug) {
+    checkDivergence();
+  }
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMMacro]);
 }
 
@@ -741,6 +744,16 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::sumAbsDiff(const GInt var) const -> GDo
     conv += std::abs(m_vars[cellId * NVARS + var] - m_varsold[cellId * NVARS + var]);
   }
   return conv;
+}
+
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::checkDivergence() {
+  for(const auto& value : m_vars) {
+    if(std::isinf(value) || std::isnan(value)) {
+      m_diverged = true;
+      return;
+    }
+  }
 }
 
 // template class LBMSolver<Debug_Level::no_debug, LBMethodType::D3Q15>;

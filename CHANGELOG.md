@@ -57,7 +57,6 @@
 - move kdtree to common lib project.
 - move line to common lib project.
 - [BUG] D2Q5 still uses diagonal neighbors also this is not necessary
-
 - simplify boundary by not making it necessary to copy the cellIds for each boundary separately
 - generalize NEEM bounary condition
 - fix poisson method to allow changes of relaxation
@@ -66,6 +65,9 @@
 
 - warn when overwriting files
 - give option to not overwrite files
+- set output format for the solvers
+- set output variables for the solvers
+- check in output functions if fileformat ending is already included
 
 ### priority:
 
@@ -74,10 +76,6 @@
 - automatically run all the testcases and produce report
 - use pressure boundary condition for poiseuille cases
 
-- set output separately for the solvers
-- check in output functions if fileformat ending is already included
-- optionally cancel calculation when any macro value is nan
-
 ## Done:
 
 ### Features
@@ -85,6 +83,8 @@
 ### Buildsystem
 
 ### Testing
+
+- check for divergence when debug is active
 
 ### Usability
 

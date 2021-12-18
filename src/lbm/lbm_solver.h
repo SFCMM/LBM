@@ -157,6 +157,9 @@ class LBMSolver : public Runnable,
   [[nodiscard]] auto inline noInternalCells() const -> GInt { return m_grid->noCells(); }
   [[nodiscard]] auto inline allCells() const -> GInt { return grid().totalSize(); }
 
+  void checkDivergence();
+
+ private:
   std::unique_ptr<GridInterface>                          m_grid;
   std::unique_ptr<LBMBndManager<DEBUG_LEVEL, LBTYPE, EQ>> m_bndManager;
 
