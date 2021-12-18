@@ -1,4 +1,4 @@
-#ifndef LBM_POSTPROCESSING_H
+#ifndef LBM_LBM_POSTPROCESSING_H
 #define LBM_POSTPROCESSING_H
 
 #include <lbm/lbm_postprocessing.h>
@@ -124,4 +124,4 @@ class Postprocess {
   GBool                                                                                                          m_postprocessing = false;
   std::shared_ptr<ConfigurationAccess>                                                                           m_conf           = nullptr;
 };
-#endif // LBM_POSTPROCESSING_H
+#endif // LBM_LBM_POSTPROCESSING_H

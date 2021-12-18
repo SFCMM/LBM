@@ -1,5 +1,5 @@
-#ifndef LBM_LBM_VARIABLES_H
-#define LBM_LBM_VARIABLES_H
+#ifndef LBM_VARIABLES_H
+#define LBM_VARIABLES_H
 
 /// Class to keep the positions of variables consistent
 /// \tparam EQ The equation that is in use.
@@ -109,4 +109,4 @@ class LBMVariables {
 };
 
 
-#endif // LBM_LBM_VARIABLES_H
+#endif // LBM_VARIABLES_H

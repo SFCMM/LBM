@@ -13,7 +13,7 @@
 #include "globaltimers.h"
 #ifdef SOLVER_AVAILABLE
 #include "gridgenerator/cartesiangrid_generation.h"
-#include "lbm/lbm_constants.h"
+#include "lbm/constants.h"
 #else
 #include "cartesiangrid_generation.h"
 #endif

@@ -1,8 +1,8 @@
-#ifndef LBM_LBM_EQUILIBRIUM_FUNC_H
-#define LBM_LBM_EQUILIBRIUM_FUNC_H
+#ifndef LBM_EQUILIBRIUM_FUNC_H
+#define LBM_EQUILIBRIUM_FUNC_H
 
 #include <sfcmm_common.h>
-#include "lbm_constants.h"
+#include "constants.h"
 
 
 namespace eq {
@@ -89,4 +89,4 @@ static inline void poisson(GDouble* feq, const GDouble potential) {
 }
 } // namespace eq
 
-#endif // LBM_LBM_EQUILIBRIUM_FUNC_H
+#endif // LBM_EQUILIBRIUM_FUNC_H

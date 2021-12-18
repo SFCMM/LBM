@@ -1,5 +1,5 @@
-#ifndef LBM_LBM_BND_INTERFACE_H
-#define LBM_LBM_BND_INTERFACE_H
+#ifndef LBM_BND_INTERFACE_H
+#define LBM_BND_INTERFACE_H
 class LBMBndInterface {
  public:
   LBMBndInterface()          = default;
@@ -44,4 +44,4 @@ class LBMBndCell {
   VectorD<dim(LBTYPE)> m_normal;
   GInt                 m_mappedCellId = -1;
 };
-#endif // LBM_LBM_BND_INTERFACE_H
+#endif // LBM_BND_INTERFACE_H

@@ -4,9 +4,9 @@
 #include "cartesiangrid.h"
 #include "common/configuration.h"
 #include "interface/solver_interface.h"
-#include "lbm_bnd.h"
-#include "lbm_constants.h"
-#include "lbm_variables.h"
+#include "bnd.h"
+#include "constants.h"
+#include "variables.h"
 #include "postprocessing.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>

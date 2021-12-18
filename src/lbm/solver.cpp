@@ -1,6 +1,6 @@
-#include "lbm_solver.h"
+#include "solver.h"
 #include "analytical_solutions.h"
-#include "lbm_equilibrium_func.h"
+#include "equilibrium_func.h"
 
 #include <set>
 

@@ -4,11 +4,11 @@
 #include <sfcmm_common.h>
 #include "common/configuration.h"
 #include "common/surface.h"
-#include "lbm_bnd_dirichlet.h"
-#include "lbm_bnd_in_out.h"
-#include "lbm_bnd_interface.h"
-#include "lbm_bnd_periodic.h"
-#include "lbm_bnd_wall.h"
+#include "bnd_dirichlet.h"
+#include "bnd_in_out.h"
+#include "bnd_interface.h"
+#include "bnd_periodic.h"
+#include "bnd_wall.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, GBool TANGENTIALVELO>
 class LBMBnd_wallBB;

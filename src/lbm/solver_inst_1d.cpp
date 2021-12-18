@@ -1,4 +1,4 @@
-#include "lbm_solver.cpp"
+#include "solver.cpp"
 
 // todo: no test case
 // extern template class LBMSolver<Debug_Level::no_debug, LBMethodType::D1Q3, LBEquation::Navier_Stokes>;

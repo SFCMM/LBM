@@ -1,12 +1,12 @@
-#ifndef LBM_LBM_BND_DIRICHLET_H
-#define LBM_LBM_BND_DIRICHLET_H
+#ifndef LBM_BND_DIRICHLET_H
+#define LBM_BND_DIRICHLET_H
 #include <json.h>
 #include <sfcmm_common.h>
 #include "analytical_solutions.h"
 #include "common/surface.h"
-#include "lbm_bnd_interface.h"
-#include "lbm_constants.h"
-#include "lbm_variables.h"
+#include "bnd_interface.h"
+#include "constants.h"
+#include "variables.h"
 
 using json = nlohmann::json;
 
@@ -112,4 +112,4 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
   std::vector<GInt> m_bndCells;
   std::vector<GInt> m_extrapolationCellId;
 };
-#endif // LBM_LBM_BND_DIRICHLET_H
+#endif // LBM_BND_DIRICHLET_H

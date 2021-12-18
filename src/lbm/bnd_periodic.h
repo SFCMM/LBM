@@ -1,8 +1,8 @@
-#ifndef LBM_LBM_BND_PERIODIC_H
-#define LBM_LBM_BND_PERIODIC_H
-#include "lbm_bnd_interface.h"
-#include "lbm_constants.h"
-#include "lbm_variables.h"
+#ifndef LBM_BND_PERIODIC_H
+#define LBM_BND_PERIODIC_H
+#include "bnd_interface.h"
+#include "constants.h"
+#include "variables.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
@@ -163,4 +163,4 @@ class LBMBnd_Periodic : public LBMBndInterface {
  private:
   std::vector<LBMBndCell_periodic<DEBUG_LEVEL, LBTYPE>> m_bndCells;
 };
-#endif // LBM_LBM_BND_PERIODIC_H
+#endif // LBM_BND_PERIODIC_H

@@ -1,7 +1,7 @@
 #ifndef LBM_BND_WALL_H
 #define LBM_BND_WALL_H
-#include "lbm_bnd_interface.h"
-#include "lbm_constants.h"
+#include "bnd_interface.h"
+#include "constants.h"
 
 template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
 class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {

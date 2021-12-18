@@ -2,7 +2,7 @@
 #define LBM_SOLVEREXE_H
 
 #include <sfcmm_common.h>
-#include "lbm_solver.h"
+#include "solver.h"
 
 // encapsulation to specialize to LBMethodeType
 template <Debug_Level DEBUG_LEVEL>

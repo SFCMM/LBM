@@ -1,8 +1,8 @@
-#ifndef LBM_LBM_BND_IN_OUT_H
-#define LBM_LBM_BND_IN_OUT_H
-#include "lbm_bnd_interface.h"
-#include "lbm_constants.h"
-#include "lbm_variables.h"
+#ifndef LBM_BND_IN_OUT_H
+#define LBM_BND_IN_OUT_H
+#include "bnd_interface.h"
+#include "constants.h"
+#include "variables.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBnd_InOutBB : public LBMBndInterface {
@@ -157,4 +157,4 @@ class LBMBnd_InOutBB : public LBMBndInterface {
   std::vector<GInt>    m_bndCells;
 };
 
-#endif // LBM_LBM_BND_IN_OUT_H
+#endif // LBM_BND_IN_OUT_H
