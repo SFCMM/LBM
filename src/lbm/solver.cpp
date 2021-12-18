@@ -1,7 +1,7 @@
 #include "solver.h"
 #include "analytical_solutions.h"
 #include "equilibrium_func.h"
-
+#include "globaltimers.h"
 #include <set>
 
 using namespace std;

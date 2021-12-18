@@ -14,6 +14,7 @@ struct Timers_ {
     IO,
     Init,
 
+    // Grid Generator
     GridGeneratorTotal,
     GridGeneration,
     GridInit,
@@ -22,6 +23,7 @@ struct Timers_ {
     GridRefinement,
     GridIo,
 
+    // LBM
     LBMSolverTotal,
     LBMInit,
     LBMMainLoop,
@@ -34,6 +36,16 @@ struct Timers_ {
     LBMForce,
     LBMPost,
     LBMIo,
+
+    // Particle
+    LPTSolverTotal,
+    LPTInit,
+    LPTMainLoop,
+    LPTCalc,
+    LPTColl,
+    LPTForce,
+    LPTPost,
+    LPTIo,
 
     // counter
     _count

@@ -3,6 +3,7 @@
 #include "json.h"
 #include <sfcmm_common.h>
 #include <utility>
+#include <stack>
 using json = nlohmann::json;
 
 template <GInt NDIM>

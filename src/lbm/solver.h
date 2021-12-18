@@ -81,6 +81,7 @@ class LBMSolver : public Runnable,
   void init(int argc, GChar** argv);
   void initTimers();
   void allocateMemory();
+  void loadConfiguration();
 
   //  [[nodiscard]] auto grid() const -> CartesianGrid<DEBUG_LEVEL, LBMethod<LBTYPE>::m_dim>* {
   //    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get());
@@ -91,7 +92,6 @@ class LBMSolver : public Runnable,
   }
 
 
-  void loadConfiguration();
   void timeStep();
   void output(const GBool forced = false, const GString& postfix = "");
   void compareToAnalyticalResult();
@@ -159,7 +159,6 @@ class LBMSolver : public Runnable,
 
   void checkDivergence();
 
- private:
   std::unique_ptr<GridInterface>                          m_grid;
   std::unique_ptr<LBMBndManager<DEBUG_LEVEL, LBTYPE, EQ>> m_bndManager;
 

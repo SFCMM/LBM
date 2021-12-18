@@ -1,8 +1,12 @@
 # LBM Solver
 
 ## Features
-- Solve Navier-Stokes equations
+- Solve Navier-Stokes equation
 - Solve Poisson-Boltzmann equation
+- Lagrange particle tracking
+   - drag
+   - evaporation
+   - injection
 
 
 ## License

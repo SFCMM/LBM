@@ -22,6 +22,7 @@
 - write out lines as svg
 - [LPT] add simple collision model
 - set write out precision
+- write out memory statistics
 
 # V0.0.2
 
