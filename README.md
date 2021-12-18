@@ -10,8 +10,8 @@
 
 
 ## License
-- Code is BSD v3 licensed
-- Data and Documentation is CC-BY-NC ![license](https://creativecommons.org/licenses/by-nc/4.0/ "CC-BY-NC)")
+- Code: [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+- Data/Documentation: [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC_BY--NC_4.0-blue.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 
 ## Requirements
 
@@ -30,6 +30,14 @@
    ```make -j 6```
 4) run bench
    ```./lbm --bench```
+   
+## Tests
+
+Run all testcases:
+* /test/run.sh
+
+Clean testcase directories:
+* /test/clean.sh
 
 ## Commandline options
 
@@ -38,13 +46,11 @@
 Set the debug level to run:
 
 - 0 off (default)
-- 1 minimal
-- 2 normal
-- 3 more
-- 4 maximum
+- 1 on
+- 2 all checks
 
-For example to run with the debug level 3:
-```./gridgenerator --debug 3```
+For example to run with all debug checks:
+```./gridgenerator --debug 2```
 
 Determines how many extra checks and output is produced!
 
