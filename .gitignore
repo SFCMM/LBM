@@ -4,3 +4,7 @@
 build/
 
 docs/docs_doxygen/
+
+*.stdout
+
+*.vtp
