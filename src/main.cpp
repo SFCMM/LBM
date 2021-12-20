@@ -48,7 +48,7 @@ class AppConfiguration {
   void setConfigurationFile(const GString& configFile) { m_configurationFile = configFile; }
   void setBenchmark() { m_benchmark = true; }
 
-  [[nodiscard]] auto toRun(const SolverType solver) const -> GBool {
+  [[nodiscard]] auto toRun() const -> GBool {
     // open configuration file
     if(MPI::isRoot() && isFile(m_configurationFile)) {
       std::ifstream configFileStream(m_configurationFile);
@@ -56,7 +56,7 @@ class AppConfiguration {
       configFileStream >> config;
       // check for solvers for solver-> type
       const GString solverType = config["solver"]["type"];
-      if(SOLVER_NAME[static_cast<GInt>(solver)] == solverType || SOLVER_NAMELC[static_cast<GInt>(solver)] == solverType) {
+      if(SOLVER_NAME[static_cast<GInt>(Solver)] == solverType || SOLVER_NAMELC[static_cast<GInt>(Solver)] == solverType) {
         return true;
       }
     }
@@ -84,12 +84,18 @@ class AppConfiguration {
 #ifdef SOLVER_AVAILABLE
       case SolverType::LBM:
         m_app = std::make_unique<LBMSolverExecutor<DEBUG>>(m_domainId, m_noDomains);
+        break;
+      case SolverType::LPT:
+        m_app = std::make_unique<LPTSolverExecutor<DEBUG>>(m_domainId, m_noDomains);
+        break;
 #endif
+      case SolverType::GRIDDER:
+        m_app = std::make_unique<GridGenerator<DEBUG>>(m_domainId, m_noDomains);
         break;
       case SolverType::NONE:
         [[fallthrough]];
       default:
-        m_app = std::make_unique<GridGenerator<DEBUG>>(m_domainId, m_noDomains);
+        TERMM(-1, "No valid solverType set!");
     }
 
     if(!m_benchmark) {
@@ -103,12 +109,12 @@ class AppConfiguration {
   int     m_argc{};
   GChar** m_argv{};
 
-  std::unique_ptr<Runnable>        m_app;
-  GString                          m_configurationFile = "grid.json";
-  GBool                            m_benchmark         = false;
-  GBool                            m_init              = false;
-  GInt32                           m_domainId          = -1;
-  GInt32                           m_noDomains         = -1;
+  std::unique_ptr<Runnable> m_app;
+  GString                   m_configurationFile = "grid.json";
+  GBool                     m_benchmark         = false;
+  GBool                     m_init              = false;
+  GInt32                    m_domainId          = -1;
+  GInt32                    m_noDomains         = -1;
 };
 } // namespace internal_
 
@@ -209,9 +215,10 @@ auto main(int argc, GChar** argv) -> int {
 
   startupInfo(argv);
 
-  internal_::AppConfiguration gridGenRunner(argc, argv, domainId, noDomains);
+  internal_::AppConfiguration<SolverType::GRIDDER> gridGenRunner(argc, argv, domainId, noDomains);
 #ifdef SOLVER_AVAILABLE
-  internal_::AppConfiguration<SolverType::LBM> solverRunner(argc, argv, domainId, noDomains);
+  internal_::AppConfiguration<SolverType::LBM> solverRunnerLBM(argc, argv, domainId, noDomains);
+  internal_::AppConfiguration<SolverType::LPT> solverRunnerLPT(argc, argv, domainId, noDomains);
 #endif
 
 
@@ -226,7 +233,8 @@ auto main(int argc, GChar** argv) -> int {
   if(result.count("bench") > 0) {
     gridGenRunner.setBenchmark();
 #ifdef SOLVER_AVAILABLE
-    solverRunner.setBenchmark();
+    solverRunnerLPT.setBenchmark();
+    solverRunnerLBM.setBenchmark();
 #endif
   } else {
     // first positional argument should be the configuration file
@@ -237,29 +245,59 @@ auto main(int argc, GChar** argv) -> int {
     }
     gridGenRunner.setConfigurationFile(config_file);
 #ifdef SOLVER_AVAILABLE
-    solverRunner.setConfigurationFile(config_file);
+    solverRunnerLBM.setConfigurationFile(config_file);
+    solverRunnerLPT.setConfigurationFile(config_file);
 #endif
   }
 
-  GInt ret = gridGenRunner.run(debug);
-  STOP_ALL_RECORD_TIMERS();
-  DISPLAY_ALL_TIMERS();
-  RECORD_TIMER_START(TimeKeeper[Timers::timertotal]);
+  GBool runLBM = false;
+  GBool runLPT = false;
+#ifdef SOLVER_AVAILABLE
+  runLBM = solverRunnerLBM.toRun();
+  runLPT = solverRunnerLPT.toRun();
+#endif
 
+  GBool runGridGenerator = true;
+  if(runLPT) {
+    // todo: check if we need to run
+    runGridGenerator = false;
+    cerr0 << "Grid generator hardcoded deactivated for LPT" << std::endl;
+  }
+
+  GInt gridGenRet = 0;
+  if(runGridGenerator) {
+    cerr0 << "running gridder " << std::endl;
+    gridGenRet = gridGenRunner.run(debug);
+    STOP_ALL_RECORD_TIMERS();
+    DISPLAY_ALL_TIMERS();
+  }
+
+  GInt lbmRet = 0;
+  GInt lptRet = 0;
 
 #ifdef SOLVER_AVAILABLE
-  if(ret == 0 && (result.count("solver") > 0 || solverRunner.toRun(SolverType::LBM))) {
+  RECORD_TIMER_START(TimeKeeper[Timers::timertotal]);
+
+  // LBM is run by default when using the solver switch
+  if(gridGenRet == 0 && (result.count("solver") > 0 || runLBM)) {
     logger.close();
-    solverRunner.transferGrid(gridGenRunner.grid(), debug);
+    solverRunnerLBM.transferGrid(gridGenRunner.grid(), debug);
     gridGenRunner.releaseMemory();
-    ret = solverRunner.run(debug);
+    lbmRet = solverRunnerLBM.run(debug);
   }
-#endif
+
+  if(gridGenRet == 0 && runLPT) {
+    logger.close();
+    //    solverRunnerLBM.transferGrid(gridGenRunner.grid(), debug);
+    //    gridGenRunner.releaseMemory();
+    lptRet = solverRunnerLPT.run(debug);
+  }
 
   STOP_ALL_RECORD_TIMERS();
   DISPLAY_ALL_TIMERS();
+#endif
 
   logger.close();
   MPI_Finalize();
-  return static_cast<int>(ret);
+  return static_cast<int>(gridGenRet + lbmRet + lptRet);
 }

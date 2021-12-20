@@ -5,12 +5,13 @@
 #include "common/configuration.h"
 #include "interface/solver_interface.h"
 #include "particle.h"
+#include "cartesiangrid.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 class LPTSolver : public Runnable, private Configuration {
  private:
   // Type declarations and template variables only
-  static constexpr GInt NVARS = Particle<NDIM, P>::m_noVars;
+  static constexpr GInt NVARS = static_cast<GInt>(Particle<NDIM, P>::m_noVars);
 
  public:
   LPTSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
@@ -20,9 +21,11 @@ class LPTSolver : public Runnable, private Configuration {
   auto operator=(const LPTSolver&) -> LPTSolver& = delete;
   auto operator=(LPTSolver&&) -> LPTSolver& = delete;
 
-  void init(int argc, GChar** argv, GString config_file) override;
-  void initBenchmark(int argc, GChar** argv) override;
-  auto run() -> GInt override;
+  void               init(int argc, GChar** argv, GString config_file) override;
+  void               initBenchmark(int argc, GChar** argv) override;
+  auto               run() -> GInt override;
+  [[nodiscard]] auto grid() const -> const CartesianGrid<DEBUG_LEVEL, NDIM>& override { TERMM(-1, "Not implemented"); };
+  void               transferGrid(const GridInterface& /*grid*/) override { TERMM(-1, "Not implemented"); };
 
   /// Memory used in Kbytes
   /// \return KBytes used
@@ -57,8 +60,8 @@ class LPTSolver : public Runnable, private Configuration {
 
   /// Variables
   std::vector<GDouble> m_vars;
-  GInt                 m_timeStep;
-  GDouble              m_dt;
+  GInt                 m_timeStep = 0;
+  GDouble              m_dt       = NAN;
 };
 
 

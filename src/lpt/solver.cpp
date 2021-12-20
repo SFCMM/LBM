@@ -8,7 +8,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init(int argc, GChar** argv) {
   m_exe = argv[0]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
 #ifndef GRIDGEN_SINGLE_FILE_LOG
-  logger.open("lbm_log" + std::to_string(m_domainId), false, argc, argv, MPI_COMM_WORLD);
+  logger.open("lpt_log" + std::to_string(m_domainId), false, argc, argv, MPI_COMM_WORLD);
 #else
   if(DEBUG_LEVEL < Debug_Level::max_debug) {
     logger.open("lpt_log", true, argc, argv, MPI_COMM_WORLD);
@@ -25,8 +25,8 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::init(int argc, GChar** argv, GString config_file) {
   setConfiguration(config_file);
   init(argc, argv);
-  logger << NDIM << "D LBM Solver started ||>" << endl;
-  cout << NDIM << "D LBM Solver started ||>" << endl;
+  logger << NDIM << "D LPT Solver started ||>" << endl;
+  cout << NDIM << "D LPT Solver started ||>" << endl;
   Configuration::load("solver");
   //  POST::setConfAccessor(Configuration::getAccessor("postprocessing"));
   RECORD_TIMER_STOP(TimeKeeper[Timers::LPTInit]);
@@ -47,7 +47,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::initTimers() {
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LPTSolverTotal], "Total run time of the LPT Solver.", TimeKeeper[Timers::timertotal]);
   RECORD_TIMER_START(TimeKeeper[Timers::LPTSolverTotal]);
 
-  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LPTInit], "Initialization of the LPT solver", TimeKeeper[Timers::LBMSolverTotal]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LPTInit], "Initialization of the LPT solver", TimeKeeper[Timers::LPTSolverTotal]);
   RECORD_TIMER_START(TimeKeeper[Timers::LPTInit]);
 
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LPTMainLoop], "Main Loop of the LPT solver!", TimeKeeper[Timers::LPTSolverTotal]);

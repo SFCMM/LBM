@@ -1,4 +1,4 @@
-#ifndef LBM_FORCES_H
-#define LBM_FORCES_H
+#ifndef LPT_FORCES_H
+#define LPT_FORCES_H
 
-#endif // LBM_FORCES_H
+#endif // LPT_FORCES_H

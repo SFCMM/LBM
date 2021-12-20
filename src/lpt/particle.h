@@ -1,5 +1,5 @@
-#ifndef LBM_PARTICLE_H
-#define LBM_PARTICLE_H
+#ifndef LPT_PARTICLE_H
+#define LPT_PARTICLE_H
 
 #include <sfcmm_common.h>
 
@@ -54,4 +54,4 @@ class Particle<NDIM, LPTType::High> {
   static constexpr auto oldTemperature() -> GInt { return 2 * NDIM + 4; }
 };
 
-#endif // LBM_PARTICLE_H
+#endif // LPT_PARTICLE_H

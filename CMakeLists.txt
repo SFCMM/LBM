@@ -30,7 +30,9 @@ add_executable(lbm
         src/lbm/solverExe.h src/common/configuration.h src/lbm/bnd_wall.h src/lbm/bnd_interface.h
         src/lbm/bnd_in_out.h src/lbm/bnd_periodic.h src/postprocessing.h src/postprocessing_cartesian.h
         src/lbm/lbm_postprocessing.h src/postprocessing_func.h src/common/line.h src/common/mesh.h
-        src/lbm/bnd_dirichlet.h src/lbm/solver_inst_1d.cpp src/lbm/solver_inst_2d.cpp src/lbm/equilibrium_func.h src/lpt/particle.h src/lpt/forces.h src/lpt/solver.cpp src/lpt/solver.h src/common/sphere.h src/lpt/solverExe.h src/lpt/solver_inst_2d.cpp src/lpt/solver_inst_3d.cpp)
+        src/lbm/bnd_dirichlet.h src/lbm/solver_inst_1d.cpp src/lbm/solver_inst_2d.cpp src/lbm/equilibrium_func.h
+        src/lpt/particle.h src/lpt/forces.h src/lpt/solver.cpp src/lpt/solver.h src/common/sphere.h src/lpt/solverExe.h
+        src/lpt/solver_inst_2d.cpp src/lpt/solver_inst_3d.cpp)
 
 #TARGET_LINK_LIBRARIES(lbm PUBLIC mpi)
 target_link_libraries(lbm PUBLIC MPI::MPI_CXX dl tinfo pthread)
