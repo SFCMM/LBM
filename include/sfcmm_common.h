@@ -23,6 +23,7 @@ static constexpr int MAX_DIM = 4;
 
 #include "common/math/cartesian.h"
 #include "common/math/hilbert.h"
+#include "common/math/integration.h"
 #include "common/math/mathfunctions.h"
 
 #endif

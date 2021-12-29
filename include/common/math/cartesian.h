@@ -28,7 +28,6 @@ static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
   if constexpr(NDIM == 2) {
     return dir > 5 ? dir - 2 : dir + 2;
   }
-  TERMM(-1, "No valid direction");
 }
 
 /// Return maximum number of children per cell
