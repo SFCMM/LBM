@@ -2,8 +2,8 @@
 #define LPT_PARTICLE_H
 
 #include <sfcmm_common.h>
+#include "lpt/constants.h"
 
-enum class LPTType { Normal, High };
 
 template <GInt NDIM, LPTType P>
 class Particle {};

@@ -1,6 +1,6 @@
 {
   "dry-run": true,
-  "dim": 2,
+  "dim": 3,
   "solver": {
     "type": "lpt",
     "maxSteps": 100,
