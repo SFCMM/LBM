@@ -2,6 +2,7 @@
 ## Planned
 - add python frontend
 - add gpu acceleration
+- reduce todo to 0
 
 # V0.0.3
 ## Planned
@@ -23,6 +24,7 @@
 - [LPT] add simple collision model
 - set write out precision
 - write out memory statistics
+- reduce todo below 50
 
 # V0.0.2
 
@@ -33,7 +35,6 @@
 - load grid from disk
 - Couette in 3D
 - Poiseuille flow in 3D
-- add simple LPT solver
 - add simple injection model
 - contact angle
 - output analytical solution if wanted
@@ -63,6 +64,7 @@
 - fix poisson method to allow changes of relaxation
 - determine analytical solutions for 2D poisson cases
 - adjust settings for poisson D2Q9
+- reduce todos below 100
 
 - warn when overwriting files
 - give option to not overwrite files
@@ -76,6 +78,7 @@
 - outflow pressure bc
 - automatically run all the testcases and produce report
 - use pressure boundary condition for poiseuille cases
+- LPT solver
 
 ## Done:
 

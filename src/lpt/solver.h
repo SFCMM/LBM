@@ -3,12 +3,13 @@
 
 #include <sfcmm_common.h>
 #include "common/configuration.h"
+#include "common/random.h"
 #include "interface/solver_interface.h"
 #include "particle.h"
 #include "cartesiangrid.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
-class LPTSolver : public Runnable, private Configuration {
+class LPTSolver : public Runnable, private Configuration, private RandomGenerator {
  private:
   // Type declarations and template variables only
   static constexpr GInt NVARS = static_cast<GInt>(Particle<NDIM, P>::m_noVars);
@@ -38,14 +39,17 @@ class LPTSolver : public Runnable, private Configuration {
   void loadConfiguration();
 
   void initialCondition();
+  void init_randomVolPos();
+
   void timeStep();
   void output(const GBool forced);
 
   /// Configuration
-  GString m_exe;
-  GString m_configurationFileName;
-  GBool   m_benchmark = false;
-  GInt    m_capacity  = 1000;
+  GString     m_exe;
+  GString     m_configurationFileName;
+  GBool       m_benchmark        = false;
+  GInt        m_capacity         = 1000;
+  LPTInitCond m_initialCondition = LPTInitCond::none;
 
   /// MPI
   GInt32 m_domainId  = -1;

@@ -3,11 +3,14 @@
 
 enum class LPTType { Normal, High };
 
-enum class LPTInitCond { load_from_CSV, randomvol_pos, randomplane_pos };
+enum class LPTInitCond { none, load_from_CSV, randomvol_pos, randomplane_pos };
 
-static constexpr std::array<std::string_view, 3> LPTInitCondName = {"load_from_CSV", "randomvol_pos", "randomplane_pos"};
+static constexpr std::array<std::string_view, 4> LPTInitCondName = {"none", "load_from_CSV", "randomvol_pos", "randomplane_pos"};
 
-static constexpr auto LPTInitCond(const std::string_view condName) -> LPTInitCond {
+static constexpr auto getLPTInitCond(const std::string_view condName) -> LPTInitCond {
+  if(condName == "none") {
+    return LPTInitCond::none;
+  }
   if(condName == "load_from_CSV") {
     return LPTInitCond::load_from_CSV;
   }

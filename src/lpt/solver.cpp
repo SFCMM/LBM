@@ -66,6 +66,9 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::loadConfiguration() {
   m_outputInfoInterval     = opt_config_value<GInt>("info_interval", m_outputInfoInterval);
   m_outputSolutionInterval = opt_config_value<GInt>("solution_interval", m_outputSolutionInterval);
   m_solutionFileName       = opt_config_value<GString>("solution_filename", m_solutionFileName);
+  m_initialCondition       = getLPTInitCond(opt_config_value<GString>("initialcondition", "none"));
+  // todo: set by configuration
+  m_capacity = 1000;
 
   if(!isPath(m_outputDir, m_generatePath)) {
     TERMM(-1, "Invalid output directory set! (value: " + m_outputDir + ")");
@@ -80,6 +83,7 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::allocateMemory() {
   // allocate memory
   m_vars.resize(m_capacity * NVARS);
+  cerr0 << "allocated memory: " << mem() << "KB" << std::endl;
 }
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
@@ -118,7 +122,36 @@ auto LPTSolver<DEBUG_LEVEL, NDIM, P>::run() -> GInt {
 }
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
-void LPTSolver<DEBUG_LEVEL, NDIM, P>::initialCondition() {}
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::initialCondition() {
+  switch(m_initialCondition) {
+    case LPTInitCond::randomvol_pos:
+      init_randomVolPos();
+      break;
+    case LPTInitCond::none:
+      return;
+    default:
+      TERMM(-1, "Invalid initial condition");
+  }
+}
+
+template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
+  // todo: make settable
+  GInt noParticles = 10;
+  // todo: make settable
+  GString m_volType = "box";
+  // todo: make settable
+  VectorD<NDIM> cornerA = {0, 0};
+  // todo: make settable
+  VectorD<NDIM> cornerB = {10, 1};
+
+  cerr0 << "Placing " << noParticles << " particles inside " << m_volType << " at random position" << std::endl;
+
+  for(GInt partId = 0; partId < noParticles; ++partId) {
+    cerr0 << "Generate particle at " << strStreamify<NDIM>(randomPos<NDIM>(cornerA, cornerB)).str() << std::endl;
+  }
+}
+
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {}
