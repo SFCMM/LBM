@@ -16,7 +16,7 @@
 #include "sfcmm_types.h"
 #include "macros.h"
 #ifdef USE_ASSERTS
-#include "term.h"
+#include "common/term.h"
 #endif
 
 // todo: documentation
