@@ -79,7 +79,7 @@ inline static auto encode(T* c) -> GString {
   auto* char_wise = static_cast<GUchar*>(static_cast<void*>(&c[0]));
 
   for(GInt i = 0; i < length; ++i) {
-    for(GInt byte = 0; byte < sizeof(T); ++byte) {
+    for(GUint byte = 0; byte < sizeof(T); ++byte) {
       auto tmp_bitset = std::bitset<8>(char_wise[i * sizeof(T) + byte]);
       for(GInt bit = 0; bit < 8; ++bit) {
         mem[(length - i - 1) * sizeof(T) * 8 + byte * 8 + bit] = tmp_bitset[bit];

@@ -12,6 +12,7 @@ static constexpr int MAX_DIM = 4;
 #include "common/globalmpi.h"
 #include "common/log.h"
 #include "common/macros.h"
+#include "common/randxor.h"
 #include "common/sfcmm_types.h"
 #include "common/timer.h"
 
