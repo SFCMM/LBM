@@ -83,6 +83,9 @@
 ## Done:
 
 ### Features
+- Lagrange Particle Solver
+  - Forces:
+    - Gravity
 
 ### Buildsystem
 

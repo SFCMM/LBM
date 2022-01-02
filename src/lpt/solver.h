@@ -2,6 +2,7 @@
 #define LPT_SOLVER_H
 
 #include <sfcmm_common.h>
+#include <Eigen/Core>
 #include "common/configuration.h"
 #include "common/random.h"
 #include "interface/solver_interface.h"
@@ -12,7 +13,8 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 class LPTSolver : public Runnable, private Configuration, private RandomGenerator {
  private:
   // Type declarations and template variables only
-  static constexpr GInt NVARS = static_cast<GInt>(Particle<NDIM, P>::m_noVars);
+  using PTYPE                 = Particle<NDIM, P>;
+  static constexpr GInt NVARS = static_cast<GInt>(PTYPE::m_noVars);
 
  public:
   LPTSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
@@ -43,6 +45,10 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
 
   void timeStep();
   void output(const GBool forced);
+
+  inline auto velocity(const GInt pid) -> Eigen::Map<VectorD<NDIM>> { return Eigen::Map<VectorD<NDIM>>(&m_vars[pid * PTYPE::velocity(0)]); }
+
+  inline auto center(const GInt pid) -> Eigen::Map<VectorD<NDIM>> { return Eigen::Map<VectorD<NDIM>>(&m_vars[pid * PTYPE::center(0)]); }
 
   /// Configuration
   GString     m_exe;

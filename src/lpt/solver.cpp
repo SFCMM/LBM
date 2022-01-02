@@ -83,6 +83,8 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::allocateMemory() {
   // allocate memory
   m_vars.resize(m_capacity * NVARS);
+  // fill variables with NAN to crash when using unset variables
+  fill(m_vars.begin(), m_vars.end(), NAN);
   cerr0 << "allocated memory: " << mem() << "KB" << std::endl;
 }
 
@@ -148,13 +150,32 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
   cerr0 << "Placing " << noParticles << " particles inside " << m_volType << " at random position" << std::endl;
 
   for(GInt partId = 0; partId < noParticles; ++partId) {
-    cerr0 << "Generate particle at " << strStreamify<NDIM>(randomPos<NDIM>(cornerA, cornerB)).str() << std::endl;
+    center(partId) = randomPos<NDIM>(cornerA, cornerB);
+    velocity(partId).fill(0);
   }
 }
 
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
-void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {}
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
+  // todo: load from config
+  VectorD<NDIM> m_gravity     = {0, 10};
+  GInt          m_noParticles = 10;
+  GDouble       m_dt          = 0.1;
+  GInt          m_maxNoSteps  = 100;
+
+  for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
+    for(GInt partId = 0; partId < m_noParticles; ++partId) {
+      velocity(partId) = m_gravity * m_dt;
+      center(partId)   = center(partId) + velocity(partId) * m_dt;
+    }
+  }
+
+  for(GInt partId = 0; partId < m_noParticles; ++partId) {
+    cerr0 << "V " << strStreamify<NDIM>(velocity(partId)).str() << std::endl;
+    cerr0 << "center " << strStreamify<NDIM>(center(partId)).str() << std::endl;
+  }
+}
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::output(const GBool forced) {}

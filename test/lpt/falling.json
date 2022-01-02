@@ -2,6 +2,10 @@
   "dry-run": true,
   "dim": 2,
   "seed": 123456789,
+  "gravity": [
+    0,
+    10
+  ],
   "solver": {
     "type": "lpt",
     "maxSteps": 100,
