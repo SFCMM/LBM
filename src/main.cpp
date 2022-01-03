@@ -249,20 +249,21 @@ auto main(int argc, GChar** argv) -> int {
     solverRunnerLPT.setConfigurationFile(config_file);
 #endif
   }
+  GBool runGridGenerator = true;
 
+#ifdef SOLVER_AVAILABLE
   GBool runLBM = false;
   GBool runLPT = false;
-#ifdef SOLVER_AVAILABLE
-  runLBM = solverRunnerLBM.toRun();
-  runLPT = solverRunnerLPT.toRun();
-#endif
+  runLBM       = solverRunnerLBM.toRun();
+  runLPT       = solverRunnerLPT.toRun();
 
-  GBool runGridGenerator = true;
   if(runLPT) {
     // todo: check if we need to run
     runGridGenerator = false;
     cerr0 << "Grid generator hardcoded deactivated for LPT" << std::endl;
   }
+#endif
+
 
   GInt gridGenRet = 0;
   if(runGridGenerator) {
