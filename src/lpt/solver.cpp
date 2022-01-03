@@ -1,6 +1,6 @@
 #include "solver.h"
-#include "globaltimers.h"
 #include "common/sphere.h"
+#include "globaltimers.h"
 
 using namespace std;
 
@@ -150,7 +150,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
   // todo: make configable
   const GDouble initVelo = 0;
   // todo: make configable
-  const GDouble initDensity = 1;
+  const GDouble initDensity = 2;
   // todo: make configable
   const GDouble initRadius = 1;
 
@@ -161,6 +161,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
     velocity(partId).fill(initVelo);
     density(partId) = initDensity;
     radius(partId)  = initRadius;
+    volume(partId)  = sphere::volumeR(initRadius);
   }
 }
 
@@ -169,9 +170,13 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   // todo: load from config
   VectorD<NDIM> m_gravity     = {0, 10};
-  GInt          m_noParticles = 10;
-  GDouble       m_dt          = 0.1;
-  GInt          m_maxNoSteps  = 100;
+  const GInt    m_noParticles = 10;
+  const GDouble m_dt          = 0.1;
+  const GInt    m_maxNoSteps  = 100;
+
+  // todo: load from config
+  const GDouble ambientDensity   = 1;
+  const GDouble ambientViscosity = 1E-5;
 
   for(GInt partId = 0; partId < m_noParticles; ++partId) {
     cerr0 << "V " << strStreamify<NDIM>(velocity(partId)).str() << std::endl;
@@ -180,11 +185,18 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
 
   for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
     for(GInt partId = 0; partId < m_noParticles; ++partId) {
-      volume(partId)       = sphere::volumeR(radius(partId));
-      const GDouble mass   = volume(partId) * density(partId);
-      VectorD<NDIM> forces = m_gravity; // forces/mass
-      velocity(partId) += forces * m_dt;
-      center(partId) = center(partId) + velocity(partId) * m_dt;
+      const VectorD<NDIM> oldVelocity = velocity(partId);
+
+      const GDouble r   = radius(partId);
+      const GDouble rho = density(partId);
+
+      const GDouble reynoldsNumber = ambientDensity * oldVelocity.norm() * 2.0 * r / ambientViscosity;
+      const GDouble DC             = 18.0 * ambientViscosity / (4.0 * r * r * rho);
+      const GDouble mass           = volume(partId) * rho;
+
+      VectorD<NDIM> forces = DC * (-oldVelocity) + m_gravity * (1.0 - ambientDensity / rho); // forces/mass
+      velocity(partId)     = oldVelocity + forces * m_dt;
+      center(partId)       = center(partId) + velocity(partId) * m_dt;
     }
   }
 

@@ -47,7 +47,7 @@ static constexpr GInt MAX_DIM = 4;
 
 // clang-format off
 #define PROJECT_VER @PROJECT_VERSION@
-#define BUILD_NUM 449
+#define BUILD_NUM 450
 #define COMPILER_VER @CMAKE_CXX_COMPILER_VERSION@
 #define COMPILER_NAME @CMAKE_CXX_COMPILER_ID@
 #define BUILD_TYPE @CMAKE_BUILD_TYPE@
