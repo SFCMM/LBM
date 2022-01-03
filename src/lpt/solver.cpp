@@ -152,7 +152,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
   // todo: make configable
   const GDouble initDensity = 2;
   // todo: make configable
-  const GDouble initRadius = 1;
+  const GDouble initRadius = 0.01;
 
   cerr0 << "Placing " << noParticles << " particles inside " << m_volType << " at random position" << std::endl;
 
@@ -172,11 +172,12 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   VectorD<NDIM> m_gravity     = {0, 10};
   const GInt    m_noParticles = 10;
   const GDouble m_dt          = 0.1;
-  const GInt    m_maxNoSteps  = 100;
+  const GInt    m_maxNoSteps  = 200000;
 
   // todo: load from config
   const GDouble ambientDensity   = 1;
-  const GDouble ambientViscosity = 1E-5;
+  const GDouble       ambientViscosity = 1E-5;
+  const VectorD<NDIM> ambientVelocity  = {0, 0};
 
   for(GInt partId = 0; partId < m_noParticles; ++partId) {
     cerr0 << "V " << strStreamify<NDIM>(velocity(partId)).str() << std::endl;
@@ -185,18 +186,19 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
 
   for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
     for(GInt partId = 0; partId < m_noParticles; ++partId) {
-      const VectorD<NDIM> oldVelocity = velocity(partId);
+      const VectorD<NDIM> oldVelocity    = velocity(partId);
+      const VectorD<NDIM> oldRelVelocity = ambientVelocity - oldVelocity;
 
       const GDouble r   = radius(partId);
       const GDouble rho = density(partId);
 
-      const GDouble reynoldsNumber = ambientDensity * oldVelocity.norm() * 2.0 * r / ambientViscosity;
+      const GDouble reynoldsNumber = ambientDensity * oldRelVelocity.norm() * 2.0 * r / ambientViscosity;
       const GDouble DC             = 18.0 * ambientViscosity / (4.0 * r * r * rho);
       const GDouble mass           = volume(partId) * rho;
 
-      VectorD<NDIM> forces = DC * (-oldVelocity) + m_gravity * (1.0 - ambientDensity / rho); // forces/mass
-      velocity(partId)     = oldVelocity + forces * m_dt;
-      center(partId)       = center(partId) + velocity(partId) * m_dt;
+      a(partId)        = DC * oldRelVelocity + m_gravity * (1.0 - ambientDensity / rho); // forces/mass
+      velocity(partId) = oldVelocity + a(partId) * m_dt;
+      center(partId)   = center(partId) + velocity(partId) * m_dt;
     }
   }
 

@@ -86,6 +86,10 @@
 - Lagrange Particle Solver
   - Forces:
     - Gravity
+    - Buoyancy
+    - Stokes Drag
+  - Integration methods:
+    - Forward Euler
 
 ### Buildsystem
 
