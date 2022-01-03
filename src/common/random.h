@@ -5,7 +5,7 @@
 
 class RandomGenerator {
  public:
-  RandomGenerator() : m_generator(12345) { logger << "WARNING: No seed set" << std::endl; };
+  RandomGenerator() : m_generator(123456) { logger << "WARNING: No seed set" << std::endl; };
 
   template <GInt NDIM>
   inline auto randomPos(const VectorD<NDIM>& lowerBound, const VectorD<NDIM>& upperBound) -> VectorD<NDIM> {

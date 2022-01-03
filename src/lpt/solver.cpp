@@ -1,5 +1,6 @@
 #include "solver.h"
 #include "globaltimers.h"
+#include "common/sphere.h"
 
 using namespace std;
 
@@ -146,12 +147,20 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
   VectorD<NDIM> cornerA = {0, 0};
   // todo: make settable
   VectorD<NDIM> cornerB = {10, 1};
+  // todo: make configable
+  const GDouble initVelo = 0;
+  // todo: make configable
+  const GDouble initDensity = 1;
+  // todo: make configable
+  const GDouble initRadius = 1;
 
   cerr0 << "Placing " << noParticles << " particles inside " << m_volType << " at random position" << std::endl;
 
   for(GInt partId = 0; partId < noParticles; ++partId) {
     center(partId) = randomPos<NDIM>(cornerA, cornerB);
-    velocity(partId).fill(0);
+    velocity(partId).fill(initVelo);
+    density(partId) = initDensity;
+    radius(partId)  = initRadius;
   }
 }
 
@@ -164,10 +173,18 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   GDouble       m_dt          = 0.1;
   GInt          m_maxNoSteps  = 100;
 
+  for(GInt partId = 0; partId < m_noParticles; ++partId) {
+    cerr0 << "V " << strStreamify<NDIM>(velocity(partId)).str() << std::endl;
+    cerr0 << "center " << strStreamify<NDIM>(center(partId)).str() << std::endl;
+  }
+
   for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
     for(GInt partId = 0; partId < m_noParticles; ++partId) {
-      velocity(partId) = m_gravity * m_dt;
-      center(partId)   = center(partId) + velocity(partId) * m_dt;
+      volume(partId)       = sphere::volumeR(radius(partId));
+      const GDouble mass   = volume(partId) * density(partId);
+      VectorD<NDIM> forces = m_gravity; // forces/mass
+      velocity(partId) += forces * m_dt;
+      center(partId) = center(partId) + velocity(partId) * m_dt;
     }
   }
 

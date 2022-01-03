@@ -1,14 +1,19 @@
 #ifndef LPT_SOLVER_H
 #define LPT_SOLVER_H
 
-#include <sfcmm_common.h>
 #include <Eigen/Core>
+#include <sfcmm_common.h>
+#include "cartesiangrid.h"
 #include "common/configuration.h"
 #include "common/random.h"
 #include "interface/solver_interface.h"
 #include "particle.h"
-#include "cartesiangrid.h"
 
+/// Solver for Lagrange particles
+/// Memory consumption 1MB = ~10000 Particles (Normal), ~5000 Particles (Evaporation, High Accuracy)
+/// \tparam DEBUG_LEVEL
+/// \tparam NDIM
+/// \tparam P
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 class LPTSolver : public Runnable, private Configuration, private RandomGenerator {
  private:
@@ -46,9 +51,24 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   void timeStep();
   void output(const GBool forced);
 
-  inline auto velocity(const GInt pid) -> Eigen::Map<VectorD<NDIM>> { return Eigen::Map<VectorD<NDIM>>(&m_vars[pid * PTYPE::velocity(0)]); }
+  inline auto velocity(const GInt pid) -> Eigen::Map<VectorD<NDIM>> {
+    return Eigen::Map<VectorD<NDIM>>(&m_vars[pid * NVARS + PTYPE::velocity(0)]);
+  }
 
-  inline auto center(const GInt pid) -> Eigen::Map<VectorD<NDIM>> { return Eigen::Map<VectorD<NDIM>>(&m_vars[pid * PTYPE::center(0)]); }
+  inline auto center(const GInt pid) -> Eigen::Map<VectorD<NDIM>> {
+    return Eigen::Map<VectorD<NDIM>>(&m_vars[pid * NVARS + PTYPE::center(0)]);
+  }
+
+  inline auto a(const GInt pid) -> Eigen::Map<VectorD<NDIM>> { return Eigen::Map<VectorD<NDIM>>(&m_vars[pid * NVARS + PTYPE::a(0)]); }
+
+  inline auto density(const GInt pid) -> GDouble& { return m_vars[pid * NVARS + PTYPE::density()]; }
+
+  inline auto volume(const GInt pid) -> GDouble& { return m_vars[pid * NVARS + PTYPE::volume()]; }
+
+  inline auto radius(const GInt pid) -> GDouble& { return m_vars[pid * NVARS + PTYPE::radius()]; }
+
+  inline auto temperature(const GInt pid) -> GDouble& { return m_vars[pid * NVARS + PTYPE::temperature()]; }
+
 
   /// Configuration
   GString     m_exe;
