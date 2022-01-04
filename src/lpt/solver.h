@@ -10,6 +10,15 @@
 #include "interface/solver_interface.h"
 #include "particle.h"
 
+enum class IntegrationMethod {
+  ForwardEuler,
+  ForwardEulerPredCor, // s.a. + Predictor-Corrector Step
+  ImplicitEuler,       // for high relative velocities (Note: underpredicts actual velocity)
+  Berger20, // Implicit First-order Exponential Integrator Method as in Sven Berger et al., Large-Eddy Simulation Study of Biofuel Injection
+            // in an Optical Direct Injection Engine (Note: stable and more accurate for high-relative velocities)
+  Berger20PredCor // s.a. + Predictor-Corrector Step
+};
+
 /// Solver for Lagrange particles
 /// Memory consumption 1MB = ~10000 Particles (Normal), ~5000 Particles (Evaporation, High Accuracy)
 /// \tparam DEBUG_LEVEL
@@ -50,9 +59,10 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   void init_randomVolPos();
 
   void timeStep();
-
-  template <force::Model FM>
+  template <force::Model FM, IntegrationMethod IM>
   void calcA();
+  template <IntegrationMethod IM>
+  void timeIntegration();
 
   void output(const GBool forced);
 
@@ -73,6 +83,8 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   inline auto radius(const GInt pid) -> GDouble& { return m_vars[pid * NVARS + PTYPE::radius()]; }
 
   inline auto temperature(const GInt pid) -> GDouble& { return m_vars[pid * NVARS + PTYPE::temperature()]; }
+
+  inline auto DC(const GInt pid) -> GDouble& { return m_vars[pid * NVARS + PTYPE::DC()]; }
 
 
   /// Configuration

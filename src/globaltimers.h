@@ -42,6 +42,7 @@ struct Timers_ {
     LPTInit,
     LPTMainLoop,
     LPTCalc,
+    LPTInt,
     LPTColl,
     LPTForce,
     LPTPost,

@@ -19,6 +19,7 @@ enum class Model {
 };
 
 enum class DragModel {
+  Stokes,          // linear drag valid for Stokes flow (Rep << 1)
   SchillerNaumann, // non-linear drag by Schiller-Naumann
   PinskyKhain,     // non-linear drag by Pinsky&Khain, J. Aerosol Sci. 28(7), 1177-1214 (1997).
   Putnam61         // Mixture Formation in Internal Combustion Engines, 2005, Carsten Baumgarten
@@ -43,6 +44,9 @@ static constexpr auto dragForceStokes(const GDouble radius, const GDouble partic
 template <DragModel DM>
 static constexpr auto dragCoefficient(const GDouble rep) {
   switch(DM) {
+    case DragModel::Stokes:
+      return 1.0;
+      break;
     case DragModel::SchillerNaumann:
       return 1.0 + 0.15 * gcem::pow(rep, 0.687);
       break;

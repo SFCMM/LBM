@@ -53,6 +53,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::initTimers() {
 
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LPTMainLoop], "Main Loop of the LPT solver!", TimeKeeper[Timers::LPTSolverTotal]);
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LPTCalc], "Computation", TimeKeeper[Timers::LPTMainLoop]);
+  NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LPTInt], "Integration", TimeKeeper[Timers::LPTMainLoop]);
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LPTColl], "Collision", TimeKeeper[Timers::LPTCalc]);
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LPTForce], "Computing forces", TimeKeeper[Timers::LPTCalc]);
 
@@ -175,8 +176,8 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   // todo: load from config
-  m_gravity                  = {0, 10};
-  const GDouble m_dt         = 0.1;
+  m_gravity               = {0, 10};
+  m_dt                    = 0.01;
   const GInt    m_maxNoSteps = 200000;
 
   // todo: load from config
@@ -194,27 +195,10 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
 
   for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
     // 1. Step update acceleration
-    calcA<force::Model::constDensityRatioGravBuoStokesDrag>();
-    for(GInt partId = 0; partId < m_noParticles; ++partId) {
-      const VectorD<NDIM> old_velo_p = velocity(partId);
-      //      const VectorD<NDIM> old_rel_velo = velo_a - old_velo_p;
-      //      const GDouble reynoldsNumber = rho_a * old_rel_velo.norm() * 2.0 * r_p / nu_a;
-      //      const GDouble DC             = 18.0 * nu_a / (4.0 * r_p * r_p * rho_p);
-      //      const GDouble mass = volume(partId) * rho_p;
-
-      // Note: all forces are based on a=forces/mass
-      //      a(partId) = 18.0 * nu_a / (4.0 * r_p * r_p * rho_p) * old_rel_velo // stokes drag force
-      //                  + m_gravity * (1.0 - rho_a / rho_p);                   // gravity + buoyancy
-      velocity(partId) = old_velo_p + a(partId) * m_dt;
-      center(partId)   = center(partId) + velocity(partId) * m_dt;
-      if(DEBUG_LEVEL >= Debug_Level::debug) {
-        for(GInt dir = 0; dir < NDIM; ++dir) {
-          if(isnan(velocity(partId)[dir]) || isinf(velocity(partId)[dir])) {
-            TERMM(-1, "Result diverged!");
-          }
-        }
-      }
-    }
+    // todo: make settable
+    calcA<force::Model::constDensityRatioGravBuoNlinDrag, IntegrationMethod::ImplicitEuler>();
+    // todo: make settable
+    timeIntegration<IntegrationMethod::ImplicitEuler>();
   }
 
   for(GInt partId = 0; partId < m_noParticles; ++partId) {
@@ -224,7 +208,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
 }
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
-template <force::Model FM>
+template <force::Model FM, IntegrationMethod IM>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA() {
   RECORD_TIMER_START(TimeKeeper[Timers::LPTForce]);
 
@@ -274,24 +258,85 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA() {
         break;
     }
     // Switch for drag model
+    // todo: reduce code repetition
     switch(FM) {
       case Model::constDensityRatioGravStokesDrag:
       case Model::constDensityRatioGravBuoStokesDrag:
       case Model::constDensityaGravBuoStokesDrag:
-        a(partId) += 18.0 * nu_a / (4.0 * r_p * r_p * rho_p) * (velo_a - velocity(partId));
+        DC(partId) = 18.0 * nu_a / (4.0 * r_p * r_p * rho_p);
+        if(IM != IntegrationMethod::ImplicitEuler) {
+          // just calculate DC since implicit methods use DC directly
+          a(partId) += DC(partId) * (velo_a - velocity(partId));
+        }
         break;
       case Model::constDensityRatioGravNlinDrag:
       case Model::constDensityRatioGravBuoNlinDrag:
       case Model::constDensityaGravBuoNlinDrag:
         re_p = rho_a * velo_p.norm() * 2.0 * r_p / nu_a;
         // todo: allow selecting drag model
-        a(partId) += 18.0 * nu_a / (4.0 * r_p * r_p * rho_p) * dragCoefficient<DragModel::Putnam61>(re_p) * (velo_a - velo_p);
+        DC(partId) = 18.0 * nu_a / (4.0 * r_p * r_p * rho_p) * dragCoefficient<DragModel::Putnam61>(re_p);
+        if(IM != IntegrationMethod::ImplicitEuler) {
+          // just calculate DC since implicit methods use DC directly
+          a(partId) += DC(partId) * (velo_a - velocity(partId));
+        }
         break;
       default:
+        DC(partId) = 0;
         break;
+    }
+
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        if(isnan(a(partId)[dir]) || isinf(a(partId)[dir])) {
+          TERMM(-1, "Result diverged in calcA()!");
+        }
+      }
     }
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::LPTForce]);
+}
+
+template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
+template <IntegrationMethod IM>
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeIntegration() {
+  RECORD_TIMER_START(TimeKeeper[Timers::LPTInt]);
+  VectorD<NDIM> velo_a = m_velo_a_infty;
+
+  for(GInt partId = 0; partId < m_noParticles; ++partId) {
+    const VectorD<NDIM> old_velo_p = velocity(partId);
+    switch(IM) {
+      case IntegrationMethod::ForwardEuler:
+        velocity(partId) = old_velo_p + a(partId) * m_dt;
+        center(partId)   = center(partId) + velocity(partId) * m_dt;
+        break;
+      case IntegrationMethod::ImplicitEuler:
+        // assumes that DC and v_a is constant!
+        // Derivation:
+        // v1 = v0 + a(v1) * dt <->
+        // v1 = v0 + g * (1.0 - rho_a / rho_p) * dt + DM * dt (gravity part is constant and replaced by G)
+        // v1 = v0 + G * dt + DC * (v_a - v1) * dt <->
+        // v1 = v0 + G * dt + DC * va * dt - DC * v1 * dt <->
+        // v1 * (1 + DC * dt) = v0 + G * dt + DC * va * dt <->
+        // v1  = (v0 + G * dt + DC * va * dt)/ (1 + DC * dt)
+        velocity(partId) = (old_velo_p + a(partId) * m_dt + DC(partId) * velo_a * m_dt) / (1.0 + DC(partId) * m_dt);
+        a(partId)        = (old_velo_p - velocity(partId)) / m_dt;
+        center(partId)   = center(partId) + 0.5 * (velocity(partId) + old_velo_p) * m_dt;
+        break;
+      default:
+        TERMM(-1, "Invalid Integration method!");
+    }
+
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        if(isnan(velocity(partId)[dir]) || isinf(velocity(partId)[dir])) {
+          cerr0 << "oldV " << strStreamify<NDIM>(old_velo_p).str() << std::endl;
+          cerr0 << "a " << strStreamify<NDIM>(a(partId)).str() << std::endl;
+          TERMM(-1, "Result diverged!");
+        }
+      }
+    }
+  }
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LPTInt]);
 }
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>

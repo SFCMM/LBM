@@ -13,7 +13,7 @@ template <GInt NDIM>
 class Particle<NDIM, LPTType::Normal> {
  public:
   /// Number of double variables
-  static constexpr std::byte m_noVars = static_cast<std::byte>(3 * NDIM + 4); // <= 104 bytes
+  static constexpr std::byte m_noVars = static_cast<std::byte>(3 * NDIM + 5); // <= 112 bytes
 
   /// Index functions
   static constexpr auto center(const GInt dir) -> GInt { return dir; }
@@ -35,6 +35,8 @@ class Particle<NDIM, LPTType::Normal> {
 
   static constexpr auto volume() -> GInt { return 3 * NDIM + 3; }
   static constexpr auto oldVolume() -> GInt { return -1; }
+
+  static constexpr auto DC() -> GInt { return 3 * NDIM + 4; }
 };
 
 // Base class for 2nd order and higher methods
@@ -42,7 +44,7 @@ template <GInt NDIM>
 class Particle<NDIM, LPTType::High> {
  public:
   /// Number of double variables
-  static constexpr std::byte m_noVars = static_cast<std::byte>(6 * NDIM + 7); // <= 200 bytes
+  static constexpr std::byte m_noVars = static_cast<std::byte>(6 * NDIM + 8); // <= 208 bytes
 
   /// Index functions
   static constexpr auto coord(const GInt dir) -> GInt { return dir; }
@@ -64,6 +66,8 @@ class Particle<NDIM, LPTType::High> {
 
   static constexpr auto volume() -> GInt { return 6 * NDIM + 5; }
   static constexpr auto oldVolume() -> GInt { return 6 * NDIM + 6; }
+
+  static constexpr auto DC() -> GInt { return 6 * NDIM + 7; }
 };
 
 #endif // LPT_PARTICLE_H
