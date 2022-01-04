@@ -145,7 +145,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::initialCondition() {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
   // todo: make settable
-  GInt noParticles = 1000;
+  GInt noParticles = 10;
   // todo: make settable
   GString m_volType = "box";
   // todo: make settable
@@ -232,25 +232,42 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA() {
   GDouble       nu_a   = m_nu_a_infty;
   VectorD<NDIM> velo_a = m_velo_a_infty;
 
-  GDouble rho_p = density(0);
+  GDouble       rho_p = density(0);
+  GDouble       r_p   = NAN;
+  GDouble       re_p  = NAN;
+  VectorD<NDIM> velo_p;
+  velo_p.fill(NAN);
 
   for(GInt partId = 0; partId < m_noParticles; ++partId) {
     using namespace force;
 
-    if(FM == Model::constDensityaGravBuo || FM == Model::constDensityaGravBuoStokesDrag) {
+    if(FM == Model::constDensityaGravBuo || FM == Model::constDensityaGravBuoStokesDrag || FM == Model::constDensityaGravBuoNlinDrag) {
       rho_p = density(partId);
+    }
+    if(FM == Model::constDensityRatioGravStokesDrag || FM == Model::constDensityRatioGravBuoStokesDrag
+       || FM == Model::constDensityaGravBuoStokesDrag || FM == Model::constDensityRatioGravNlinDrag
+       || FM == Model::constDensityRatioGravBuoNlinDrag || FM == Model::constDensityaGravBuoNlinDrag) {
+      r_p = radius(partId);
+    }
+
+    if(FM == Model::constDensityRatioGravNlinDrag || FM == Model::constDensityRatioGravBuoNlinDrag
+       || FM == Model::constDensityaGravBuoNlinDrag) {
+      velo_p = velocity(partId);
     }
 
     // Switch for gravity model
     switch(FM) {
       case Model::constDensityRatioGrav:
       case Model::constDensityRatioGravStokesDrag:
+      case Model::constDensityRatioGravNlinDrag:
         a(partId) = m_gravity;
         break;
       case Model::constDensityRatioGravBuo:
       case Model::constDensityRatioGravBuoStokesDrag:
+      case Model::constDensityRatioGravBuoNlinDrag:
       case Model::constDensityaGravBuo:
       case Model::constDensityaGravBuoStokesDrag:
+      case Model::constDensityaGravBuoNlinDrag:
         a(partId) = m_gravity * (1.0 - rho_a / rho_p);
         break;
       default:
@@ -261,7 +278,14 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA() {
       case Model::constDensityRatioGravStokesDrag:
       case Model::constDensityRatioGravBuoStokesDrag:
       case Model::constDensityaGravBuoStokesDrag:
-        a(partId) += 18.0 * nu_a / (4.0 * radius(partId) * radius(partId) * rho_p) * (velo_a - velocity(partId));
+        a(partId) += 18.0 * nu_a / (4.0 * r_p * r_p * rho_p) * (velo_a - velocity(partId));
+        break;
+      case Model::constDensityRatioGravNlinDrag:
+      case Model::constDensityRatioGravBuoNlinDrag:
+      case Model::constDensityaGravBuoNlinDrag:
+        re_p = rho_a * velo_p.norm() * 2.0 * r_p / nu_a;
+        // todo: allow selecting drag model
+        a(partId) += 18.0 * nu_a / (4.0 * r_p * r_p * rho_p) * dragCoefficient<DragModel::Putnam61>(re_p) * (velo_a - velo_p);
         break;
       default:
         break;

@@ -3,6 +3,7 @@
 - add python frontend
 - add gpu acceleration
 - reduce todo to 0
+- eliptic particles
 
 # V0.0.3
 ## Planned
@@ -25,6 +26,7 @@
 - set write out precision
 - write out memory statistics
 - reduce todo below 50
+- dynamic drag model
 
 # V0.0.2
 
@@ -88,6 +90,7 @@
     - Gravity
     - Buoyancy
     - Stokes Drag
+    - Non-linear Drag
   - Integration methods:
     - Forward Euler
     - Implicit Euler
