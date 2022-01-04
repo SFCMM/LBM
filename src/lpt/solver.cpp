@@ -105,10 +105,15 @@ auto LPTSolver<DEBUG_LEVEL, NDIM, P>::run() -> GInt {
   //  executePostprocess(pp::HOOK::ATSTART);
 
   for(m_timeStep = 0; m_timeStep < noTimesteps; ++m_timeStep) {
+    RECORD_TIMER_START(TimeKeeper[Timers::LPTCalc]);
     timeStep();
+    RECORD_TIMER_STOP(TimeKeeper[Timers::LPTCalc]);
+
 
     // also write an output if it's the last time step or if the solution has converged
+    RECORD_TIMER_START(TimeKeeper[Timers::LPTIo]);
     output(m_timeStep == noTimesteps - 1);
+    RECORD_TIMER_STOP(TimeKeeper[Timers::LPTIo]);
   }
 
   //  if(has_config_value("analyticalSolution")) {
@@ -140,7 +145,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::initialCondition() {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
   // todo: make settable
-  GInt noParticles = 10;
+  GInt noParticles = 1000;
   // todo: make settable
   GString m_volType = "box";
   // todo: make settable
@@ -221,6 +226,8 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 template <force::Model FM>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA() {
+  RECORD_TIMER_START(TimeKeeper[Timers::LPTForce]);
+
   GDouble       rho_a  = m_rho_a_infty;
   GDouble       nu_a   = m_nu_a_infty;
   VectorD<NDIM> velo_a = m_velo_a_infty;
@@ -260,6 +267,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA() {
         break;
     }
   }
+  RECORD_TIMER_STOP(TimeKeeper[Timers::LPTForce]);
 }
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>

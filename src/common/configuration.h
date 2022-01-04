@@ -4,6 +4,8 @@
 #include <sfcmm_common.h>
 #include <utility>
 #include <stack>
+#include "term.h"
+
 using json = nlohmann::json;
 
 template <GInt NDIM>
