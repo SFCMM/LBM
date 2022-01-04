@@ -6,6 +6,7 @@
 #include "cartesiangrid.h"
 #include "common/configuration.h"
 #include "common/random.h"
+#include "forces.h"
 #include "interface/solver_interface.h"
 #include "particle.h"
 
@@ -49,6 +50,10 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   void init_randomVolPos();
 
   void timeStep();
+
+  template <force::Model FM>
+  void calcA();
+
   void output(const GBool forced);
 
   inline auto velocity(const GInt pid) -> Eigen::Map<VectorD<NDIM>> {
@@ -90,8 +95,16 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
 
   /// Variables
   std::vector<GDouble> m_vars;
-  GInt                 m_timeStep = 0;
-  GDouble              m_dt       = NAN;
+  GInt                 m_timeStep    = 0;
+  GInt                 m_noParticles = 0;
+  GDouble              m_dt          = NAN;
+
+  //  VectorD<NDIM>        m_gravity     = NAN_LIST<NDIM>();
+  VectorD<NDIM> m_gravity;
+  GDouble       m_rho_a_infty = NAN;
+  GDouble       m_nu_a_infty  = NAN;
+  //  VectorD<NDIM> m_velo_a_infty =  NAN_LIST<NDIM>();
+  VectorD<NDIM> m_velo_a_infty;
 };
 
 

@@ -162,6 +162,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
     density(partId) = initDensity;
     radius(partId)  = initRadius;
     volume(partId)  = sphere::volumeR(initRadius);
+    m_noParticles++;
   }
 }
 
@@ -169,15 +170,17 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   // todo: load from config
-  VectorD<NDIM> m_gravity     = {0, 10};
-  const GInt    m_noParticles = 10;
-  const GDouble m_dt          = 0.1;
-  const GInt    m_maxNoSteps  = 200000;
+  m_gravity                  = {0, 10};
+  const GDouble m_dt         = 0.1;
+  const GInt    m_maxNoSteps = 200000;
 
   // todo: load from config
-  const GDouble ambientDensity   = 1;
-  const GDouble       ambientViscosity = 1E-5;
-  const VectorD<NDIM> ambientVelocity  = {0, 0};
+  const GDouble rho_a        = 1;
+  m_rho_a_infty              = 1;
+  const GDouble nu_a         = 1E-5;
+  m_nu_a_infty               = 1E-5;
+  const VectorD<NDIM> velo_a = {0, 0};
+  m_velo_a_infty             = {0, 0};
 
   for(GInt partId = 0; partId < m_noParticles; ++partId) {
     cerr0 << "V " << strStreamify<NDIM>(velocity(partId)).str() << std::endl;
@@ -185,26 +188,77 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   }
 
   for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
+    // 1. Step update acceleration
+    calcA<force::Model::constDensityRatioGravBuoStokesDrag>();
     for(GInt partId = 0; partId < m_noParticles; ++partId) {
-      const VectorD<NDIM> oldVelocity    = velocity(partId);
-      const VectorD<NDIM> oldRelVelocity = ambientVelocity - oldVelocity;
+      const VectorD<NDIM> old_velo_p = velocity(partId);
+      //      const VectorD<NDIM> old_rel_velo = velo_a - old_velo_p;
+      //      const GDouble reynoldsNumber = rho_a * old_rel_velo.norm() * 2.0 * r_p / nu_a;
+      //      const GDouble DC             = 18.0 * nu_a / (4.0 * r_p * r_p * rho_p);
+      //      const GDouble mass = volume(partId) * rho_p;
 
-      const GDouble r   = radius(partId);
-      const GDouble rho = density(partId);
-
-      const GDouble reynoldsNumber = ambientDensity * oldRelVelocity.norm() * 2.0 * r / ambientViscosity;
-      const GDouble DC             = 18.0 * ambientViscosity / (4.0 * r * r * rho);
-      const GDouble mass           = volume(partId) * rho;
-
-      a(partId)        = DC * oldRelVelocity + m_gravity * (1.0 - ambientDensity / rho); // forces/mass
-      velocity(partId) = oldVelocity + a(partId) * m_dt;
+      // Note: all forces are based on a=forces/mass
+      //      a(partId) = 18.0 * nu_a / (4.0 * r_p * r_p * rho_p) * old_rel_velo // stokes drag force
+      //                  + m_gravity * (1.0 - rho_a / rho_p);                   // gravity + buoyancy
+      velocity(partId) = old_velo_p + a(partId) * m_dt;
       center(partId)   = center(partId) + velocity(partId) * m_dt;
+      if(DEBUG_LEVEL >= Debug_Level::debug) {
+        for(GInt dir = 0; dir < NDIM; ++dir) {
+          if(isnan(velocity(partId)[dir]) || isinf(velocity(partId)[dir])) {
+            TERMM(-1, "Result diverged!");
+          }
+        }
+      }
     }
   }
 
   for(GInt partId = 0; partId < m_noParticles; ++partId) {
     cerr0 << "V " << strStreamify<NDIM>(velocity(partId)).str() << std::endl;
     cerr0 << "center " << strStreamify<NDIM>(center(partId)).str() << std::endl;
+  }
+}
+
+template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
+template <force::Model FM>
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA() {
+  GDouble       rho_a  = m_rho_a_infty;
+  GDouble       nu_a   = m_nu_a_infty;
+  VectorD<NDIM> velo_a = m_velo_a_infty;
+
+  GDouble rho_p = density(0);
+
+  for(GInt partId = 0; partId < m_noParticles; ++partId) {
+    using namespace force;
+
+    if(FM == Model::constDensityaGravBuo || FM == Model::constDensityaGravBuoStokesDrag) {
+      rho_p = density(partId);
+    }
+
+    // Switch for gravity model
+    switch(FM) {
+      case Model::constDensityRatioGrav:
+      case Model::constDensityRatioGravStokesDrag:
+        a(partId) = m_gravity;
+        break;
+      case Model::constDensityRatioGravBuo:
+      case Model::constDensityRatioGravBuoStokesDrag:
+      case Model::constDensityaGravBuo:
+      case Model::constDensityaGravBuoStokesDrag:
+        a(partId) = m_gravity * (1.0 - rho_a / rho_p);
+        break;
+      default:
+        break;
+    }
+    // Switch for drag model
+    switch(FM) {
+      case Model::constDensityRatioGravStokesDrag:
+      case Model::constDensityRatioGravBuoStokesDrag:
+      case Model::constDensityaGravBuoStokesDrag:
+        a(partId) += 18.0 * nu_a / (4.0 * radius(partId) * radius(partId) * rho_p) * (velo_a - velocity(partId));
+        break;
+      default:
+        break;
+    }
   }
 }
 

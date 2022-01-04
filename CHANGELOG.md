@@ -90,6 +90,7 @@
     - Stokes Drag
   - Integration methods:
     - Forward Euler
+    - Implicit Euler
 
 ### Buildsystem
 
