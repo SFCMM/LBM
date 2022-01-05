@@ -64,26 +64,57 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   template <IntegrationMethod IM>
   void timeIntegration();
 
-  void output(const GBool forced);
+  void output(const GBool forced, const GString& postfix = "");
 
+  // Variable accessor functions
+  /// Set/Get velocity of a particle
+  /// \param pid Particle Id
+  /// \return Velocity of the particle
   inline auto velocity(const GInt pid) -> Eigen::Map<VectorD<NDIM>> {
     return Eigen::Map<VectorD<NDIM>>(&m_vars[pid * NVARS + PTYPE::velocity(0)]);
   }
 
+  /// Set/Get velocity of a particle
+  /// \param pid Particle Id
+  /// \param dir Direction
+  /// \return Velocity of the particle
+  inline auto velocity(const GInt pid, const GInt dir) -> GDouble& { return m_vars[pid * NVARS + PTYPE::velocity(dir)]; }
+
+  /// Set/Get center of a particle
+  /// \param pid Particle Id
+  /// \return Center of the particle
   inline auto center(const GInt pid) -> Eigen::Map<VectorD<NDIM>> {
     return Eigen::Map<VectorD<NDIM>>(&m_vars[pid * NVARS + PTYPE::center(0)]);
   }
 
+  /// Set/Get acceleration of a particle
+  /// \param pid Particle Id
+  /// \return acceleration of the particle
   inline auto a(const GInt pid) -> Eigen::Map<VectorD<NDIM>> { return Eigen::Map<VectorD<NDIM>>(&m_vars[pid * NVARS + PTYPE::a(0)]); }
 
+  /// Set/Get density of a particle
+  /// \param pid Particle Id
+  /// \return density of the particle
   inline auto density(const GInt pid) -> GDouble& { return m_vars[pid * NVARS + PTYPE::density()]; }
 
+  /// Set/Get volume of a particle
+  /// \param pid Particle Id
+  /// \return volume of the particle
   inline auto volume(const GInt pid) -> GDouble& { return m_vars[pid * NVARS + PTYPE::volume()]; }
 
+  /// Set/Get radius of a particle
+  /// \param pid Particle Id
+  /// \return radius of the particle
   inline auto radius(const GInt pid) -> GDouble& { return m_vars[pid * NVARS + PTYPE::radius()]; }
 
+  /// Set/Get temperature of a particle
+  /// \param pid Particle Id
+  /// \return temperature of the particle
   inline auto temperature(const GInt pid) -> GDouble& { return m_vars[pid * NVARS + PTYPE::temperature()]; }
 
+  /// Set/Get drag coefficient of a particle
+  /// \param pid Particle Id
+  /// \return drag coefficient of the particle
   inline auto DC(const GInt pid) -> GDouble& { return m_vars[pid * NVARS + PTYPE::DC()]; }
 
 

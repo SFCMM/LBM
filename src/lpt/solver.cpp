@@ -178,7 +178,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   // todo: load from config
   m_gravity               = {0, 10};
   m_dt                    = 0.01;
-  const GInt    m_maxNoSteps = 200000;
+  const GInt m_maxNoSteps = 200000;
 
   // todo: load from config
   const GDouble rho_a        = 1;
@@ -340,4 +340,42 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeIntegration() {
 }
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
-void LPTSolver<DEBUG_LEVEL, NDIM, P>::output(const GBool forced) {}
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::output(const GBool forced, const GString& postfix) {
+  if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || forced) {
+    std::vector<IOIndex>              index;
+    std::vector<std::vector<GString>> values;
+
+    std::vector<VectorD<NDIM>>             tmpCenter;
+    std::array<std::vector<GDouble>, NDIM> tmpVel;
+    std::vector<GDouble>                   tmpRho;
+
+
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      tmpVel[dir].resize(m_noParticles);
+    }
+    tmpRho.resize(m_noParticles);
+    tmpCenter.resize(m_noParticles);
+
+    for(GInt partId = 0; partId < m_noParticles; ++partId) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        tmpVel[dir][partId] = velocity(partId, dir);
+      }
+      tmpRho[partId]    = density(partId);
+      tmpCenter[partId] = center(partId);
+    }
+
+    std::vector<GString> velStr = {"u", "v", "w"};
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      // todo: fix type
+      index.emplace_back(IOIndex{velStr[dir], "float32"});
+      values.emplace_back(toStringVector(tmpVel[dir], m_noParticles));
+    }
+    // todo: fix type
+    index.emplace_back(IOIndex{"rho", "float32"});
+    values.emplace_back(toStringVector(tmpRho, m_noParticles));
+
+
+    VTK::ASCII::writePoints<NDIM>(m_outputDir + m_solutionFileName + "_" + std::to_string(m_timeStep) + postfix, m_noParticles, tmpCenter,
+                                  index, values);
+  }
+}
