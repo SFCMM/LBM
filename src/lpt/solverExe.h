@@ -15,17 +15,26 @@ class LPTSolverExecutor : public Runnable {
   /// \param argv CMD
   /// \param config_file configuration file to be used
   void init(int argc, GChar** argv, GString config_file) override {
-    //    if(MPI::isRoot()) {
-    //      std::ifstream configFileStream(config_file);
-    //      json          config;
-    //      configFileStream >> config;
-    //      // determine which model to use and equation to solve
-    //      model    = config::opt_config_value(config["solver"], "model", model);
-    //      equation = config::opt_config_value(config["solver"], "equation", equation);
-    //    }
-    //    // todo: communicate the model
+    if(MPI::isRoot()) {
+      std::ifstream configFileStream(config_file);
+      json          config;
+      configFileStream >> config;
+      m_noDim = config::required_config_value<GInt>(config, "dim");
+      //      model    = config::opt_config_value(config["solver"], "model", model);
+      //      equation = config::opt_config_value(config["solver"], "equation", equation);
+    }
+    // todo: communicate
 
-    m_lptSolver = std::make_unique<LPTSolver<DEBUG_LEVEL, 2, LPTType::Normal>>(m_domainId, m_noDomains);
+    switch(m_noDim) {
+      case 2:
+        m_lptSolver = std::make_unique<LPTSolver<DEBUG_LEVEL, 2, LPTType::Normal>>(m_domainId, m_noDomains);
+        break;
+      case 3:
+        m_lptSolver = std::make_unique<LPTSolver<DEBUG_LEVEL, 3, LPTType::Normal>>(m_domainId, m_noDomains);
+        break;
+      default:
+        TERMM(-1, "Unsupported dimension option");
+    }
 
     m_lptSolver->init(argc, argv, config_file);
   }
@@ -50,6 +59,8 @@ class LPTSolverExecutor : public Runnable {
  private:
   GInt32 m_domainId  = -1;
   GInt32 m_noDomains = -1;
+
+  GInt m_noDim = 2;
 
   std::unique_ptr<Runnable> m_lptSolver;
 };

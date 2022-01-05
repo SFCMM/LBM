@@ -148,11 +148,11 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
   // todo: make settable
   GInt noParticles = 100;
   // todo: make settable
-  GString m_volType = "box";
-  // todo: make settable
-  VectorD<NDIM> cornerA = {0, 0};
-  // todo: make settable
-  VectorD<NDIM> cornerB = {10, 1};
+  GString       m_volType = "box";
+  auto          config    = getAccessor("randomvol_pos");
+  auto          volconfig = config->getObject("volume");
+  VectorD<NDIM> cornerA   = config::required_config_value<NDIM>(volconfig, "A");
+  VectorD<NDIM> cornerB   = config::required_config_value<NDIM>(volconfig, "B");
   // todo: make configable
   const GDouble initVelo = 0;
   // todo: make configable
@@ -176,17 +176,17 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   // todo: load from config
-  m_gravity               = {0, 10};
+  m_gravity.fill(0);
+  m_gravity[NDIM - 1]     = 10;
   m_dt                    = 0.01;
   const GInt m_maxNoSteps = 200000;
 
   // todo: load from config
-  const GDouble rho_a        = 1;
-  m_rho_a_infty              = 1;
-  const GDouble nu_a         = 1E-5;
-  m_nu_a_infty               = 1E-5;
-  const VectorD<NDIM> velo_a = {0, 0};
-  m_velo_a_infty             = {0, 0};
+  const GDouble rho_a = 1;
+  m_rho_a_infty       = 1;
+  const GDouble nu_a  = 1E-5;
+  m_nu_a_infty        = 1E-5;
+  m_velo_a_infty.fill(0);
 
   for(GInt partId = 0; partId < m_noParticles; ++partId) {
     cerr0 << "V " << strStreamify<NDIM>(velocity(partId)).str() << std::endl;

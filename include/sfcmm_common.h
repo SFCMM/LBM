@@ -19,6 +19,7 @@ static constexpr int MAX_DIM = 4;
 #include "common/util/backtrace.h"
 #include "common/util/base64.h"
 #include "common/util/binary.h"
+#include "common/util/eigen.h"
 #include "common/util/string_helper.h"
 #include "common/util/sys.h"
 

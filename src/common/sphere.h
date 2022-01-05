@@ -15,6 +15,6 @@ static constexpr auto areaR(const GDouble radius) -> GDouble { return 4.0 * PI *
 /// \return Volume of the sphere
 static constexpr auto volumeR(const GDouble radius) -> GDouble { return 4.0 / 3.0 * PI * gcem::pow(radius, 3); }
 
-}; // namespace sphere
+} // namespace sphere
 
 #endif // LBM_SPHERE_H

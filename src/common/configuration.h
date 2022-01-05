@@ -21,6 +21,18 @@ static constexpr inline auto required_config_value(const json& config, const GSt
   TERMM(-1, "The required configuration value is missing: " + key);
 }
 
+template <GInt NDIM>
+static inline auto required_config_value(const json& config, const GString& key) -> Point<NDIM> {
+  // todo: check for types
+  if(config.template contains(key)) {
+    // todo: check size
+    std::vector<GDouble> tmp = config[key];
+    return Point<NDIM>(tmp.data());
+  }
+  cerr0 << config << std::endl;
+  TERMM(-1, "The required configuration value is missing: " + key);
+}
+
 template <typename T>
 static constexpr inline auto opt_config_value(const json& config, const GString& key, const T& defaultValue) -> T {
   // todo: check for types
