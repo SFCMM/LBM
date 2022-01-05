@@ -146,7 +146,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::initialCondition() {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
   // todo: make settable
-  GInt noParticles = 10;
+  GInt noParticles = 100;
   // todo: make settable
   GString m_volType = "box";
   // todo: make settable
@@ -339,6 +339,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeIntegration() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LPTInt]);
 }
 
+// todo: allow choice of output variables
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::output(const GBool forced, const GString& postfix) {
   if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || forced) {
@@ -348,6 +349,8 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::output(const GBool forced, const GString& 
     std::vector<VectorD<NDIM>>             tmpCenter;
     std::array<std::vector<GDouble>, NDIM> tmpVel;
     std::vector<GDouble>                   tmpRho;
+    std::vector<GDouble>                   tmpRadius;
+    std::vector<GDouble>                   tmpTemperature;
 
 
     for(GInt dir = 0; dir < NDIM; ++dir) {
@@ -355,13 +358,17 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::output(const GBool forced, const GString& 
     }
     tmpRho.resize(m_noParticles);
     tmpCenter.resize(m_noParticles);
+    tmpRadius.resize(m_noParticles);
+    tmpTemperature.resize(m_noParticles);
 
     for(GInt partId = 0; partId < m_noParticles; ++partId) {
       for(GInt dir = 0; dir < NDIM; ++dir) {
         tmpVel[dir][partId] = velocity(partId, dir);
       }
-      tmpRho[partId]    = density(partId);
-      tmpCenter[partId] = center(partId);
+      tmpRho[partId]         = density(partId);
+      tmpCenter[partId]      = center(partId);
+      tmpRadius[partId]      = radius(partId);
+      tmpTemperature[partId] = temperature(partId);
     }
 
     std::vector<GString> velStr = {"u", "v", "w"};
@@ -373,7 +380,12 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::output(const GBool forced, const GString& 
     // todo: fix type
     index.emplace_back(IOIndex{"rho", "float32"});
     values.emplace_back(toStringVector(tmpRho, m_noParticles));
-
+    // todo: fix type
+    index.emplace_back(IOIndex{"radius", "float32"});
+    values.emplace_back(toStringVector(tmpRadius, m_noParticles));
+    // todo: fix type
+    index.emplace_back(IOIndex{"temperature", "float32"});
+    values.emplace_back(toStringVector(tmpTemperature, m_noParticles));
 
     VTK::ASCII::writePoints<NDIM>(m_outputDir + m_solutionFileName + "_" + std::to_string(m_timeStep) + postfix, m_noParticles, tmpCenter,
                                   index, values);

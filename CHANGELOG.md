@@ -27,6 +27,8 @@
 - write out memory statistics
 - reduce todo below 50
 - dynamic drag model
+- plastic collision
+- ray tracing of particles
 
 # V0.0.2
 
@@ -80,7 +82,8 @@
 - outflow pressure bc
 - automatically run all the testcases and produce report
 - use pressure boundary condition for poiseuille cases
-- LPT solver
+- add analytical result for lpt
+- make all configoptions available for lpt
 
 ## Done:
 
