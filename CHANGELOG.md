@@ -29,6 +29,7 @@
 - dynamic drag model
 - plastic collision
 - ray tracing of particles
+- refactor comparison with analytical solution to postprocessing
 
 # V0.0.2
 
@@ -83,7 +84,9 @@
 - outflow pressure bc
 - automatically run all the testcases and produce report
 - use pressure boundary condition for poiseuille cases
-- make all configoptions available for lpt
+- make all configoptions available for lpt (today)
+- allow setting the analytical solution in the config file (today)
+- add additional analytical solutions
 
 ## Done:
 

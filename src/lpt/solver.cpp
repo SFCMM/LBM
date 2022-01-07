@@ -407,15 +407,57 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::output(const GBool forced, const GString& 
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
-  GDouble maxError = 0;
+  GDouble maxError      = 0;
+  GDouble sumError      = 0;
+  GDouble sumErrorSq    = 0;
+  GDouble sumSolution   = 0;
+  GDouble sumSolutionSq = 0;
+
   for(GInt partId = 0; partId < m_noParticles; ++partId) {
-    const GDouble error = std::abs((analytical::lpt::freefall_stokes_vel<NDIM, P>(part(partId), m_init_v, m_nu_a_infty, m_rho_a_infty,
-                                                                                  m_velo_a_infty, m_currentTime, m_gravity)
-                                    - velocity(partId))
-                                       .norm());
-    if(error > maxError) {
-      maxError = error;
-    }
+    VectorD<NDIM> ana_sol = analytical::lpt::freefall_stokes_vel<NDIM, P>(part(partId), m_init_v, m_nu_a_infty, m_rho_a_infty,
+                                                                          m_velo_a_infty, m_currentTime, m_gravity);
+    const GDouble error   = (ana_sol - velocity(partId)).norm();
+    maxError              = std::max(error, maxError);
+    sumErrorSq += gcem::pow(error, 2);
+    sumSolution += ana_sol.norm();
+    sumSolutionSq += ana_sol.squaredNorm();
   }
-  cerr0 << "The maximum error is " << maxError << std::endl;
+
+  const GDouble L2error = (gcem::sqrt(sumErrorSq) / gcem::sqrt(sumSolutionSq)) / gcem::pow(m_noParticles, 1.0 / NDIM);
+  const GDouble gre     = sumError / sumSolution;
+
+  //  cerr0 << "Comparing to analytical result " << analyticalSolutionName << std::endl;
+  //  logger << "Comparing to analytical result " << analyticalSolutionName << std::endl;
+  cerr0 << "max. Error: " << maxError << std::endl;
+  logger << "max. Error: " << maxError << std::endl;
+  cerr0 << "avg. L2: " << L2error << std::endl;
+  logger << "avg. L2: " << L2error << std::endl;
+  cerr0 << "global relative error: " << gre << std::endl;
+  logger << "global relative error: " << L2error << std::endl;
+
+  // compare with the maximum expected error to give a pass/no-pass result
+  const GDouble maximumExpectedError    = opt_config_value("errorMax", 1.0);
+  const GDouble maximumExpectedErrorL2  = opt_config_value("errorL2", 1.0);
+  const GDouble maximumExpectedErrorGRE = opt_config_value("errorGRE", 1.0);
+
+  GBool failedErrorCheck = false;
+  if(maximumExpectedError < maxError) {
+    failedErrorCheck = true;
+    cerr0 << "Error bounds for the maximum error have failed!!! ( < " << maximumExpectedError << ")" << std::endl;
+    logger << "Error bounds for the maximum error have failed!!! ( < " << maximumExpectedError << ")" << std::endl;
+  }
+  if(maximumExpectedErrorL2 < L2error) {
+    failedErrorCheck = true;
+    cerr0 << "Error bounds for the L2 error have failed!!! ( < " << maximumExpectedErrorL2 << ")" << std::endl;
+    logger << "Error bounds for the L2 error have failed!!! ( < " << maximumExpectedErrorL2 << ")" << std::endl;
+  }
+  if(maximumExpectedErrorGRE < gre) {
+    failedErrorCheck = true;
+    cerr0 << "Error bounds for the global relative error have failed!!! ( < " << maximumExpectedErrorGRE << ")" << std::endl;
+    logger << "Error bounds for the global relative error have failed!!! ( < " << maximumExpectedErrorGRE << ")" << std::endl;
+  }
+
+  if(failedErrorCheck) {
+    TERMM(-1, "Analytical testcase failed");
+  }
 }

@@ -1,8 +1,8 @@
 #include "solver.h"
+#include <set>
 #include "analytical_solutions.h"
 #include "equilibrium_func.h"
 #include "globaltimers.h"
-#include <set>
 
 using namespace std;
 
@@ -345,6 +345,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMIo]);
 }
 
+// todo: move to a common place and also remove from lpt
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
   // todo: fix for 3D
@@ -390,17 +391,11 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
     sumError += delta;
     sumErrorSq += gcem::pow(delta, 2);
     sumSolution += solution.norm();
-    sumSolutionSq += gcem::pow(solution.norm(), 2);
+    sumSolutionSq += solution.squaredNorm();
     maxError = std::max(delta, maxError);
   }
   const GDouble L2error = (gcem::sqrt(sumErrorSq) / gcem::sqrt(sumSolutionSq)) / gcem::pow(noInternalCells(), 1.0 / NDIM);
-
-  // if that compare with the maximum expected error to give a pass/no-pass result
-  const GDouble maximumExpectedError    = opt_config_value("errorMax", 1.0);
-  const GDouble maximumExpectedErrorL2  = opt_config_value("errorL2", 1.0);
-  const GDouble maximumExpectedErrorGRE = opt_config_value("errorGRE", 1.0);
-
-  const GDouble gre = sumError / sumSolution;
+  const GDouble gre     = sumError / sumSolution;
 
   cerr0 << "Comparing to analytical result " << analyticalSolutionName << std::endl;
   logger << "Comparing to analytical result " << analyticalSolutionName << std::endl;
@@ -410,6 +405,11 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
   logger << "avg. L2: " << L2error << std::endl;
   cerr0 << "global relative error: " << gre << std::endl;
   logger << "global relative error: " << L2error << std::endl;
+
+  // compare with the maximum expected error to give a pass/no-pass result
+  const GDouble maximumExpectedError    = opt_config_value("errorMax", 1.0);
+  const GDouble maximumExpectedErrorL2  = opt_config_value("errorL2", 1.0);
+  const GDouble maximumExpectedErrorGRE = opt_config_value("errorGRE", 1.0);
 
   GBool failedErrorCheck = false;
   if(maximumExpectedError < maxError) {
