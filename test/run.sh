@@ -14,21 +14,28 @@ fi
 DEFAULT_OMP_THREADS=4
 LOG_PATH="run_log_"$(date +%s)
 
-run_test(){
+run_test() {
   NAME="$(cut -d'.' -f1 <<<"$1")"
 
   echo "Running testcase $NAME..."
 
-  if OMP_NUM_THREADS=$DEFAULT_OMP_THREADS $BINPATH "$1" &> "$NAME".stdout; then
+  if OMP_NUM_THREADS=$DEFAULT_OMP_THREADS $BINPATH "$1" &>"$NAME".stdout; then
     echo "passed"
-    SUCCESS=$((SUCCESS+1))
+    SUCCESS=$((SUCCESS + 1))
   else
     echo "FAILED"
-    FAILED=$((FAILED+1))
+    FAILED=$((FAILED + 1))
   fi
 
-  cp lbm_log ../"$LOG_PATH"/"$NAME"_lbm_log.txt
-  cp gridgen_log ../"$LOG_PATH"/"$NAME"_gridgen_log.txt
+  if [ -f "lbm_log" ]; then
+    cp lbm_log ../"$LOG_PATH"/"$NAME"_lbm_log.txt
+  fi
+  if [ -f "lpt_log" ]; then
+    cp lpt_log ../"$LOG_PATH"/"$NAME"_lpt_log.txt
+  fi
+  if [ -f "gridgen_log" ]; then
+    cp gridgen_log ../"$LOG_PATH"/"$NAME"_gridgen_log.txt
+  fi
   cp "$NAME".stdout ../"$LOG_PATH"/"$NAME".stdout
 }
 
@@ -47,6 +54,11 @@ cd ..
 cd poisson || exit
 run_test poisson1D.json
 run_test poisson2D.json
+cd ..
+
+cd lpt || exit
+run_test falling.json
+run_test falling3d.json
 cd ..
 
 ./clean.sh
