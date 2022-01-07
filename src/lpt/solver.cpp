@@ -1,4 +1,5 @@
 #include "solver.h"
+#include "analytical_solutions.h"
 #include "common/sphere.h"
 #include "globaltimers.h"
 
@@ -154,7 +155,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
   VectorD<NDIM> cornerA   = config::required_config_value<NDIM>(volconfig, "A");
   VectorD<NDIM> cornerB   = config::required_config_value<NDIM>(volconfig, "B");
   // todo: make configable
-  const GDouble initVelo = 0;
+  m_init_v.fill(0);
   // todo: make configable
   const GDouble initDensity = 2;
   // todo: make configable
@@ -163,11 +164,11 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
   cerr0 << "Placing " << noParticles << " particles inside " << m_volType << " at random position" << std::endl;
 
   for(GInt partId = 0; partId < noParticles; ++partId) {
-    center(partId) = randomPos<NDIM>(cornerA, cornerB);
-    velocity(partId).fill(initVelo);
-    density(partId) = initDensity;
-    radius(partId)  = initRadius;
-    volume(partId)  = sphere::volumeR(initRadius);
+    center(partId)   = randomPos<NDIM>(cornerA, cornerB);
+    velocity(partId) = m_init_v;
+    density(partId)  = initDensity;
+    radius(partId)   = initRadius;
+    volume(partId)   = sphere::volumeR(initRadius);
     m_noParticles++;
   }
 }
@@ -179,7 +180,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   m_gravity.fill(0);
   m_gravity[NDIM - 1]     = 10;
   m_dt                    = 0.01;
-  const GInt m_maxNoSteps = 200000;
+  const GInt m_maxNoSteps = 20000;
 
   // todo: load from config
   const GDouble rho_a = 1;
@@ -193,17 +194,29 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
     cerr0 << "center " << strStreamify<NDIM>(center(partId)).str() << std::endl;
   }
 
+  //  cerr0 << "test " << analytical::lpt::freefall_stokes_vel<NDIM, P>(part(0), m_init_v, m_nu_a_infty, m_rho_a_infty,
+  //                                                                    m_velo_a_infty, 10,
+  //                                                                    m_gravity) << std::endl;
+  //  TERMM(-1, "test");
+
   for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
     // 1. Step update acceleration
     // todo: make settable
-    calcA<force::Model::constDensityRatioGravBuoNlinDrag, IntegrationMethod::ImplicitEuler>();
+    calcA<force::Model::constDensityRatioGravBuoStokesDrag, IntegrationMethod::ImplicitEuler>();
     // todo: make settable
     timeIntegration<IntegrationMethod::ImplicitEuler>();
+    m_currentTime += m_dt;
   }
 
   for(GInt partId = 0; partId < m_noParticles; ++partId) {
     cerr0 << "V " << strStreamify<NDIM>(velocity(partId)).str() << std::endl;
     cerr0 << "center " << strStreamify<NDIM>(center(partId)).str() << std::endl;
+  }
+
+  // todo: make settable
+  const GBool analyticalTest = true;
+  if(analyticalTest) {
+    compareToAnalyticalResult();
   }
 }
 
@@ -390,4 +403,19 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::output(const GBool forced, const GString& 
     VTK::ASCII::writePoints<NDIM>(m_outputDir + m_solutionFileName + "_" + std::to_string(m_timeStep) + postfix, m_noParticles, tmpCenter,
                                   index, values);
   }
+}
+
+template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
+  GDouble maxError = 0;
+  for(GInt partId = 0; partId < m_noParticles; ++partId) {
+    const GDouble error = std::abs((analytical::lpt::freefall_stokes_vel<NDIM, P>(part(partId), m_init_v, m_nu_a_infty, m_rho_a_infty,
+                                                                                  m_velo_a_infty, m_currentTime, m_gravity)
+                                    - velocity(partId))
+                                       .norm());
+    if(error > maxError) {
+      maxError = error;
+    }
+  }
+  cerr0 << "The maximum error is " << maxError << std::endl;
 }

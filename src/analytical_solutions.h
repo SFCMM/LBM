@@ -1,6 +1,11 @@
 #ifndef LBM_ANALYTICAL_SOLUTIONS_H
 #define LBM_ANALYTICAL_SOLUTIONS_H
 
+#include <sfcmm_common.h>
+#include "lpt/particle.h"
+template <GInt NDIM>
+using Point = VectorD<NDIM>;
+
 namespace analytical {
 
 namespace ns {
@@ -59,6 +64,39 @@ inline auto poissonCHAI08_1(const Point<1> x) -> Point<1> {
   return Point<1>((exp_pK - 1.0) / (exp_pK - exp_mK) * exp_mKx + (1.0 - exp_mK) / (exp_pK - exp_mK) * exp_pKx);
 }
 } // namespace poisson
+
+namespace lpt {
+template <GInt NDIM, LPTType P>
+static constexpr auto freefall_noDrag_vel(const ParticleData<NDIM, P>& part, const VectorD<NDIM>& init_v, const GDouble t,
+                                          const Point<NDIM>& gravity, const GDouble rho_a = 0) -> Point<NDIM> {
+  return gravity * (1 - rho_a / part.density()) * t + init_v;
+}
+
+template <GInt NDIM, LPTType P>
+static constexpr auto freefall_noDrag_pos(const Point<NDIM>& start, const ParticleData<NDIM, P>& part, const VectorD<NDIM>& init_v,
+                                          const GDouble t, const Point<NDIM>& gravity, const GDouble rho_a = 0) -> VectorD<NDIM> {
+  return 0.5 * gravity * (1 - rho_a / part.density()) * gcem::pow(t, 2) + t * init_v + start;
+}
+
+template <GInt NDIM, LPTType P>
+static constexpr auto freefall_stokes_vel(const ParticleData<NDIM, P>& part, const VectorD<NDIM>& init_v, const GDouble nu_a,
+                                          const GDouble rho_a, const VectorD<NDIM>& v_a, const GDouble t, const VectorD<NDIM>& gravity)
+    -> VectorD<NDIM> {
+  const GDouble c1 = rho_a / part.density();
+  const GDouble c2 = 18.0 * nu_a / (4.0 * part.radius() * part.radius() * part.density()); // Pas /(m^2 * kg/m^3) -> kg/ms / (kg/m) = 1/s
+  return (gcem::exp(-c2 * t) * (c2 * (v_a * (gcem::exp(c2 * t) - 1) + init_v) - (c1 - 1) * gravity * (gcem::exp(c2 * t) - 1))) / c2;
+}
+
+template <GInt NDIM, LPTType P>
+static constexpr auto freefall_stokes_pos(const Point<NDIM>& start, const ParticleData<NDIM, P>& part, const VectorD<NDIM>& init_v,
+                                          const GDouble nu_a, const GDouble rho_a, const VectorD<NDIM>& v_a, const GDouble t,
+                                          const VectorD<NDIM>& gravity) -> VectorD<NDIM> {
+  const GDouble c1 = rho_a / part.density();
+  const GDouble c2 = 18.0 * nu_a / (4.0 * part.radius() * part.radius() * part.density()); // Pas /(m^2 * kg/m^3) -> kg/ms / (kg/m) = 1/s
+  return (gcem::exp(-c2 * t)(-c1 * gravity + c2 * v_a - c2 * init_v + gravity)) / (c2 * c2)
+         + (t * (-c1 * gravity + c2 * v_a + gravity)) / c2 + start;
+}
+} // namespace lpt
 
 template <GInt NDIM>
 auto getAnalyticalSolution(const GString& name) -> std::function<Point<NDIM>(Point<NDIM>)> {

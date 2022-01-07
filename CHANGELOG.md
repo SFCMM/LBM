@@ -69,6 +69,7 @@
 - determine analytical solutions for 2D poisson cases
 - adjust settings for poisson D2Q9
 - reduce todos below 100
+- [LPT] terminal velocity test
 
 - warn when overwriting files
 - give option to not overwrite files
@@ -82,7 +83,6 @@
 - outflow pressure bc
 - automatically run all the testcases and produce report
 - use pressure boundary condition for poiseuille cases
-- add analytical result for lpt
 - make all configoptions available for lpt
 
 ## Done:
@@ -97,6 +97,9 @@
   - Integration methods:
     - Forward Euler
     - Implicit Euler
+  - analytical tests:
+    - free fall
+    - stokes drag
 
 ### Buildsystem
 

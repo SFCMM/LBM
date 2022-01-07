@@ -64,9 +64,12 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   template <IntegrationMethod IM>
   void timeIntegration();
 
+  void compareToAnalyticalResult();
   void output(const GBool forced, const GString& postfix = "");
 
   // Variable accessor functions
+  inline auto part(const GInt pid) -> ParticleData<NDIM, P> { return ParticleData<NDIM, P>(&m_vars[pid * NVARS]); }
+
   /// Set/Get velocity of a particle
   /// \param pid Particle Id
   /// \return Velocity of the particle
@@ -139,10 +142,14 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   /// Variables
   std::vector<GDouble> m_vars;
   GInt                 m_timeStep    = 0;
+  GDouble              m_currentTime = 0;
   GInt                 m_noParticles = 0;
   GDouble              m_dt          = NAN;
 
-  //  VectorD<NDIM>        m_gravity     = NAN_LIST<NDIM>();
+  VectorD<NDIM> m_init_v;
+
+  // ambient condition
+  //   VectorD<NDIM>        m_gravity     = NAN_LIST<NDIM>();
   VectorD<NDIM> m_gravity;
   GDouble       m_rho_a_infty = NAN;
   GDouble       m_nu_a_infty  = NAN;

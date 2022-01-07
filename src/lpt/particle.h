@@ -4,7 +4,6 @@
 #include <sfcmm_common.h>
 #include "lpt/constants.h"
 
-
 template <GInt NDIM, LPTType P>
 class Particle {};
 
@@ -68,6 +67,30 @@ class Particle<NDIM, LPTType::High> {
   static constexpr auto oldVolume() -> GInt { return 6 * NDIM + 6; }
 
   static constexpr auto DC() -> GInt { return 6 * NDIM + 7; }
+};
+
+template <GInt NDIM, LPTType P>
+class ParticleData : Particle<NDIM, P> {
+ public:
+  ParticleData(const GDouble* particleRef) : m_particleRef(particleRef) {}
+  [[nodiscard]] inline constexpr auto center(const GInt dir) const -> GDouble { return m_particleRef[Particle<NDIM, P>::center(dir)]; }
+
+  [[nodiscard]] inline constexpr auto velocity(const GInt dir) const -> GDouble { return m_particleRef[Particle<NDIM, P>::velocity(dir)]; }
+
+  [[nodiscard]] inline constexpr auto a(const GInt dir) const -> GDouble { return m_particleRef[Particle<NDIM, P>::a(dir)]; }
+
+  [[nodiscard]] inline constexpr auto radius() const -> GDouble { return m_particleRef[Particle<NDIM, P>::radius()]; }
+
+  [[nodiscard]] inline constexpr auto density() const -> GDouble { return m_particleRef[Particle<NDIM, P>::density()]; }
+
+  [[nodiscard]] inline constexpr auto temperature() const -> GDouble { return m_particleRef[Particle<NDIM, P>::temperature()]; }
+
+  [[nodiscard]] inline constexpr auto volume() const -> GDouble { return m_particleRef[Particle<NDIM, P>::volume()]; }
+
+  [[nodiscard]] inline constexpr auto DC() const -> GDouble { return m_particleRef[Particle<NDIM, P>::DC()]; }
+
+ private:
+  const GDouble* m_particleRef;
 };
 
 #endif // LPT_PARTICLE_H
