@@ -193,9 +193,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
     m_currentTime += m_dt;
   }
 
-  // todo: make settable
-  const GBool analyticalTest = true;
-  if(analyticalTest) {
+  if(has_config_value("analyticalSolution")) {
     compareToAnalyticalResult();
   }
 }
@@ -388,6 +386,8 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::output(const GBool forced, const GString& 
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
+  const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");
+
   GDouble maxError      = 0;
   GDouble sumError      = 0;
   GDouble sumErrorSq    = 0;

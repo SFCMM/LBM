@@ -84,8 +84,6 @@
 - outflow pressure bc
 - automatically run all the testcases and produce report
 - use pressure boundary condition for poiseuille cases
-- make all configoptions available for lpt (today)
-- [LPT] allow setting the analytical solution in the config file (today)
 - [LPT] add additional analytical solutions
 
 ## Done:
