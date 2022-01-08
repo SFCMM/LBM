@@ -32,7 +32,7 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   static constexpr GInt NVARS = static_cast<GInt>(PTYPE::m_noVars);
 
  public:
-  LPTSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains){};
+  LPTSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains) { m_init_v.fill(0); };
   ~LPTSolver() override       = default;
   LPTSolver(const LPTSolver&) = delete;
   LPTSolver(LPTSolver&&)      = delete;

@@ -152,12 +152,10 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
   GInt          noParticles = config->template required_config_value<GInt>("noparticles");
   VectorD<NDIM> cornerA     = eigenutil::unpack<NDIM>(config->template required_config_value<std::vector<GDouble>>("volume", "A"));
   VectorD<NDIM> cornerB     = eigenutil::unpack<NDIM>(config->template required_config_value<std::vector<GDouble>>("volume", "B"));
-  // todo: make configable
-  m_init_v.fill(0);
-  // todo: make configable
-  const GDouble initDensity = 2;
-  // todo: make configable
-  const GDouble initRadius = 0.01;
+
+  m_init_v                  = eigenutil::unpack<NDIM>(config->template required_config_value<std::vector<GDouble>>("init_velo"));
+  const GDouble initDensity = config->template required_config_value<GDouble>("init_rho_p");
+  const GDouble initRadius  = config->template required_config_value<GDouble>("init_r_p");
 
   cerr0 << "Placing " << noParticles << " particles inside " << m_volType << " at random position" << std::endl;
 
@@ -187,16 +185,6 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   m_nu_a_infty        = 1E-5;
   m_velo_a_infty.fill(0);
 
-  for(GInt partId = 0; partId < m_noParticles; ++partId) {
-    cerr0 << "V " << strStreamify<NDIM>(velocity(partId)).str() << std::endl;
-    cerr0 << "center " << strStreamify<NDIM>(center(partId)).str() << std::endl;
-  }
-
-  //  cerr0 << "test " << analytical::lpt::freefall_stokes_vel<NDIM, P>(part(0), m_init_v, m_nu_a_infty, m_rho_a_infty,
-  //                                                                    m_velo_a_infty, 10,
-  //                                                                    m_gravity) << std::endl;
-  //  TERMM(-1, "test");
-
   for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
     // 1. Step update acceleration
     // todo: make settable
@@ -204,11 +192,6 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
     // todo: make settable
     timeIntegration<IntegrationMethod::ImplicitEuler>();
     m_currentTime += m_dt;
-  }
-
-  for(GInt partId = 0; partId < m_noParticles; ++partId) {
-    cerr0 << "V " << strStreamify<NDIM>(velocity(partId)).str() << std::endl;
-    cerr0 << "center " << strStreamify<NDIM>(center(partId)).str() << std::endl;
   }
 
   // todo: make settable

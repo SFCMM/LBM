@@ -13,6 +13,12 @@
     "initialcondition": "randomvol_pos",
     "randomvol_pos": {
       "noparticles": 10,
+      "init_rho_p": 2,
+      "init_r_p": 0.01,
+      "init_velo": [
+        0.0,
+        0.0
+      ],
       "volume": {
         "type": "box",
         "A": [
