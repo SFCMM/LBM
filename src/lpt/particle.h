@@ -16,13 +16,13 @@ class Particle<NDIM, LPTType::Normal> {
 
   /// Index functions
   static constexpr auto center(const GInt dir) -> GInt { return dir; }
-  static constexpr auto oldCenter(const GInt dir) -> GInt { return -1; }
+  static constexpr auto oldCenter(const GInt /*dir*/) -> GInt { return -1; }
 
   static constexpr auto velocity(const GInt dir) -> GInt { return NDIM + dir; }
-  static constexpr auto oldVelocity(const GInt dir) -> GInt { return -1; }
+  static constexpr auto oldVelocity(const GInt /*dir*/) -> GInt { return -1; }
 
   static constexpr auto a(const GInt dir) -> GInt { return 2 * NDIM + dir; }
-  static constexpr auto oldA(const GInt dir) -> GInt { return -1; }
+  static constexpr auto oldA(const GInt /*dir*/) -> GInt { return -1; }
 
   static constexpr auto radius() -> GInt { return 3 * NDIM; }
   static constexpr auto oldRadius() -> GInt { return -1; }
