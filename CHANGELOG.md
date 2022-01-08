@@ -3,7 +3,9 @@
 - add python frontend
 - add gpu acceleration
 - reduce todo to 0
-- eliptic particles
+- [LPT] eliptic particles
+- [LPT] fluid collision model
+- [LPT] breakup model
 
 # V0.0.3
 ## Planned
@@ -30,13 +32,12 @@
 - plastic collision
 - ray tracing of particles
 - refactor comparison with analytical solution to postprocessing
+- initial material point method
+- mpi communication methods
 
 # V0.0.2
 
 ## Planned
-
-- run basic 2D NS sphere case
-- run basic 2D NS obstruction case
 - load grid from disk
 - Couette in 3D
 - Poiseuille flow in 3D
@@ -56,26 +57,37 @@
 - make neem boundary condition available for NS
 - add way to just iterate over leaf cells
 - order boundary conditions by type
-- add documentation for the testcases
-- simplify writing output
+
 - add more openmp
 - in cartesiangrid don't use the configuration.json but the accessor to mark the unused values correctly
-- move kdtree to common lib project.
-- move line to common lib project.
+
 - [BUG] D2Q5 still uses diagonal neighbors also this is not necessary
 - simplify boundary by not making it necessary to copy the cellIds for each boundary separately
-- generalize NEEM bounary condition
+- generalize NEEM boundary condition
 - fix poisson method to allow changes of relaxation
-- determine analytical solutions for 2D poisson cases
-- adjust settings for poisson D2Q9
 - reduce todos below 100
-- [LPT] terminal velocity test
 
 - warn when overwriting files
 - give option to not overwrite files
 - set output format for the solvers
 - set output variables for the solvers
 - check in output functions if fileformat ending is already included
+- simplify writing output
+
+### this month:
+
+- determine analytical solutions for 2D poisson cases
+- adjust settings for poisson D2Q9
+- run basic 2D NS sphere case
+- run basic 2D NS obstruction case
+
+- [LPT] terminal velocity test
+- [LPT] finish for release
+
+- [LIB] move kdtree to common lib project.
+- [LIB] move line to common lib project.
+
+- [DOC] add documentation for the testcases
 
 ### next week:
 
@@ -83,7 +95,10 @@
 - [LBM] outflow pressure bc
 - [LBM]automatically run all the testcases and produce report
 - [LBM] use pressure boundary condition for poiseuille cases
+
 - [LPT] add additional analytical solutions
+- [LPT] add documentation
+- [LPT] add tutorial
 - [LPT] add simple injection model
 
 ## Done:

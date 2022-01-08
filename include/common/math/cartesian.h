@@ -29,7 +29,8 @@ static constexpr inline auto oppositeDir(const GInt dir) -> GInt {
     // diagonal direction
     return dir > 5 ? dir - 2 : dir + 2;
   }
-  TERMM(-1, "INVALID");
+  std::cerr << "Invalid dir in oppositeDir() " << std::endl;
+  std::exit(-1);
 }
 
 /// Return maximum number of children per cell
