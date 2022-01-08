@@ -32,7 +32,11 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   static constexpr GInt NVARS = static_cast<GInt>(PTYPE::m_noVars);
 
  public:
-  LPTSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains) { m_init_v.fill(0); };
+  LPTSolver(GInt32 domainId, GInt32 noDomains) : m_domainId(domainId), m_noDomains(noDomains) {
+    m_init_v.fill(0);
+    m_gravity.fill(NAN);
+    m_velo_a_infty.fill(0);
+  };
   ~LPTSolver() override       = default;
   LPTSolver(const LPTSolver&) = delete;
   LPTSolver(LPTSolver&&)      = delete;
@@ -126,6 +130,7 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   GString     m_configurationFileName;
   GBool       m_benchmark        = false;
   GInt        m_capacity         = default_number_particles_capacity;
+  GInt        m_maxNoSteps       = {};
   LPTInitCond m_initialCondition = LPTInitCond::none;
 
   /// MPI
@@ -149,11 +154,9 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   VectorD<NDIM> m_init_v;
 
   // ambient condition
-  //   VectorD<NDIM>        m_gravity     = NAN_LIST<NDIM>();
   VectorD<NDIM> m_gravity;
-  GDouble       m_rho_a_infty = NAN;
-  GDouble       m_nu_a_infty  = NAN;
-  //  VectorD<NDIM> m_velo_a_infty =  NAN_LIST<NDIM>();
+  GDouble       m_rho_a_infty = 1.205;   // air density at 20C [kg/m^3]
+  GDouble       m_nu_a_infty  = 1.82E-5; // air viscosity at 20C [Pa s]
   VectorD<NDIM> m_velo_a_infty;
 };
 

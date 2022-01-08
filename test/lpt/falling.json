@@ -10,7 +10,13 @@
     "type": "lpt",
     "capacity": 100,
     "maxSteps": 100,
+    "dt": 0.01,
     "initialcondition": "randomvol_pos",
+    "gravity": [
+      0,
+      0,
+      10
+    ],
     "randomvol_pos": {
       "noparticles": 10,
       "init_rho_p": 2,

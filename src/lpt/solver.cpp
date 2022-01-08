@@ -73,6 +73,18 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::loadConfiguration() {
 
   m_capacity = opt_config_value<GInt>("capacity", m_capacity);
 
+  m_gravity     = required_config_value<NDIM>("gravity");
+  m_rho_a_infty = opt_config_value<GDouble>("rho_infty", m_rho_a_infty);
+  m_nu_a_infty  = opt_config_value<GDouble>("nu_infty", m_nu_a_infty);
+
+  std::vector<GDouble> tmp;
+  tmp.resize(NDIM);
+  fill_n(tmp.begin(), NDIM, 0);
+  m_velo_a_infty = eigenutil::unpack<NDIM>(opt_config_value<std::vector<GDouble>>("v_infty", tmp));
+
+  m_dt         = required_config_value<GDouble>("dt");
+  m_maxNoSteps = required_config_value<GInt>("maxSteps");
+
   if(!isPath(m_outputDir, m_generatePath)) {
     TERMM(-1, "Invalid output directory set! (value: " + m_outputDir + ")");
   }
@@ -172,19 +184,6 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
-  // todo: load from config
-  m_gravity.fill(0);
-  m_gravity[NDIM - 1]     = 10;
-  m_dt                    = 0.01;
-  const GInt m_maxNoSteps = 20000;
-
-  // todo: load from config
-  const GDouble rho_a = 1;
-  m_rho_a_infty       = 1;
-  const GDouble nu_a  = 1E-5;
-  m_nu_a_infty        = 1E-5;
-  m_velo_a_infty.fill(0);
-
   for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
     // 1. Step update acceleration
     // todo: make settable
