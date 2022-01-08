@@ -141,6 +141,7 @@ class Configuration {
       m_unusedKeys[key] = true;
       return static_cast<T>(conf[key]);
     }
+    cerr0 << conf << std::endl;
     TERMM(-1, "The required configuration value is missing: " + key);
   }
 
@@ -330,7 +331,21 @@ class ConfigurationAccess {
   template <typename T>
   auto required_config_value(const GString& parentObjKey, const GString& key) -> T {
     // todo: check for types
+    if(parentObjKey.empty()) {
+      TERMM(-1, "Invalid parentObjKey");
+    }
     std::vector<GString> access{m_prefix, parentObjKey};
+    return m_parentConf->template required_config_value<T>(access, key);
+  }
+
+  /// Get a required configuration value (exit if it doesn't exist)
+  /// \tparam T Type of the value
+  /// \param key Key of the value
+  /// \return Configuration value if it exist or exit
+  template <typename T>
+  auto required_config_value(const GString& key) -> T {
+    // todo: check for types
+    std::vector<GString> access{m_prefix};
     return m_parentConf->template required_config_value<T>(access, key);
   }
 

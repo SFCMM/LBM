@@ -85,8 +85,8 @@
 - automatically run all the testcases and produce report
 - use pressure boundary condition for poiseuille cases
 - make all configoptions available for lpt (today)
-- allow setting the analytical solution in the config file (today)
-- add additional analytical solutions
+- [LPT] allow setting the analytical solution in the config file (today)
+- [LPT] add additional analytical solutions
 
 ## Done:
 

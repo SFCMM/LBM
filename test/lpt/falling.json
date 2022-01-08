@@ -8,6 +8,7 @@
   ],
   "solver": {
     "type": "lpt",
+    "capacity": 100,
     "maxSteps": 100,
     "initialcondition": "randomvol_pos",
     "randomvol_pos": {

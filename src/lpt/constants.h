@@ -1,6 +1,9 @@
 #ifndef LPT_CONSTANTS_H
 #define LPT_CONSTANTS_H
 
+// default values
+static constexpr GInt default_number_particles_capacity = 100;
+
 enum class LPTType { Normal, High };
 
 enum class LPTInitCond { none, load_from_CSV, randomvol_pos, randomplane_pos };

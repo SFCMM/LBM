@@ -70,8 +70,8 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::loadConfiguration() {
   m_outputSolutionInterval = opt_config_value<GInt>("solution_interval", m_outputSolutionInterval);
   m_solutionFileName       = opt_config_value<GString>("solution_filename", m_solutionFileName);
   m_initialCondition       = getLPTInitCond(opt_config_value<GString>("initialcondition", "none"));
-  // todo: set by configuration
-  m_capacity = 1000;
+
+  m_capacity = opt_config_value<GInt>("capacity", m_capacity);
 
   if(!isPath(m_outputDir, m_generatePath)) {
     TERMM(-1, "Invalid output directory set! (value: " + m_outputDir + ")");
@@ -146,14 +146,12 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::initialCondition() {
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
+  auto config = getAccessor("randomvol_pos");
   // todo: make settable
-  GInt noParticles = 100;
-  // todo: make settable
-  GString       m_volType = "box";
-  auto          config    = getAccessor("randomvol_pos");
-  auto          volconfig = config->getObject("volume");
-  VectorD<NDIM> cornerA   = config::required_config_value<NDIM>(volconfig, "A");
-  VectorD<NDIM> cornerB   = config::required_config_value<NDIM>(volconfig, "B");
+  GString       m_volType   = "box";
+  GInt          noParticles = config->template required_config_value<GInt>("noparticles");
+  VectorD<NDIM> cornerA     = eigenutil::unpack<NDIM>(config->template required_config_value<std::vector<GDouble>>("volume", "A"));
+  VectorD<NDIM> cornerB     = eigenutil::unpack<NDIM>(config->template required_config_value<std::vector<GDouble>>("volume", "B"));
   // todo: make configable
   m_init_v.fill(0);
   // todo: make configable

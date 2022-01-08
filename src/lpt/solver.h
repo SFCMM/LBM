@@ -125,7 +125,7 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   GString     m_exe;
   GString     m_configurationFileName;
   GBool       m_benchmark        = false;
-  GInt        m_capacity         = 1000;
+  GInt        m_capacity         = default_number_particles_capacity;
   LPTInitCond m_initialCondition = LPTInitCond::none;
 
   /// MPI
