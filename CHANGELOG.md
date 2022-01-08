@@ -89,6 +89,7 @@
 ## Done:
 
 ### Features
+
 - Lagrange Particle Solver
   - Forces:
     - Gravity
@@ -145,8 +146,6 @@
 - supports D1Q3, D2Q5 and D2Q9
 - Support the solution of Navier-Stokes and Poisson-Boltzmann equation
 
-### Buildsystem
-
 ### Testing
 - Added Couette flow testcase
 - Added Poiseuille flow testcase
@@ -160,11 +159,3 @@
 ### IO
 - differentiate between float and integers correctly in the VTK output
 - write lines output to csv
-
-### Performance
-
-### Bugs
-
-### Documentation
-
-### Refactoring
