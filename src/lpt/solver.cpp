@@ -200,6 +200,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   }
 }
 
+// todo: roll all the ifs into constexpr functions
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 template <force::Model FM, IntegrationMethod IM>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA() {
@@ -251,23 +252,23 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA() {
         break;
     }
     // Switch for drag model
-    // todo: reduce code repetition
     switch(FM) {
       case Model::constDensityRatioGravStokesDrag:
       case Model::constDensityRatioGravBuoStokesDrag:
       case Model::constDensityaGravBuoStokesDrag:
-        DC(partId) = 18.0 * nu_a / (4.0 * r_p * r_p * rho_p);
-        if(IM != IntegrationMethod::ImplicitEuler) {
-          // just calculate DC since implicit methods use DC directly
-          a(partId) += DC(partId) * (velo_a - velocity(partId));
-        }
-        break;
       case Model::constDensityRatioGravNlinDrag:
       case Model::constDensityRatioGravBuoNlinDrag:
       case Model::constDensityaGravBuoNlinDrag:
-        re_p = rho_a * velo_p.norm() * 2.0 * r_p / nu_a;
-        // todo: allow selecting drag model
-        DC(partId) = 18.0 * nu_a / (4.0 * r_p * r_p * rho_p) * dragCoefficient<DragModel::Putnam61>(re_p);
+        DC(partId) = 18.0 * nu_a / (4.0 * r_p * r_p * rho_p);
+
+        // for nonlinear drag models calculate correction factor
+        if(FM == Model::constDensityRatioGravNlinDrag || FM == Model::constDensityRatioGravBuoNlinDrag
+           || FM == Model::constDensityaGravBuoNlinDrag) {
+          re_p = rho_a * velo_p.norm() * 2.0 * r_p / nu_a;
+          // todo: allow selecting drag model
+          DC(partId) *= dragCoefficient<DragModel::Putnam61>(re_p);
+        }
+
         if(IM != IntegrationMethod::ImplicitEuler) {
           // just calculate DC since implicit methods use DC directly
           a(partId) += DC(partId) * (velo_a - velocity(partId));
