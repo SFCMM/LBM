@@ -40,7 +40,6 @@
 - load grid from disk
 - Couette in 3D
 - Poiseuille flow in 3D
-- add simple injection model
 - contact angle
 - output analytical solution if wanted
 - check in periodic boundaries if all cells have been linked
@@ -78,13 +77,14 @@
 - set output variables for the solvers
 - check in output functions if fileformat ending is already included
 
-### priority:
+### next week:
 
-- inflow pressure bc
-- outflow pressure bc
-- automatically run all the testcases and produce report
-- use pressure boundary condition for poiseuille cases
+- [LBM] inflow pressure bc
+- [LBM] outflow pressure bc
+- [LBM]automatically run all the testcases and produce report
+- [LBM] use pressure boundary condition for poiseuille cases
 - [LPT] add additional analytical solutions
+- [LPT] add simple injection model
 
 ## Done:
 
