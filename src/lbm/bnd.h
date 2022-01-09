@@ -127,11 +127,11 @@ class LBMBndManager : private Configuration {
         case BndryType::Inlet_BounceBack_ConstPressure:
           m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
           TERMM(-1, "Broken");
-          break;
+          //          break;
         case BndryType::Outlet_BounceBack_ConstPressure:
           m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
           TERMM(-1, "Broken");
-          break;
+          //          break;
         case BndryType::Periodic:
           m_bndrys.emplace_back(std::make_unique<LBMBnd_Periodic<DEBUG_LEVEL, LBTYPE>>(surf[0], surf[1], properties));
           break;
@@ -154,6 +154,12 @@ class LBMBnd_dummy : public LBMBndInterface {
  public:
   LBMBnd_dummy()           = default;
   ~LBMBnd_dummy() override = default;
+
+  // deleted constructors not needed
+  LBMBnd_dummy(const LBMBnd_dummy&) = delete;
+  LBMBnd_dummy(LBMBnd_dummy&&)      = delete;
+  auto operator=(const LBMBnd_dummy&) -> LBMBnd_dummy& = delete;
+  auto operator=(LBMBnd_dummy&&) -> LBMBnd_dummy& = delete;
 
   void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 

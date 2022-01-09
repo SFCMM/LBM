@@ -17,6 +17,13 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
   LBMBndCell_periodic(const GInt cellId, const VectorD<dim(LBTYPE)>& _normal) : LBMBndCell<LBTYPE>(cellId, _normal) {}
   virtual ~LBMBndCell_periodic() = default;
 
+  // deleted constructors not needed
+  //  LBMBndCell_periodic(const LBMBndCell_periodic&) = delete;
+  //  LBMBndCell_periodic(LBMBndCell_periodic&&)      = delete;
+  //  auto operator=(const LBMBndCell_periodic&) -> LBMBndCell_periodic& = delete;
+  //  auto operator=(LBMBndCell_periodic&&) -> LBMBndCell_periodic& = delete;
+
+
   // todo: move to some common place
   void init(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected) {
     LBMBndCell<LBTYPE>::init();
