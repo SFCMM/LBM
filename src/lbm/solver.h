@@ -32,6 +32,7 @@ class LBMSolver : public Runnable,
  public:
   LBMSolver(GInt32 domainId, GInt32 noDomains) : POST(), m_domainId(domainId), m_noDomains(noDomains){};
   ~LBMSolver() override       = default;
+
   LBMSolver(const LBMSolver&) = delete;
   LBMSolver(LBMSolver&&)      = delete;
   auto operator=(const LBMSolver&) -> LBMSolver& = delete;
@@ -201,9 +202,10 @@ class LBMSolver : public Runnable,
 
   GDouble m_relaxTime = defaultRelaxT;
   GDouble m_omega     = 1.0 / m_relaxTime;
-  GDouble m_dt        = NAN;
 
-  GInt m_timeStep = 0;
+  GInt    m_timeStep    = 0;
+  GDouble m_dt          = NAN;
+  GDouble m_currentTime = 0;
 };
 
 #endif // LBM_SOLVER_H

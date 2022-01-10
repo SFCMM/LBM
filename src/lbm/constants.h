@@ -18,8 +18,8 @@ static constexpr GInt defaultSolutionInterval = 100;
 static constexpr GInt maxNumberDistributions  = 30;
 
 // default speed of sound
-static constexpr GDouble lbm_cs   = 1.0 / gcem::sqrt(3.0);
-static constexpr GDouble lbm_cssq = 1.0 / 3.0;
+static constexpr GDouble lbm_cs   = 1.0 / gcem::sqrt(3.0); // assuming dx/dt = 1
+static constexpr GDouble lbm_cssq = 1.0 / 3.0;             // assuming dx/dt = 1
 
 enum class LBEquation { Navier_Stokes, Poisson, Navier_Stokes_Poisson };
 static constexpr std::array<std::string_view, 3> LBEquationName = {"Navier-Stokes",
@@ -81,7 +81,7 @@ enum class BndryType {
   Dirichlet_NEEM                      // Dirichlet boundary condition using Non-equilibrium extrapolation method
 };
 
-enum class LBMethodType { D1Q3, D2Q5, D2Q9, D3Q15, D4Q20, INVALID };
+enum class LBMethodType { D1Q3, D2Q5, D2Q9, D3Q19, D3Q27, D4Q40, INVALID };
 
 
 template <GInt NDIM, GInt NDIST>
@@ -99,9 +99,16 @@ static constexpr auto getLBMethodType() -> LBMethodType {
           std::terminate();
       }
     case 3:
-      return LBMethodType::D3Q15;
+      switch(NDIST) {
+        case 19:
+          return LBMethodType::D3Q19;
+        case 27:
+          return LBMethodType::D3Q27;
+        default:
+          std::terminate();
+      }
     case 4:
-      return LBMethodType::D4Q20;
+      return LBMethodType::D4Q40;
     default:
       std::terminate();
   }
@@ -116,6 +123,12 @@ static constexpr auto getLBMethodType(const std::string_view modelName) -> LBMet
   }
   if(modelName == "D2Q9") {
     return LBMethodType::D2Q9;
+  }
+  if(modelName == "D3Q19") {
+    return LBMethodType::D3Q19;
+  }
+  if(modelName == "D3Q27") {
+    return LBMethodType::D3Q27;
   }
   TERMM(-1, "Invalid model configuration!");
 }
@@ -134,7 +147,14 @@ static constexpr auto getLBMethodType(const GInt noDims, const GInt noDistributi
           std::terminate();
       }
     case 3:
-      return getLBMethodType<3, 15>();
+      switch(noDistributions) {
+        case 19:
+          return getLBMethodType<3, 19>();
+        case 27:
+          return getLBMethodType<3, 27>();
+        default:
+          std::terminate();
+      }
     case 4:
       return getLBMethodType<4, 20>();
     default:
@@ -150,8 +170,10 @@ static constexpr auto noDists(LBMethodType type) -> GInt {
       return 5;
     case LBMethodType::D2Q9:
       return 9;
-    case LBMethodType::D3Q15:
-      return 15;
+    case LBMethodType::D3Q19:
+      return 19;
+    case LBMethodType::D3Q27:
+      return 27;
     case LBMethodType::INVALID:
     default:
       return 0;
@@ -165,7 +187,8 @@ static constexpr auto dim(LBMethodType type) -> GInt {
     case LBMethodType::D2Q5:
     case LBMethodType::D2Q9:
       return 2;
-    case LBMethodType::D3Q15:
+    case LBMethodType::D3Q19:
+    case LBMethodType::D3Q27:
       return 3;
     case LBMethodType::INVALID:
     default:
@@ -265,6 +288,89 @@ class LBMethod<LBMethodType::D2Q9> {
   static constexpr GBool            m_isThermal  = false;
   static constexpr GBool            m_canPoisson = false;
   static constexpr std::string_view m_name       = "D2Q9";
+};
+
+template <>
+class LBMethod<LBMethodType::D3Q19> {
+ public:
+  static constexpr std::array<std::array<GDouble, 3>, 19> m_dirs = {
+      {{{-1, 0, 0}},
+       {{1, 0, 0}}, // main dir x
+       {{0, -1, 0}},
+       {{0, 1, 0}}, // main dir y
+       {{0, 0, -1}},
+       {{0, 0, 1}}, // main dir z
+       {{-1, -1, 0}},
+       {{-1, 1, 0}},
+       {{1, -1, 0}},
+       {{1, 1, 0}}, // diagonals in 2D plane (Note: order is different to 2DQ9)
+       {{-1, 0, -1}},
+       {{-1, 0, 1}},
+       {{1, 0, -1}},
+       {{1, 0, 1}}, // diagonals in x dir
+       {{0, -1, -1}},
+       {{0, -1, 1}},
+       {{0, 1, -1}},
+       {{0, 1, 1}},   // diagonals in y dir
+       {{0, 0, 0}}}}; // center
+
+  static constexpr std::array<GInt, 19> m_oppositeDist = {1, 0, 3, 2, 5, 4, 9, 8, 7, 6, 13, 12, 11, 10, 17, 16, 15, 14, 18};
+
+  /// look-up table for opposite direction
+  static constexpr auto oppositeDist(const GInt dist) -> GInt { return m_oppositeDist[dist]; }
+
+  static constexpr std::array<GDouble, 19> m_weights = {1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 36.0,
+                                                        1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0,
+                                                        1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 3.0};
+
+  static constexpr GDouble m_poissonAlpha = NAN;
+  //  static constexpr std::array<GDouble, 19> m_poissonWeights = {1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0,
+  //                                                              1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 0.0};
+
+
+  static constexpr GInt             m_dim        = 3;
+  static constexpr GInt             m_noDists    = 19;
+  static constexpr GBool            m_isThermal  = false;
+  static constexpr GBool            m_canPoisson = false;
+  static constexpr std::string_view m_name       = "D3Q19";
+};
+
+template <>
+class LBMethod<LBMethodType::D3Q27> {
+ public:
+  static constexpr std::array<std::array<GDouble, 3>, 27> m_dirs = {
+      {{{-1, 0, 0}},         {{1, 0, 0}},                                           // main dir x
+       {{0, -1, 0}},         {{0, 1, 0}},                                           // main dir y
+       {{0, 0, -1}},         {{0, 0, 1}},                                           // main dir z
+       {{-1, -1, 0}},        {{-1, 1, 0}},        {{1, -1, 0}},        {{1, 1, 0}}, // diagonals in 2D plane (Note: order is different to
+                                                                                    // 2DQ9)
+       {{-1, 0, -1}},        {{-1, 0, 1}},        {{1, 0, -1}},        {{1, 0, 1}}, // diagonals in x dir
+       {{0, -1, -1}},        {{0, -1, 1}},        {{0, 1, -1}},        {{0, 1, 1}}, // diagonals in y dir
+       {{-1.0, -1.0, -1.0}}, {{-1.0, -1.0, 1.0}}, {{-1.0, 1.0, -1.0}}, {{-1.0, 1.0, 1.0}}, {{1.0, -1.0, -1.0}},
+       {{1.0, -1.0, 1.0}},   {{1.0, 1.0, -1.0}},  {{1.0, 1.0, 1.0}}, // tridiagonal directions
+       {{0, 0, 0}}}};                                                // center
+
+  static constexpr std::array<GInt, 27> m_oppositeDist = {1,  0,  3,  2,  5,  4,  9,  8,  7,  6,  13, 12, 11, 10,
+                                                          17, 16, 15, 14, 25, 24, 23, 22, 21, 20, 19, 18, 26};
+
+  /// look-up table for opposite direction
+  static constexpr auto oppositeDist(const GInt dist) -> GInt { return m_oppositeDist[dist]; }
+
+  static constexpr std::array<GDouble, 27> m_weights = {
+      2.0 / 27.0,  2.0 / 27.0,  2.0 / 27.0,  2.0 / 27.0,  2.0 / 27.0,  2.0 / 27.0,  1.0 / 54.0, 1.0 / 54.0, 1.0 / 54.0,
+      1.0 / 54.0,  1.0 / 54.0,  1.0 / 54.0,  1.0 / 54.0,  1.0 / 54.0,  1.0 / 54.0,  1.0 / 54.0, 1.0 / 54.0, 1.0 / 54.0,
+      1.0 / 216.0, 1.0 / 216.0, 1.0 / 216.0, 1.0 / 216.0, 1.0 / 216.0, 1.0 / 216.0, 8.0 / 27.0};
+
+  static constexpr GDouble m_poissonAlpha = NAN;
+  //  static constexpr std::array<GDouble, 19> m_poissonWeights = {1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0,
+  //                                                              1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 0.0};
+
+
+  static constexpr GInt             m_dim        = 3;
+  static constexpr GInt             m_noDists    = 27;
+  static constexpr GBool            m_isThermal  = false;
+  static constexpr GBool            m_canPoisson = false;
+  static constexpr std::string_view m_name       = "D3Q27";
 };
 
 template <LBMethodType LBTYPE>

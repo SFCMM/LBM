@@ -167,6 +167,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::run() -> GInt {
 
     // also write an output if it's the last time step or if the solution has converged
     output(m_timeStep == noTimesteps - 1 || converged);
+    m_currentTime += m_dt;
   }
 
   if(has_config_value("analyticalSolution")) {
@@ -292,7 +293,9 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
     output(true, "bdiv");
     return;
   }
-  //  updateMacroscopicValues();
+  if(!m_diverged) {
+    updateMacroscopicValues();
+  }
   if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || forced) {
     std::vector<IOIndex>              index;
     std::vector<std::vector<GString>> values;
@@ -485,6 +488,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::updateMacroscopicValues() {
           }
           velocity(cellId, dir) /= rho(cellId);
         }
+        // todo: calculate the viscous stress tensor (if activated)
+        // todo: calculate f^neq_ = f_i -f^eq_i (if activated)
       }
 
       if(EQ == LBEquation::Poisson || EQ == LBEquation::Navier_Stokes_Poisson) {
@@ -539,11 +544,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
   for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST; ++dist) {
       f(cellId, dist) = (1 - m_omega) * fold(cellId, dist) + m_omega * feq(cellId, dist);
-      if(EQ == LBEquation::Poisson && dist != NDIST - 1) {
-        // todo: make settable
-        static constexpr GDouble k           = 27.79;
-        static const GDouble     diffusivity = METH::m_poissonAlpha * gcem::pow(m_speedOfSound, 2) * (0.5 - m_relaxTime) * m_dt;
-        f(cellId, dist) += m_dt * diffusivity * METH::m_poissonWeights[dist] * k * k * electricPotential(cellId);
+      if constexpr(EQ == LBEquation::Poisson) {
+        if(dist != NDIST - 1) {
+          // todo: make settable
+          static constexpr GDouble k           = 27.79;
+          static const GDouble     diffusivity = METH::m_poissonAlpha * gcem::pow(m_speedOfSound, 2) * (0.5 - m_relaxTime) * m_dt;
+          f(cellId, dist) += m_dt * diffusivity * METH::m_poissonWeights[dist] * k * k * electricPotential(cellId);
+        }
       }
     }
   }
@@ -755,9 +762,3 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::checkDivergence() {
     }
   }
 }
-
-// template class LBMSolver<Debug_Level::no_debug, LBMethodType::D3Q15>;
-// template class LBMSolver<Debug_Level::min_debug, LBMethodType::D3Q15>;
-// template class LBMSolver<Debug_Level::debug, LBMethodType::D3Q15>;
-// template class LBMSolver<Debug_Level::more_debug, LBMethodType::D3Q15>;
-// template class LBMSolver<Debug_Level::max_debug, LBMethodType::D3Q15>;

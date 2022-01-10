@@ -34,6 +34,7 @@
 - refactor comparison with analytical solution to postprocessing
 - initial material point method
 - mpi communication methods
+- [LBM] calculate total energy/internal energy for output purposes (also output pressure and temperature)
 
 # V0.0.2
 
@@ -117,6 +118,8 @@
   - analytical tests:
     - free fall
     - stokes drag
+- Lattice Boltzmann Code
+  - add D3Q19 and D3Q27
 
 ### Buildsystem
 

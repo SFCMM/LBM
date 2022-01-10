@@ -7,7 +7,7 @@
 template <GInt NDIM>
 class Line {
  private:
-  using EigenLine = Eigen::Hyperplane<GDouble, 2>;
+  using EigenLine = Eigen::Hyperplane<GDouble, NDIM>;
 
  public:
   Line(const Point<NDIM>& pointA, const Point<NDIM>& pointB) : m_a(pointA), m_b(pointB), m_line(EigenLine::Through(pointA, pointB)) {}
