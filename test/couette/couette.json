@@ -32,8 +32,8 @@
   "solver": {
     "type": "lbm",
     "method": "bgk",
-    "relaxation": 0.9,
-    "reynoldsnumber": 0.75,
+    "relaxation": 1.0,
+    "reynoldsnumber": 0.0433013,
     "maxSteps": 200000,
     "info_interval": 100,
     "solution_interval": 500,

@@ -85,29 +85,26 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   }
 
 
-  //  const GDouble m_referenceLength = 1.0;
-  //  const GDouble m_ma = 0.001;
+  // todo: make settable
+  m_ma        = 0.01;
+  m_refLength = 1.0;
 
-  // Re = rho * u * L/nu
-  // u = ma * sqrt(gamma * R * T)
-  //  m_nu = m_ma / gcem::sqrt(3) / m_re * m_refLength;
-  // todo: add option to define nu
+
   m_relaxTime = opt_config_value<GDouble>("relaxation", m_relaxTime);
   if(EQ == LBEquation::Navier_Stokes || EQ == LBEquation::Navier_Stokes_Poisson) {
-    m_re = required_config_value<GDouble>("reynoldsnumber");
+    m_re    = required_config_value<GDouble>("reynoldsnumber");
+    m_nu    = m_refRho * m_ma * lbm_cs / m_re * m_refLength; // Re = rho * |u| * l/nu -> nu = rho * |u| * l/re with |u| = ma * lbm_cs
+    m_omega = 2.0 / (1.0 + 6.0 * m_nu) * m_relaxTime;
   } else {
-    m_re = 0;
+    m_re    = 0;
+    m_ma    = 1.0 / lbm_cs;
+    m_omega = 1.0 / m_relaxTime;
+    m_nu    = (2.0 * m_relaxTime - 1) / 6.0;
   }
 
-
-  /// todo: 1.73205080756887729352??? (F1BCS)
-  //  m_nu    = m_ma / 1.73205080756887729352 / m_re * m_referenceLength; //* (FFPOW2[maxLevel() - a_level(pCellId)]);
-  //  m_omega = 2.0 / (1.0 + 6.0 * m_nu);
-
-  m_omega = 1.0 / m_relaxTime;
-  m_nu    = (2.0 * m_relaxTime - 1) / 6.0;
-  m_refU  = m_re * m_nu / m_refLength;
-  m_dt    = 1.0 / (std::pow(size(), 1.0 / NDIM) - 1); // todo:test
+  m_refU                            = m_ma * lbm_cs;
+  const GDouble m_finestGridSpacing = 1.0 / (std::pow(size(), 1.0 / NDIM) - 1);          // todo: replace with cellLength
+  m_dt                              = m_finestGridSpacing * m_ma * lbm_cs / m_refLength; // todo:test
 
   m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL, LBTYPE, EQ>>();
 

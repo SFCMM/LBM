@@ -1,6 +1,6 @@
 #include "solver.cpp"
 
-// Main directions + diagonals
+// Main directions + diagonals (unsuitable for high Reynolds numbers)
 extern template class LBMSolver<Debug_Level::no_debug, LBMethodType::D3Q19, LBEquation::Navier_Stokes>;
 template class LBMSolver<Debug_Level::no_debug, LBMethodType::D3Q19, LBEquation::Navier_Stokes>;
 extern template class LBMSolver<Debug_Level::debug, LBMethodType::D3Q19, LBEquation::Navier_Stokes>;

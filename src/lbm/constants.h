@@ -7,7 +7,7 @@ class LBMethod;
 
 // default environment properties
 static constexpr GDouble defaultT20C       = 293.15;
-static constexpr GDouble defaultMachNumber = 0.2;
+static constexpr GDouble defaultMachNumber = 0.01;
 
 // default numerical properties
 static constexpr GDouble defaultRelaxT = 0.9;
