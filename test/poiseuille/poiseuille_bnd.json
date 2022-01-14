@@ -51,12 +51,12 @@
       "cube": {
         "+x": {
           "type": "periodic",
-          "generateBndry": false,
+          "generateBndry": true,
           "connection": "-x"
         },
         "-x": {
           "type": "periodic",
-          "generateBndry": false,
+          "generateBndry": true,
           "connection": "+x"
         },
         "-y": {
