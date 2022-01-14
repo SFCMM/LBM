@@ -98,16 +98,8 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
   }
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-                const std::function<GDouble&(GInt, GInt)>& vars) {
+                const std::function<GDouble&(GInt, GInt)>& /*vars*/) {
     std::array<GDouble, noDists(LBTYPE)> feq;
-
-    for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
-      feq[dist] = LBMethod<LBTYPE>::m_weights[dist] * vars(mapped(), VAR::rho())
-                  * (1
-                     + 3
-                           * (vars(mapped(), VAR::velocity(0)) * LBMethod<LBTYPE>::m_dirs[dist][0]
-                              + vars(mapped(), VAR::velocity(1)) * LBMethod<LBTYPE>::m_dirs[dist][1]));
-    }
 
     //    do the same as in the propagation step
     for(GInt id = 0; id < m_noSetDists; ++id) {
@@ -118,13 +110,6 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
 
   void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
              const std::function<GDouble&(GInt, GInt)>& /*vars*/) {}
-
-  // todo: fix me
-  //  deleted constructors not needed
-  //  LBMBndCell_wallBB(const LBMBndCell_wallBB&) = delete;
-  //  LBMBndCell_wallBB(LBMBndCell_wallBB&&)      = delete;
-  //  auto operator=(const LBMBndCell_wallBB&) -> LBMBndCell_wallBB& = delete;
-  //  auto operator=(LBMBndCell_wallBB&&) -> LBMBndCell_wallBB& = delete;
 
  private:
   using LBMBndCell<LBTYPE>::mapped;
