@@ -167,6 +167,10 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::run() -> GInt {
     m_currentTime += m_dt;
   }
 
+  if(m_diverged) {
+    TERMM(-1, "Solution diverged");
+  }
+
   if(has_config_value("analyticalSolution")) {
     compareToAnalyticalResult();
   }

@@ -32,7 +32,7 @@
   "solver": {
     "type": "lbm",
     "relaxation": 1,
-    "reynoldsnumber": 0.04,
+    "reynoldsnumber": 20,
     "analyticalSolution": "poiseuille2D_1",
     "analyticalSolutionExcludeSurface": [
       "+x",

@@ -22,8 +22,6 @@
     logger.close();
     MPI_Abort(MPI_COMM_WORLD, static_cast<int>(errorCode));
   } else {
-    // memDealloc();
-
     // Close the log file to make sure that no MPI error occurs from the
     // unclosed file, and that a proper XML footer is written
     logger.close();

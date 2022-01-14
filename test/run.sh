@@ -49,6 +49,7 @@ cd ..
 
 cd poiseuille || exit
 run_test poiseuille.json
+run_test poiseuille_bnd.json
 cd ..
 
 cd poisson || exit
