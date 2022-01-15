@@ -36,7 +36,7 @@ run_test() {
   if [ -f "gridgen_log" ]; then
     cp gridgen_log ../"$LOG_PATH"/"$NAME"_gridgen_log.txt
   fi
-  cp "$NAME".stdout ../"$LOG_PATH"/"$NAME".stdout
+  cp "$NAME".stdout ../"$LOG_PATH"/"$NAME".stdout.txt
 }
 
 mkdir "$LOG_PATH"
