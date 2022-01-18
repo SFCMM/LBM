@@ -107,6 +107,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
     m_ma    = 1.0 / lbm_cs;
     m_omega = 1.0 / m_relaxTime;
     m_nu    = (2.0 * m_relaxTime - 1) / 6.0;
+    m_dt    = m_finestGridSpacing * m_ma * lbm_cs / m_refLength; // todo:test
   }
 
   m_refU                            = m_ma * lbm_cs;
