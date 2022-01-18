@@ -3,8 +3,8 @@
 #include <json.h>
 #include <sfcmm_common.h>
 #include "analytical_solutions.h"
-#include "common/surface.h"
 #include "bnd_interface.h"
+#include "common/surface.h"
 #include "constants.h"
 #include "variables.h"
 
@@ -87,7 +87,7 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
 
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
-                const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
+                const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
   void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& vars) override {

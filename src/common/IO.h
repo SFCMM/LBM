@@ -44,6 +44,7 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
   static constexpr unsigned int buffer_size = 1024 * N;
   std::array<char, buffer_size> buffer{};
   pointFile.rdbuf()->pubsetbuf(buffer.data(), buffer_size);
+  pointFile << setprecision(std::numeric_limits<double>::digits10);
   pointFile.open(fileName + ".csv");
 
   for(GInt id = 0; id < DIM; ++id) {

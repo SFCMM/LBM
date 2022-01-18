@@ -34,6 +34,7 @@
     "method": "bgk",
     "relaxation": 1.0,
     "reynoldsnumber": 0.0433013,
+    "ma": 0.01,
     "maxSteps": 200000,
     "info_interval": 100,
     "solution_interval": 500,

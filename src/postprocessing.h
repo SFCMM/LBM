@@ -104,12 +104,13 @@ class Postprocess {
           std::vector<VectorD<NDIM>>        tmp_coords;
           std::vector<IOIndex>              tmp_index;
           std::vector<std::vector<GString>> tmp_values;
-          tmp_values.resize(1);
+          std::vector<GDouble>              tmp_vec;
           tmp_index.emplace_back(IOIndex{"u", "float"});
           for(const GInt cellId : tmp) {
             tmp_coords.emplace_back(solver()->center(cellId));
-            tmp_values[0].emplace_back(std::to_string(solver()->velocity(cellId, 0)));
+            tmp_vec.emplace_back(solver()->velocity(cellId, 0));
           }
+          tmp_values.emplace_back(toStringVector(tmp_vec, tmp_vec.size()));
           ASCII::writePointsCSV<NDIM>("line", tmp.size(), tmp_coords, tmp_index, tmp_values);
         }
       }
