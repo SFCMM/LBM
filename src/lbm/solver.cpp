@@ -100,9 +100,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   if(EQ == LBEquation::Navier_Stokes || EQ == LBEquation::Navier_Stokes_Poisson) {
     m_re    = required_config_value<GDouble>("reynoldsnumber");
     m_nu    = m_ma /** lbm_cs */ / m_re * m_refLength; // Re = |u| * l/nu -> nu = |u| * l/re with |u| = ma * lbm_cs
+    // this follows from nu = rho_0 * cssq * (tau - 1/2 * dt) with dt = tau and rho_0 = 1
     m_omega = 2.0 / (1.0 + 2.0 * m_nu * gcem::pow(2.0, m_maxLevel));
-    //    m_nu = 0.5 * lbm_cssq * m_dt;
-    //    m_omega = 1.0/m_dt;
   } else {
     m_re    = 0;
     m_ma    = 1.0 / lbm_cs;
