@@ -7,6 +7,10 @@ template <GInt NDIM>
 using Point = VectorD<NDIM>;
 
 namespace analytical {
+struct SolutionConfig {
+  GDouble nu = 0;
+  GDouble dp = 0;
+};
 
 namespace ns {
 inline auto couette2D(const GDouble couette_wallV, const GDouble couette_channelHeight, const Point<2> coord) -> Point<2> {
@@ -28,21 +32,33 @@ inline auto couette2D_1_5(const Point<2> coord) -> Point<2> {
   return couette2D(couette_top_wallV, couette_channelHeight, coord);
 }
 
-inline auto poiseuille2D(const GDouble ytop, const GDouble ybot, const Point<2> coord, const GDouble maxV) -> Point<2> {
-  return Point<2>({-4.0 * maxV / (gcem::pow(ytop - ybot, 2)) * (coord[1] - ybot) * (coord[1] - ytop), 0});
+// inline auto poiseuille2D(const GDouble ytop, const GDouble ybot, const Point<2> coord, const GDouble maxV) -> Point<2> {
+//   return Point<2>({-4.0 * maxV / (gcem::pow(ytop - ybot, 2)) * (coord[1] - ybot) * (coord[1] - ytop), 0});
+// }
+//
+// inline auto poiseuille2D_1(const Point<2> coord) -> Point<2> {
+//   //  constexpr GDouble reynoldsNum = 0.7;
+//   //  constexpr GDouble relaxTime   = gcem::sqrt(3.0 / 16.0) + 0.5;
+//   //  constexpr GDouble refL        = 1.0;
+//
+//   //  constexpr GDouble dynViscosity = (2.0 * relaxTime - 1.0) / 6.0;
+//   // from reynolds obtain reference velocity
+//   //  constexpr GDouble refV = reynoldsNum * dynViscosity / refL;
+//   constexpr GDouble refV = 0.1;
+//   return poiseuille2D(1, 0, coord, refV);
+// }
+
+inline auto poiseuille2D(const GDouble ytop, const GDouble ybot, const Point<2> coord, const GDouble dp, const GDouble nu) -> Point<2> {
+  return Point<2>({dp / (2.0 * nu) * coord[1] * (ytop - ybot - coord[1]), 0});
 }
 
-inline auto poiseuille2D_1(const Point<2> coord) -> Point<2> {
-  //  constexpr GDouble reynoldsNum = 0.7;
-  //  constexpr GDouble relaxTime   = gcem::sqrt(3.0 / 16.0) + 0.5;
-  //  constexpr GDouble refL        = 1.0;
 
-  //  constexpr GDouble dynViscosity = (2.0 * relaxTime - 1.0) / 6.0;
-  // from reynolds obtain reference velocity
-  //  constexpr GDouble refV = reynoldsNum * dynViscosity / refL;
-  constexpr GDouble refV = 0.1;
-  return poiseuille2D(1, 0, coord, refV);
+inline auto poiseuille2D_1(const Point<2> coord, const SolutionConfig* _config = nullptr) -> Point<2> {
+  static SolutionConfig config = _config != nullptr ? *_config : config;
+  return poiseuille2D(1, 0, coord, config.dp, config.nu);
 }
+
+inline auto poiseuille2D_1s(const Point<2> coord) -> Point<2> { return poiseuille2D_1(coord); }
 
 
 } // namespace ns
@@ -99,7 +115,7 @@ static constexpr auto freefall_stokes_pos(const Point<NDIM>& start, const Partic
 } // namespace lpt
 
 template <GInt NDIM>
-auto getAnalyticalSolution(const GString& name) -> std::function<Point<NDIM>(Point<NDIM>)> {
+auto getAnalyticalSolution(const GString& name, const SolutionConfig& config) -> std::function<Point<NDIM>(Point<NDIM>)> {
   if constexpr(NDIM == 1) {
     if(name == "poissonCHAI08_1") {
       return &poisson::poissonCHAI08_1;
@@ -112,7 +128,9 @@ auto getAnalyticalSolution(const GString& name) -> std::function<Point<NDIM>(Poi
     }
 
     if(name == "poiseuille2D_1") {
-      return &ns::poiseuille2D_1;
+      // set config object
+      ns::poiseuille2D_1({0, 0}, &config);
+      return &ns::poiseuille2D_1s;
     }
   }
 

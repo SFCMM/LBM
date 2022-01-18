@@ -86,28 +86,26 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
 
 
   // todo: make settable
-  //  m_ma        = 0.00005773502692;
-  //  m_ma        = 0.00005773502692;
   m_ma = 0.0001;
-  //  m_ma        = 0.0024;
   m_refLength     = 1.0;
   GInt m_maxLevel = 5;
 
   const GDouble m_finestGridSpacing = 1.0 / (std::pow(size(), 1.0 / NDIM) - 1);          // todo: replace with cellLength
-  m_dt                              = m_finestGridSpacing * m_ma * lbm_cs / m_refLength; // todo:test
 
   m_relaxTime = opt_config_value<GDouble>("relaxation", m_relaxTime);
   if(EQ == LBEquation::Navier_Stokes || EQ == LBEquation::Navier_Stokes_Poisson) {
-    m_re    = required_config_value<GDouble>("reynoldsnumber");
-    m_nu    = m_ma /** lbm_cs */ / m_re * m_refLength; // Re = |u| * l/nu -> nu = |u| * l/re with |u| = ma * lbm_cs
+    m_re = required_config_value<GDouble>("reynoldsnumber");
+    m_ma = required_config_value<GDouble>("ma");
+    m_nu = m_ma /** lbm_cs */ / m_re * m_refLength; // Re = |u| * l/nu -> nu = |u| * l/re with |u| = ma * lbm_cs
     // this follows from nu = rho_0 * cssq * (tau - 1/2 * dt) with dt = tau and rho_0 = 1
     m_omega = 2.0 / (1.0 + 2.0 * m_nu * gcem::pow(2.0, m_maxLevel));
+    m_dt    = m_finestGridSpacing * m_ma * lbm_cs / m_refLength;
   } else {
     m_re    = 0;
     m_ma    = 1.0 / lbm_cs;
     m_omega = 1.0 / m_relaxTime;
     m_nu    = (2.0 * m_relaxTime - 1) / 6.0;
-    m_dt    = m_finestGridSpacing * m_ma * lbm_cs / m_refLength; // todo:test
+    m_dt    = m_finestGridSpacing * m_ma * lbm_cs / m_refLength;
   }
 
   m_refU                            = m_ma * lbm_cs;
@@ -362,8 +360,13 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
   // todo: fix for 3D
   //  for an analytical testcase the value "analyticalSolution" needs to be defined
   const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");
+  GDouble    dp                     = 0;
+  if(analyticalSolutionName == "poiseuille2D_1") {
+    dp = 0.0000008;
+  }
+  const analytical::SolutionConfig conf = {m_nu, dp};
   // from the analyticalSolutionName we can get a functional representation of the solution
-  const auto anaSolution = analytical::getAnalyticalSolution<NDIM>(analyticalSolutionName);
+  const auto anaSolution = analytical::getAnalyticalSolution<NDIM>(analyticalSolutionName, conf);
 
   // determine the error
   GDouble maxError = 0;
