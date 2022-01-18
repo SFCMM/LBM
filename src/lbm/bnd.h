@@ -2,13 +2,13 @@
 #define LBM_BND_H
 
 #include <sfcmm_common.h>
-#include "common/configuration.h"
-#include "common/surface.h"
 #include "bnd_dirichlet.h"
 #include "bnd_in_out.h"
 #include "bnd_interface.h"
 #include "bnd_periodic.h"
 #include "bnd_wall.h"
+#include "common/configuration.h"
+#include "common/surface.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, GBool TANGENTIALVELO>
 class LBMBnd_wallBB;
@@ -95,9 +95,9 @@ class LBMBndManager : private Configuration {
   }
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-                const std::function<GDouble&(GInt, GInt)>& vars) {
+                const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
     for(const auto& bndry : m_bndrys) {
-      bndry->preApply(f, fold, vars);
+      bndry->preApply(f, fold, feq, vars);
     }
   }
 
@@ -164,7 +164,7 @@ class LBMBnd_dummy : public LBMBndInterface {
   void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
-                const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
+                const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
   void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
              const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 };

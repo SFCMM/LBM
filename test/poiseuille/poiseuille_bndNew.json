@@ -32,15 +32,13 @@
   "solver": {
     "type": "lbm",
     "relaxation": 1,
-    "reynoldsnumber": 0.1,
+    "reynoldsnumber": 1.25,
     "analyticalSolution": "poiseuille2D_1",
     "analyticalSolutionExcludeSurface": [
       "+x",
       "-x"
     ],
-    "forcing": "poiseuille2D_1",
-    "forcing_param": "1.1",
-    "maxSteps": 34250,
+    "maxSteps": 100000,
     "info_interval": 100,
     "solution_interval": 10000,
     "convergence": 2E-11,
@@ -51,13 +49,15 @@
       "cube": {
         "+x": {
           "type": "periodic",
-          "generateBndry": false,
-          "connection": "-x"
+          "generateBndry": true,
+          "connection": "-x",
+          "pressure": 1.00001
         },
         "-x": {
           "type": "periodic",
-          "generateBndry": false,
-          "connection": "+x"
+          "generateBndry": true,
+          "connection": "+x",
+          "pressure": 1.0
         },
         "-y": {
           "type": "wall",

@@ -86,15 +86,23 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
 
 
   // todo: make settable
-  m_ma        = 0.01;
-  m_refLength = 1.0;
+  //  m_ma        = 0.00005773502692;
+  //  m_ma        = 0.00005773502692;
+  m_ma = 0.0001;
+  //  m_ma        = 0.0024;
+  m_refLength     = 1.0;
+  GInt m_maxLevel = 5;
 
+  const GDouble m_finestGridSpacing = 1.0 / (std::pow(size(), 1.0 / NDIM) - 1);          // todo: replace with cellLength
+  m_dt                              = m_finestGridSpacing * m_ma * lbm_cs / m_refLength; // todo:test
 
   m_relaxTime = opt_config_value<GDouble>("relaxation", m_relaxTime);
   if(EQ == LBEquation::Navier_Stokes || EQ == LBEquation::Navier_Stokes_Poisson) {
     m_re    = required_config_value<GDouble>("reynoldsnumber");
-    m_nu    = m_refRho * m_ma * lbm_cs / m_re * m_refLength; // Re = rho * |u| * l/nu -> nu = rho * |u| * l/re with |u| = ma * lbm_cs
-    m_omega = 2.0 / (1.0 + 6.0 * m_nu);
+    m_nu    = m_ma /** lbm_cs */ / m_re * m_refLength; // Re = |u| * l/nu -> nu = |u| * l/re with |u| = ma * lbm_cs
+    m_omega = 2.0 / (1.0 + 2.0 * m_nu * gcem::pow(2.0, m_maxLevel));
+    //    m_nu = 0.5 * lbm_cssq * m_dt;
+    //    m_omega = 1.0/m_dt;
   } else {
     m_re    = 0;
     m_ma    = 1.0 / lbm_cs;
@@ -103,8 +111,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   }
 
   m_refU                            = m_ma * lbm_cs;
-  const GDouble m_finestGridSpacing = 1.0 / (std::pow(size(), 1.0 / NDIM) - 1);          // todo: replace with cellLength
-  m_dt                              = m_finestGridSpacing * m_ma * lbm_cs / m_refLength; // todo:test
+
 
   m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL, LBTYPE, EQ>>();
 
@@ -167,6 +174,8 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::run() -> GInt {
     m_currentTime += m_dt;
   }
 
+  executePostprocess(pp::HOOK::ATEND);
+
   if(m_diverged) {
     TERMM(-1, "Solution diverged");
   }
@@ -174,8 +183,6 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::run() -> GInt {
   if(has_config_value("analyticalSolution")) {
     compareToAnalyticalResult();
   }
-
-  executePostprocess(pp::HOOK::ATEND);
 
   logger << "LBM Solver finished <||" << endl;
   cout << "LBM Solver finished <||" << endl;
@@ -587,7 +594,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::forcing() {
     //    const GDouble gradP = 0.00011276015; //gradP=8*nu*u_max/(NY)^2;
     const GDouble outletPressure = 1.0;
     //    const GDouble inletPressure  = 1.010487; //rho_inlet=3*(NX-1)*gradP+outletPressure;
-    const GDouble inletPressure = 1.01102192453;
+    //    const GDouble inletPressure = 1.01102192453;
+    const GDouble inletPressure = outletPressure + 0.0000008;
 
 
     // set Outlet forcing
@@ -643,12 +651,16 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::prePropBoundaryCnd() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMBnd]);
 
   // todo: replace by lambda function
+  // todo: don't allow to set variables that will be overwritten anyway
   using namespace std::placeholders;
   std::function<GDouble&(GInt, GInt)> _fold = std::bind(&LBMSolver::fold, this, _1, _2);
   std::function<GDouble&(GInt, GInt)> _f    = std::bind(&LBMSolver::f, this, _1, _2);
-  std::function<GDouble&(GInt, GInt)> _v    = std::bind(&LBMSolver::vars, this, _1, _2);
+  //  std::function<GDouble&(const LBMSolver&, GInt, GInt)> tmp_feq = &LBMSolver::feq;
+  std::function<GDouble&(GInt, GInt)> _feq = std::bind(static_cast<GDouble& (LBMSolver::*)(GInt, GInt)>(&LBMSolver::feq), this, _1, _2);
+  //  std::function<GDouble&(GInt, GInt)> _feq  = std::bind(tmp_feq, this, _1, _2);
+  std::function<GDouble&(GInt, GInt)> _v = std::bind(&LBMSolver::vars, this, _1, _2);
 
-  m_bndManager->preApply(_f, _fold, _v);
+  m_bndManager->preApply(_f, _fold, _feq, _v);
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMBnd]);
 }
 

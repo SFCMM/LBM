@@ -3,4 +3,4 @@ cppcoreguidelines-*, portability-*, openmp-*,-cppcoreguidelines-pro-bounds-point
 -readability-avoid-const-params-in-decls, -bugprone-easily-swappable-parameters, -cppcoreguidelines-pro-bounds-constant-array-index'
 CheckOptions:
   - key: readability-function-cognitive-complexity.Threshold
-    value: '30'
+    value: '35'

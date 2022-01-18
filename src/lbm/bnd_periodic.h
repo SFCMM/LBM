@@ -2,13 +2,15 @@
 #define LBM_BND_PERIODIC_H
 #include "bnd_interface.h"
 #include "constants.h"
+#include "equilibrium_func.h"
 #include "variables.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
  private:
-  using method               = LBMethod<LBTYPE>;
-  static constexpr GInt NDIM = LBMethod<LBTYPE>::m_dim;
+  using method                = LBMethod<LBTYPE>;
+  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
+  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
 
   using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
 
@@ -25,15 +27,16 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
 
 
   // todo: move to some common place
-  void init(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected) {
+  void init(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected, GDouble pressure) {
     LBMBndCell<LBTYPE>::init();
 
+    m_pressure               = pressure;
     const GDouble cellLength = surfConnected->cellLength(mapped());
     const auto    center     = surfConnected->center(mapped());
     const auto&   bb         = surfConnected->grid().boundingBox();
 
     // set which dists are to be set by this boundary condition
-    for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
+    for(GInt dist = 0; dist < NDIST; ++dist) {
       // determine if the dist points into the outside normal direction of bndry
       if(inDirection<dim(LBTYPE)>(normal(), LBMethod<LBTYPE>::m_dirs[dist])) {
         GBool inside = true;
@@ -98,13 +101,33 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
   }
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-                const std::function<GDouble&(GInt, GInt)>& /*vars*/) {
-    std::array<GDouble, noDists(LBTYPE)> feq;
+                const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
+    if(!std::isnan(m_pressure)) {
+      // need to calculate a pressure drop across the periodic boundary
+      GDouble vsq = 0;
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        vsq += vars(mapped(), VAR::velocity(dir)) * vars(mapped(), VAR::velocity(dir));
+      }
 
-    //    do the same as in the propagation step
-    for(GInt id = 0; id < m_noSetDists; ++id) {
-      const GInt dist              = m_bndIndex[id];
-      fold(m_linkedCell[id], dist) = f(mapped(), dist);
+      for(GInt id = 0; id < m_noSetDists; ++id) {
+        const GInt dist = m_bndIndex[id];
+        GDouble    cu   = vars(mapped(), VAR::velocity(0)) * LBMethod<LBTYPE>::m_dirs[dist][0];
+
+        //        GDouble cu = 0;
+        //        for(GInt dir = 0; dir < NDIM; ++dir) {
+        //          cu += vars(mapped(), VAR::velocity(dir))  * LBMethod<LBTYPE>::m_dirs[dist][dir];
+        //        }
+        // for incompressible NSE rho = pressure
+        fold(m_linkedCell[id], dist) =
+            eq::defaultEq(LBMethod<LBTYPE>::m_weights[dist], m_pressure, cu, vsq) + f(mapped(), dist) - feq(mapped(), dist);
+      }
+
+    } else {
+      //    do the same as in the propagation step
+      for(GInt id = 0; id < m_noSetDists; ++id) {
+        const GInt dist              = m_bndIndex[id];
+        fold(m_linkedCell[id], dist) = f(mapped(), dist);
+      }
     }
   }
 
@@ -119,34 +142,40 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
   std::array<GInt, noDists(LBTYPE)> m_bndIndex{};
   std::array<GInt, noDists(LBTYPE)> m_linkedCell{};
   GInt                              m_noSetDists = 0;
+  GDouble                           m_pressure   = NAN;
 };
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBnd_Periodic : public LBMBndInterface {
  public:
-  LBMBnd_Periodic(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected, const json&
-                  /*properties*/) {
+  LBMBnd_Periodic(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected,
+                  const json& properties) {
     GInt surfId = 0;
     for(const GInt cellId : surf->getCellList()) {
       m_bndCells.emplace_back(cellId, surf->normal(surfId));
       ++surfId;
     }
-    LBMBnd_Periodic<DEBUG_LEVEL, LBTYPE>::init(surfConnected);
+    if(config::has_config_value(properties, "pressure")) {
+      logger << "Setting pressure for peridodic boundary" << std::endl;
+      LBMBnd_Periodic<DEBUG_LEVEL, LBTYPE>::init(surfConnected, config::required_config_value<GDouble>(properties, "pressure"));
+    } else {
+      LBMBnd_Periodic<DEBUG_LEVEL, LBTYPE>::init(surfConnected);
+    }
   }
 
-  void init(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected) {
+  void init(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected, GDouble pressure = NAN) {
     for(auto& bndCell : m_bndCells) {
-      bndCell.init(surfConnected);
+      bndCell.init(surfConnected, pressure);
     }
   }
 
   void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-                const std::function<GDouble&(GInt, GInt)>& vars) override {
+                const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) override {
     // apply to all boundary cells
     for(auto& bndCell : m_bndCells) {
-      bndCell.preApply(f, fold, vars);
+      bndCell.preApply(f, fold, feq, vars);
     }
   }
   void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
