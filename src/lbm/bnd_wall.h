@@ -38,7 +38,9 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
       fold(mapped(), oppositeDist) = f(mapped(), dist);
 
       if constexpr(TANGENTIALVELO) {
-        fold(mapped(), oppositeDist) += m_tangentialVelo[oppositeDist];
+        // todo: actually calculate this
+        GDouble avg_density = 1.0;
+        fold(mapped(), oppositeDist) += avg_density * m_tangentialVelo[oppositeDist];
       }
     }
   }
@@ -72,7 +74,7 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
 
         // vector is parallel to the normal vector -> velocity = 0
         if(!parallel) {
-          m_tangentialVelo[dist] = tangentialDotDir * 1.0 / 6.0 * tangentialVelo;
+          m_tangentialVelo[dist] = tangentialDotDir * 2 * LBMethod<LBTYPE>::m_weights[dist] * 1.0 / lbm_cssq * tangentialVelo;
         }
       }
     }

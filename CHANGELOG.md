@@ -94,13 +94,18 @@
 
 - [LBM] inflow pressure bc
 - [LBM] outflow pressure bc
-- [LBM]automatically run all the testcases and produce report
+- [LBM] automatically run all the testcases and produce report
 - [LBM] use pressure boundary condition for poiseuille cases
+
+- ([LBM] add fullway bounce back for boundary ghost cells
+- [LBM] add support for boundary ghost cells in periodic boundary)
 
 - [LPT] add additional analytical solutions
 - [LPT] add documentation
 - [LPT] add tutorial
 - [LPT] add simple injection model
+
+- (add boundary ghost cells which have a cell center on the boundary!)
 
 ## Done:
 
@@ -128,6 +133,8 @@
 - check for divergence when debug is active
 
 ### Usability
+
+- add pressure forcing term in periodic boundary condition
 
 ### IO
 
