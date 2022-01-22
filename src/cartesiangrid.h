@@ -432,6 +432,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
       }
     }
 
+    addDiagonalNghbrs(bndryGhostOffset);
+
     if(m_noGhostsCells > 0) {
       cerr0 << "Added ghostlayers no cells:" << m_noGhostsCells << std::endl;
       logger << "Added ghostlayers no cells:" << m_noGhostsCells << std::endl;
@@ -440,14 +442,14 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   }
 
   /// Add the diagonal(2D/3D) and/or tridiagonal (3D) to the neighbor connections of each cell.
-  void addDiagonalNghbrs() {
+  void addDiagonalNghbrs(const GInt offset = 0) {
     m_diagonalNghbrs = true;
     auto tmpNghbr    = m_nghbrIds;
 
     auto tmpN = [&](const GInt cellId, const GInt dir) { return tmpNghbr[cellId * cartesian::maxNoNghbrs<NDIM>() + dir]; };
 
 
-    for(GInt cellId = 0; cellId < size(); ++cellId) {
+    for(GInt cellId = offset; cellId < size(); ++cellId) {
       // dirs 0=-x 1=+x 2=-y 3=+y
 
       // copy existing neighbor connections
