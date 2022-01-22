@@ -150,10 +150,8 @@ class LBMBnd_Periodic : public LBMBndInterface {
  public:
   LBMBnd_Periodic(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected,
                   const json& properties) {
-    GInt surfId = 0;
     for(const GInt cellId : surf->getCellList()) {
-      m_bndCells.emplace_back(cellId, surf->normal(surfId));
-      ++surfId;
+      m_bndCells.emplace_back(cellId, surf->normal(cellId));
     }
     if(config::has_config_value(properties, "pressure")) {
       logger << "Setting pressure for peridodic boundary" << std::endl;

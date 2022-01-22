@@ -49,9 +49,10 @@ class Surface : public SurfaceInterface {
 
   void addCell(const GInt cellId, const GInt dir) override {
     m_cellId.emplace_back(cellId);
-    m_normal.emplace_back();
-    m_normal.back().fill(0);
-    m_normal.back()[dir / 2] = 2 * (dir % 2) - 1;
+    VectorD<NDIM> tmp;
+    tmp.fill(0);
+    tmp[dir / 2]     = 2 * (dir % 2) - 1;
+    m_normal[cellId] = tmp;
   }
 
   void updateNeighbors() {
@@ -64,7 +65,7 @@ class Surface : public SurfaceInterface {
     }
   }
 
-  auto normal(const GInt surfCellId) const -> const VectorD<NDIM>& { return m_normal[surfCellId]; }
+  auto normal(const GInt surfCellId) const -> const VectorD<NDIM>& { return m_normal.at(surfCellId); }
 
   [[nodiscard]] auto size() const -> GInt {
     ASSERT(!m_cellId.empty(), "Not inited!");
@@ -87,12 +88,18 @@ class Surface : public SurfaceInterface {
     return m_nghbrIds.at(cellId)[dir];
   }
 
+  void setBndryGhostCells() { m_hasBndryGhosts = true; }
+
+  [[nodiscard]] auto hasBndryGhostCells() const -> GBool { return m_hasBndryGhosts; }
+
  private:
   std::vector<GInt>                                                              m_cellId;
   std::unordered_map<GInt, std::array<GInt, cartesian::maxNoNghbrsDiag<NDIM>()>> m_nghbrIds;
 
-  std::vector<VectorD<NDIM>>    m_normal;
-  const CartesianGridData<NDIM> m_grid = nullptr;
+  std::unordered_map<GInt, VectorD<NDIM>> m_normal;
+  const CartesianGridData<NDIM>           m_grid = nullptr;
+
+  GBool m_hasBndryGhosts = false;
 };
 
 #endif // LBM_SURFACE_H

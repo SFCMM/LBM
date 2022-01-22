@@ -151,5 +151,87 @@ static constexpr std::array<std::array<GDouble, cartesian::maxNoNghbrs<sfcmm::MA
         {{15, -1, -1, 12, -1, 10, -1, 6}}, // 14
         {{-1, 14, -1, 13, -1, 11, -1, 7}}  // 15
     }};
+
+/// Return the direction diagonal between 2 (2D) directions
+/// \tparam NDIM Dimensionality
+/// \param dir1 Direction 1
+/// \param dir2 Direction 2
+/// \return Direction diagonal between these
+template <GInt NDIM>
+static constexpr auto inbetweenDiagDirs(GInt /*dir1*/, GInt /*dir2*/) -> GInt {
+  std::cerr << "Invalid dist in inbetweenDiagDirs() " << std::endl;
+  std::exit(-1);
+  return -1;
+}
+
+template <>
+constexpr auto inbetweenDiagDirs<2>(GInt dir1, GInt dir2) -> GInt {
+  if(dir2 < dir1) {
+    GInt tmp = dir2;
+    dir2     = dir1;
+    dir1     = tmp;
+  }
+  // after this dist 1  < dir2
+  switch(dir1) {
+    case 0:
+      if(dir2 == 2) {
+        return 6;
+      }
+      if(dir2 == 3) {
+        return 7;
+      }
+    case 1:
+      if(dir2 == 2) {
+        return 5;
+      }
+      if(dir2 == 3) {
+        return 4;
+      }
+      break;
+    default:
+      std::cerr << "Invalid dist in inbetweenDiagDirs<2>()" << std::endl;
+      std::exit(-1);
+  }
+}
+
+/// Return the direction unit vector.
+/// \tparam NDIM Dimensionality
+/// \param dir Direction
+/// \return Unit vector of the corresponding direction
+template <GInt NDIM>
+inline auto dirVec(GInt /*dir*/) -> VectorD<NDIM> {
+  std::cerr << "Invalid dir in dirVec()" << std::endl;
+  std::exit(-1);
+  VectorD<NDIM> tmp;
+  tmp.fill(NAN);
+  return tmp;
+}
+
+template <>
+inline auto dirVec<2>(GInt dir) -> VectorD<2> {
+  switch(dir) {
+    case 0:
+      return {-1, 0};
+    case 1:
+      return {1, 0};
+    case 2:
+      return {0, -1};
+    case 3:
+      return {0, 1};
+    case 4:
+      return {1, 1};
+    case 5:
+      return {1, -1};
+    case 6:
+      return {-1, -1};
+    case 7:
+      return {-1, 1};
+    default:
+      std::cerr << "Invalid dir in dirVec<2>()" << std::endl;
+      std::exit(-1);
+  }
+  return {NAN, NAN};
+}
+
 } // namespace cartesian
 #endif // SFCMM_CARTESIAN_H

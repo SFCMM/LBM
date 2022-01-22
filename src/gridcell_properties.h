@@ -20,6 +20,7 @@ enum class CellProperties {
   marked,                /// cell has been marked
   ghost,
   leaf,
+  solid,
   // <<< add new properties here
   NumProperties
 };

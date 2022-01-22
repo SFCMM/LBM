@@ -96,16 +96,12 @@
 - [LBM] outflow pressure bc
 - [LBM] automatically run all the testcases and produce report
 - [LBM] use pressure boundary condition for poiseuille cases
-
-- ([LBM] add fullway bounce back for boundary ghost cells
-- [LBM] add support for boundary ghost cells in periodic boundary)
+- [LBM] add support for boundary ghost cells in periodic boundary
 
 - [LPT] add additional analytical solutions
 - [LPT] add documentation
 - [LPT] add tutorial
 - [LPT] add simple injection model
-
-- (add boundary ghost cells which have a cell center on the boundary!)
 
 ## Done:
 
@@ -123,8 +119,12 @@
   - analytical tests:
     - free fall
     - stokes drag
+
 - Lattice Boltzmann Code
   - add D3Q19 and D3Q27
+
+- Cartesian grid
+  - allow generation of boundary ghost cells
 
 ### Buildsystem
 

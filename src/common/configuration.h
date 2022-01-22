@@ -18,6 +18,7 @@ static constexpr inline auto required_config_value(const json& config, const GSt
   if(config.template contains(key)) {
     return static_cast<T>(config[key]);
   }
+  cerr0 << "CONFIG:" << std::endl << config << std::endl;
   TERMM(-1, "The required configuration value is missing: " + key);
 }
 

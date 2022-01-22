@@ -264,7 +264,7 @@ class BaseCartesianGrid : public GridInterface {
   }
 
   void checkBounds(const GInt id) const {
-    if(id > this->capacity()) {
+    if(id > this->capacity() || id < 0) {
       TERMM(-1, "Out of bounds id: " + std::to_string(id) + "/" + std::to_string(this->capacity()));
     }
   }

@@ -303,8 +303,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     determineBoundaryCells();
     identifyBndrySurfaces();
     setupPeriodicConnections();
-    //    addGhostCells();
     addDiagonalNghbrs();
+    addGhostCells();
 
     for(auto& [name, srf] : m_bndrySurfaces) {
       srf.updateNeighbors();
@@ -317,24 +317,125 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 
   /// Add ghost cells
   void addGhostCells() {
-    // todo: make settable
-    const GBool addGhostLayers = false;
-    if(addGhostLayers) {
-      // check all surfaces and add ghostcells in all missing dist directions
-      for(const auto& [srfName, srf] : m_bndrySurfaces) {
-        for(GInt cellId : srf.getCellList()) {
-          for(GInt nghbrDir = 0; nghbrDir < cartesian::maxNoNghbrs<NDIM>(); ++nghbrDir) {
-            if(neighbor(cellId, nghbrDir) == INVALID_CELLID) {
-              const GInt ghostCellId = size() + m_noGhostsCells;
-              cerr0 << "adding cell " << ghostCellId << " as neighbor to " << cellId << std::endl; // todo: remove
-              neighbor(cellId, nghbrDir)                              = ghostCellId;
-              neighbor(ghostCellId, cartesian::oppositeDir(nghbrDir)) = cellId;
-              property(ghostCellId, CellProperties::ghost);
-              ++m_noGhostsCells;
+    struct PossibleBndGhost {
+      std::vector<GInt>    dir;
+      GBool                connected = false;
+      GBool                invalid   = false;
+      std::vector<GString> linkedSurfaces;
+    };
+
+    std::unordered_map<GInt, PossibleBndGhost> allPossibleBndryGhosts;
+    std::set<GInt>                             boundaryCells;
+    const GInt                                 bndryGhostOffset = size();
+
+    // check all surfaces and add ghostcells in all missing dist directions
+    for(const auto& [srfName, srf] : m_bndrySurfaces) {
+      if(srf.hasBndryGhostCells()) {
+        cerr0 << "srfName: " << srfName << " adds boundary ghost cells" << std::endl;
+        logger << "srfName: " << srfName << " adds boundary ghost cells" << std::endl;
+      }
+      for(GInt cellId : srf.getCellList()) {
+        // check all the main directions of the surface
+        for(GInt nghbrDir = 0; nghbrDir < cartesian::maxNoNghbrs<NDIM>(); ++nghbrDir) {
+          if(neighbor(cellId, nghbrDir) == INVALID_CELLID) {
+            boundaryCells.emplace(cellId);
+
+            if(srf.hasBndryGhostCells()) {
+              // bndry ghost cell might need to be added
+              cerr0 << "adding cell to " << cellId << " in dir " << nghbrDir << std::endl; // todo: remove
+              allPossibleBndryGhosts[cellId].dir.emplace_back(nghbrDir);
+              allPossibleBndryGhosts[cellId].linkedSurfaces.emplace_back(srfName);
+              allPossibleBndryGhosts[cellId].connected = true;
+            } else {
+              allPossibleBndryGhosts[cellId].invalid = true;
             }
           }
         }
       }
+    }
+
+    // remove all invalid cells
+    for(const auto& bndId : boundaryCells) {
+      if(allPossibleBndryGhosts[bndId].invalid && !allPossibleBndryGhosts[bndId].connected) {
+        allPossibleBndryGhosts.erase(bndId);
+      }
+    }
+
+    cerr0 << "number of possible bndry ghost cells " << allPossibleBndryGhosts.size() << std::endl;
+
+    auto addCell = [&](const GInt linkedCell, const GInt dir) {
+      const GInt ghostCellId                             = bndryGhostOffset + m_noGhostsCells;
+      neighbor(linkedCell, dir)                          = ghostCellId;
+      neighbor(ghostCellId, cartesian::oppositeDir(dir)) = linkedCell;
+
+      GDouble length      = 0.5 * lengthOnLvl(std::to_integer<GInt>(level(linkedCell)));
+      level(ghostCellId)  = std::byte(static_cast<GInt>(level(linkedCell)) + 1);
+      center(ghostCellId) = center(linkedCell) + length * cartesian::dirVec<NDIM>(dir);
+      property(ghostCellId, CellProperties::ghost); // no valid solution
+      property(ghostCellId, CellProperties::bndry); // on boundary
+      property(ghostCellId, CellProperties::solid); // on solid side
+      cerr0 << "adding cell " << ghostCellId << " as neighbor to " << linkedCell << " center " << center(ghostCellId)
+            << std::endl; // todo: remove
+      ++m_noGhostsCells;
+    };
+
+    // generate cells
+    for(auto& [linkedCell, value] : allPossibleBndryGhosts) {
+      ASSERT(value.dir.size() <= 2, "Unsupported!" + std::to_string(value.dir.size()));
+
+      if(value.dir.size() == 1) {
+        const GInt dir = value.dir[0];
+        addCell(linkedCell, dir);
+      } else {
+        const GString       surfId        = value.linkedSurfaces[0];
+        const VectorD<NDIM> surfNormalDir = m_bndrySurfaces.at(surfId).normal(linkedCell);
+
+        for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
+          const GDouble normalDir = surfNormalDir.dot(cartesian::dirVec<NDIM>(dir));
+          if(normalDir > 0) {
+            addCell(linkedCell, dir);
+          }
+        }
+
+        const GInt diagonal = cartesian::inbetweenDiagDirs<NDIM>(value.dir[0], value.dir[1]);
+        addCell(linkedCell, diagonal);
+        value.dir.emplace_back(diagonal);
+
+        for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
+          if(neighbor(linkedCell, dir) == INVALID_CELLID) {
+            const auto invalidDirId = std::find(value.dir.begin(), value.dir.end(), dir);
+            if(invalidDirId != std::end(value.dir)) {
+              cerr0 << "erasing " << *invalidDirId << std::endl; // todo:remove
+              value.dir.erase(invalidDirId);
+            }
+          }
+        }
+      }
+    }
+
+    // fix connections to neighbors on main directions
+    for(const auto& [linkedCell, value] : allPossibleBndryGhosts) {
+      for(GInt dirId = 0; dirId < value.dir.size(); ++dirId) {
+        const GInt linkedDir = value.dir[dirId];
+        const GInt ghostId   = neighbor(linkedCell, linkedDir);
+        cerr0 << "ghost: " << ghostId << " is linked to " << linkedCell << " by " << linkedDir << std::endl;
+        for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
+          if(neighbor(ghostId, dir) == INVALID_CELLID) {
+            const GInt linkedNghbrId = neighbor(linkedCell, dir);
+            const GInt nghbrId       = (linkedNghbrId != INVALID_CELLID) ? neighbor(linkedNghbrId, linkedDir) : INVALID_CELLID;
+            if(nghbrId != INVALID_CELLID && nghbrId != ghostId) {
+              neighbor(ghostId, dir)                         = nghbrId;
+              neighbor(nghbrId, cartesian::oppositeDir(dir)) = ghostId;
+            }
+          }
+        }
+      }
+    }
+
+    if(m_noGhostsCells > 0) {
+      cerr0 << "Added ghostlayers no cells:" << m_noGhostsCells << std::endl;
+      logger << "Added ghostlayers no cells:" << m_noGhostsCells << std::endl;
+      size() += m_noGhostsCells;
     }
   }
 
@@ -412,7 +513,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
             }
           }
           if(cartesian::maxNoNghbrs<NDIM>() == noNeighbors) {
-            //            cerr0 << "Removed boundary property cellId: " << cellId << " (" << center(cellId)[0] << ", " << center(cellId)[1]
+            //            cerr0 << "Removed boundary property cellId: " << cellId << " (" << center(cellId)[0] << ", " <<
+            //            center(cellId)[1]
             //                  << ") L:" << cellLength << std::endl;
             property(cellId, CellProperties::bndry) = false;
             logger << "Simplified bndry process!!!" << std::endl;
@@ -430,9 +532,16 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 #pragma ide diagnostic   ignored "cppcoreguidelines-pro-bounds-constant-array-index"
 #endif
   void identifyBndrySurfaces() {
+    json bndryConfig = getObject("boundary");
+    //    GBool defaultBndryGhost = false;
     if(m_axisAlignedBnd) {
       for(GInt surfId = 0; surfId < cartesian::maxNoNghbrs<NDIM>(); ++surfId) {
         m_bndrySurfaces.insert({static_cast<GString>(DirIdString[surfId]), Surface<DEBUG_LEVEL, NDIM>(this->getCartesianGridData())});
+        GString modelName =
+            config::opt_config_value<GString>(bndryConfig["cube"][static_cast<GString>(DirIdString[surfId])], "model", "none");
+        if(modelName == "equilibrium") {
+          m_bndrySurfaces.at(static_cast<GString>(DirIdString[surfId])).setBndryGhostCells();
+        }
       }
 
       for(GInt cellId = 0; cellId < size(); ++cellId) {

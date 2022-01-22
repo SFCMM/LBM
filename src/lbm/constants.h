@@ -202,7 +202,7 @@ class LBMethod {
   static constexpr std::array<std::array<GDouble, dim(LBTYPE)>, noDists(LBTYPE)> m_dirs{};
   static constexpr auto                                                          oppositeDist(const GInt /*dist*/) -> GInt {
     TERMM(-1, "Invalid call");
-    return 0;
+    return -1;
   }
   static constexpr GInt                   m_dim     = 0;
   static constexpr GInt                   m_noDists = 0;
@@ -338,17 +338,34 @@ class LBMethod<LBMethodType::D3Q19> {
 template <>
 class LBMethod<LBMethodType::D3Q27> {
  public:
-  static constexpr std::array<std::array<GDouble, 3>, 27> m_dirs = {
-      {{{-1, 0, 0}},         {{1, 0, 0}},                                           // main dir x
-       {{0, -1, 0}},         {{0, 1, 0}},                                           // main dir y
-       {{0, 0, -1}},         {{0, 0, 1}},                                           // main dir z
-       {{-1, -1, 0}},        {{-1, 1, 0}},        {{1, -1, 0}},        {{1, 1, 0}}, // diagonals in 2D plane (Note: order is different to
-                                                                                    // 2DQ9)
-       {{-1, 0, -1}},        {{-1, 0, 1}},        {{1, 0, -1}},        {{1, 0, 1}}, // diagonals in x dir
-       {{0, -1, -1}},        {{0, -1, 1}},        {{0, 1, -1}},        {{0, 1, 1}}, // diagonals in y dir
-       {{-1.0, -1.0, -1.0}}, {{-1.0, -1.0, 1.0}}, {{-1.0, 1.0, -1.0}}, {{-1.0, 1.0, 1.0}}, {{1.0, -1.0, -1.0}},
-       {{1.0, -1.0, 1.0}},   {{1.0, 1.0, -1.0}},  {{1.0, 1.0, 1.0}}, // tridiagonal directions
-       {{0, 0, 0}}}};                                                // center
+  static constexpr std::array<std::array<GDouble, 3>, 27> m_dirs = {{{{-1, 0, 0}},
+                                                                     {{1, 0, 0}}, // main dir x
+                                                                     {{0, -1, 0}},
+                                                                     {{0, 1, 0}}, // main dir y
+                                                                     {{0, 0, -1}},
+                                                                     {{0, 0, 1}}, // main dir z
+                                                                     {{-1, -1, 0}},
+                                                                     {{-1, 1, 0}},
+                                                                     {{1, -1, 0}},
+                                                                     {{1, 1, 0}}, // diagonals in 2D plane (Note: order is different to
+                                                                                  // 2DQ9)
+                                                                     {{-1, 0, -1}},
+                                                                     {{-1, 0, 1}},
+                                                                     {{1, 0, -1}},
+                                                                     {{1, 0, 1}}, // diagonals in x dir
+                                                                     {{0, -1, -1}},
+                                                                     {{0, -1, 1}},
+                                                                     {{0, 1, -1}},
+                                                                     {{0, 1, 1}}, // diagonals in y dir
+                                                                     {{-1.0, -1.0, -1.0}},
+                                                                     {{-1.0, -1.0, 1.0}},
+                                                                     {{-1.0, 1.0, -1.0}},
+                                                                     {{-1.0, 1.0, 1.0}},
+                                                                     {{1.0, -1.0, -1.0}},
+                                                                     {{1.0, -1.0, 1.0}},
+                                                                     {{1.0, 1.0, -1.0}},
+                                                                     {{1.0, 1.0, 1.0}}, // tridiagonal directions
+                                                                     {{0, 0, 0}}}};     // center
 
   static constexpr std::array<GInt, 27> m_oppositeDist = {1,  0,  3,  2,  5,  4,  9,  8,  7,  6,  13, 12, 11, 10,
                                                           17, 16, 15, 14, 25, 24, 23, 22, 21, 20, 19, 18, 26};
