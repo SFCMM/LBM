@@ -58,13 +58,21 @@ class LBMBndManager : private Configuration {
           continue;
         }
         if(bndType == "wall") {
-          const GDouble tangentialV = config::opt_config_value(surfBndConfig, "tangentialVelocity", 0.0);
-          if(std::abs(tangentialV) > GDoubleEps) {
-            logger << " wall bounce-back with tangential velocity" << std::endl;
-            addBndry(BndryType::Wall_BounceBack_TangentialVelocity, surfBndConfig, bndrySrf);
+          const GString model = config::required_config_value<GString>(surfBndConfig, "model");
+          if(model == "bounceback") {
+            const GDouble tangentialV = config::opt_config_value(surfBndConfig, "tangentialVelocity", 0.0);
+            if(std::abs(tangentialV) > GDoubleEps) {
+              logger << " wall bounce-back with tangential velocity" << std::endl;
+              addBndry(BndryType::Wall_BounceBack_TangentialVelocity, surfBndConfig, bndrySrf);
+            } else {
+              logger << " wall bounce-back with no slip" << std::endl;
+              addBndry(BndryType::Wall_BounceBack, surfBndConfig, bndrySrf);
+            }
+          } else if(model == "equilibrium") {
+            logger << " wall equilibrium wet node model" << std::endl;
+            addBndry(BndryType::Wall_Equilibrium, surfBndConfig, bndrySrf);
           } else {
-            logger << " wall bounce-back with no slip" << std::endl;
-            addBndry(BndryType::Wall_BounceBack, surfBndConfig, bndrySrf);
+            TERMM(-1, "Invalid wall boundary model: " + model);
           }
           continue;
         }
@@ -123,6 +131,9 @@ class LBMBndManager : private Configuration {
           break;
         case BndryType::Wall_BounceBack_TangentialVelocity:
           m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<DEBUG_LEVEL, LBTYPE, true>>(surf[0], properties));
+          break;
+        case BndryType::Wall_Equilibrium:
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
           break;
         case BndryType::Inlet_BounceBack_ConstPressure:
           m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));

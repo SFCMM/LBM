@@ -86,29 +86,40 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
 
 
   // todo: make settable
-  m_ma = 0.0001;
+  m_ma            = 0.0001;
   m_refLength     = 1.0;
   GInt m_maxLevel = 5;
 
-  const GDouble m_finestGridSpacing = 1.0 / (std::pow(size(), 1.0 / NDIM) - 1);          // todo: replace with cellLength
+  const GDouble m_finestGridSpacing = 1.0 / (std::pow(size(), 1.0 / NDIM) - 1); // todo: replace with cellLength
 
-  m_relaxTime = opt_config_value<GDouble>("relaxation", m_relaxTime);
   if(EQ == LBEquation::Navier_Stokes || EQ == LBEquation::Navier_Stokes_Poisson) {
-    m_re = required_config_value<GDouble>("reynoldsnumber");
+    if(has_config_value("reynoldsnumber") && has_config_value("relaxation")) {
+      TERMM(-1, "Only set either reynoldsnumber or relaxation");
+    }
     m_ma = required_config_value<GDouble>("ma");
-    m_nu = m_ma /** lbm_cs */ / m_re * m_refLength; // Re = |u| * l/nu -> nu = |u| * l/re with |u| = ma * lbm_cs
-    // this follows from nu = rho_0 * cssq * (tau - 1/2 * dt) with dt = tau and rho_0 = 1
-    m_omega = 2.0 / (1.0 + 2.0 * m_nu * gcem::pow(2.0, m_maxLevel));
-    m_dt    = m_finestGridSpacing * m_ma * lbm_cs / m_refLength;
+
+    if(has_config_value("relaxation")) {
+      m_relaxTime = required_config_value<GDouble>("relaxation");
+      m_omega     = 1.0 / m_relaxTime;
+      m_nu        = (2 * m_relaxTime - 1) / 6.0;
+      m_re        = m_ma * m_refLength / m_nu;
+    } else {
+      m_re = required_config_value<GDouble>("reynoldsnumber");
+      m_nu = m_ma /** lbm_cs */ / m_re * m_refLength; // Re = |u| * l/nu -> nu = |u| * l/re with |u| = ma * lbm_cs
+      // this follows from nu = rho_0 * cssq * (tau - 1/2 * dt) with dt = tau and rho_0 = 1
+      m_omega = 2.0 / (1.0 + 2.0 * m_nu * gcem::pow(2.0, m_maxLevel));
+    }
+    m_dt = m_finestGridSpacing * m_ma * lbm_cs / m_refLength;
   } else {
-    m_re    = 0;
-    m_ma    = 1.0 / lbm_cs;
-    m_omega = 1.0 / m_relaxTime;
-    m_nu    = (2.0 * m_relaxTime - 1) / 6.0;
-    m_dt    = m_finestGridSpacing * m_ma * lbm_cs / m_refLength;
+    m_relaxTime = required_config_value<GDouble>("relaxation");
+    m_re        = 0;
+    m_ma        = 1.0 / lbm_cs;
+    m_omega     = 1.0 / m_relaxTime;
+    m_nu        = (2.0 * m_relaxTime - 1) / 6.0;
+    m_dt        = m_finestGridSpacing * m_ma * lbm_cs / m_refLength;
   }
 
-  m_refU                            = m_ma * lbm_cs;
+  m_refU = m_ma * lbm_cs;
 
 
   m_bndManager = std::make_unique<LBMBndManager<DEBUG_LEVEL, LBTYPE, EQ>>();
@@ -315,11 +326,11 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
 
 
       for(GInt dir = 0; dir < NDIM; ++dir) {
-        tmpVel[dir].resize(size());
+        tmpVel[dir].resize(allCells());
       }
-      tmpRho.resize(size());
+      tmpRho.resize(allCells());
 
-      for(GInt cellId = 0; cellId < size(); ++cellId) {
+      for(GInt cellId = 0; cellId < allCells(); ++cellId) {
         for(GInt dir = 0; dir < NDIM; ++dir) {
           tmpVel[dir][cellId] = velocity(cellId, dir);
         }
@@ -329,27 +340,27 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
       for(GInt dir = 0; dir < NDIM; ++dir) {
         // todo: fix type
         index.emplace_back(IOIndex{static_cast<GString>(VAR::VELSTR[dir]), "float32"});
-        values.emplace_back(toStringVector(tmpVel[dir], size()));
+        values.emplace_back(toStringVector(tmpVel[dir], allCells()));
       }
       // todo: fix type
       index.emplace_back(IOIndex{"rho", "float32"});
-      values.emplace_back(toStringVector(tmpRho, size()));
+      values.emplace_back(toStringVector(tmpRho, allCells()));
     }
 
     if(EQ == LBEquation::Poisson || EQ == LBEquation::Navier_Stokes_Poisson) {
       std::vector<GDouble> tmpV;
       tmpV.resize(size());
 
-      for(GInt cellId = 0; cellId < size(); ++cellId) {
+      for(GInt cellId = 0; cellId < allCells(); ++cellId) {
         tmpV[cellId] = electricPotential(cellId);
       }
       // todo: fix type
       index.emplace_back(IOIndex{"V", "float32"});
-      values.emplace_back(toStringVector(tmpV, size()));
+      values.emplace_back(toStringVector(tmpV, allCells()));
     }
 
-    VTK::ASCII::writePoints<NDIM>(m_outputDir + m_solutionFileName + "_" + std::to_string(m_timeStep) + postfix, size(), center(), index,
-                                  values, isLeaf);
+    VTK::ASCII::writePoints<NDIM>(m_outputDir + m_solutionFileName + "_" + std::to_string(m_timeStep) + postfix, allCells(), center(),
+                                  index, values, isLeaf);
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMIo]);
 }
@@ -552,6 +563,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
     }
   }
 
+  m_omega = 1.0;
   for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST; ++dist) {
       f(cellId, dist) = (1 - m_omega) * fold(cellId, dist) + m_omega * feq(cellId, dist);

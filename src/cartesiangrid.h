@@ -303,8 +303,9 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     determineBoundaryCells();
     identifyBndrySurfaces();
     setupPeriodicConnections();
+    // todo: rename add interface cells...
+    //    addGhostCells();
     addDiagonalNghbrs();
-    addGhostCells();
 
     for(auto& [name, srf] : m_bndrySurfaces) {
       srf.updateNeighbors();
@@ -363,43 +364,48 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 
     cerr0 << "number of possible bndry ghost cells " << allPossibleBndryGhosts.size() << std::endl;
 
-    auto addCell = [&](const GInt linkedCell, const GInt dir) {
+    auto addCell = [&](const GInt linkedCell, const GInt dir, const GString surfId) {
       const GInt ghostCellId                             = bndryGhostOffset + m_noGhostsCells;
       neighbor(linkedCell, dir)                          = ghostCellId;
       neighbor(ghostCellId, cartesian::oppositeDir(dir)) = linkedCell;
 
-      GDouble length      = 0.5 * lengthOnLvl(std::to_integer<GInt>(level(linkedCell)));
-      level(ghostCellId)  = std::byte(static_cast<GInt>(level(linkedCell)) + 1);
-      center(ghostCellId) = center(linkedCell) + length * cartesian::dirVec<NDIM>(dir);
-      property(ghostCellId, CellProperties::ghost); // no valid solution
-      property(ghostCellId, CellProperties::bndry); // on boundary
-      property(ghostCellId, CellProperties::solid); // on solid side
+      GDouble length                               = 0.5 * lengthOnLvl(std::to_integer<GInt>(level(linkedCell)));
+      level(ghostCellId)                           = std::byte(static_cast<GInt>(level(linkedCell)) + 1);
+      center(ghostCellId)                          = center(linkedCell) + length * cartesian::dirVec<NDIM>(dir);
+      property(ghostCellId, CellProperties::ghost) = true; // no valid solution
+      property(ghostCellId, CellProperties::bndry) = true; // on boundary
+      property(ghostCellId, CellProperties::solid) = true; // on solid side
       cerr0 << "adding cell " << ghostCellId << " as neighbor to " << linkedCell << " center " << center(ghostCellId)
             << std::endl; // todo: remove
       ++m_noGhostsCells;
+
+      m_bndrySurfaces.at(surfId).addCell(ghostCellId, dir);
+      return ghostCellId;
     };
 
     // generate cells
     for(auto& [linkedCell, value] : allPossibleBndryGhosts) {
       ASSERT(value.dir.size() <= 2, "Unsupported!" + std::to_string(value.dir.size()));
 
+      const GString surfId  = value.linkedSurfaces[0];
+      GInt          ghostId = INVALID_CELLID;
+
       if(value.dir.size() == 1) {
         const GInt dir = value.dir[0];
-        addCell(linkedCell, dir);
+        addCell(linkedCell, dir, surfId);
       } else {
-        const GString       surfId        = value.linkedSurfaces[0];
         const VectorD<NDIM> surfNormalDir = m_bndrySurfaces.at(surfId).normal(linkedCell);
 
         for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
           const GDouble normalDir = surfNormalDir.dot(cartesian::dirVec<NDIM>(dir));
           if(normalDir > 0) {
-            addCell(linkedCell, dir);
+            addCell(linkedCell, dir, surfId);
           }
         }
 
-        const GInt diagonal = cartesian::inbetweenDiagDirs<NDIM>(value.dir[0], value.dir[1]);
-        addCell(linkedCell, diagonal);
-        value.dir.emplace_back(diagonal);
+        //        const GInt diagonal = cartesian::inbetweenDiagDirs<NDIM>(value.dir[0], value.dir[1]);
+        //        ghostId             = addCell(linkedCell, diagonal, surfId);
+        //        value.dir.emplace_back(diagonal);
 
         for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
           if(neighbor(linkedCell, dir) == INVALID_CELLID) {
@@ -415,6 +421,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 
     // fix connections to neighbors on main directions
     for(const auto& [linkedCell, value] : allPossibleBndryGhosts) {
+      const GString surfId = value.linkedSurfaces[0];
       for(GInt dirId = 0; dirId < value.dir.size(); ++dirId) {
         const GInt linkedDir = value.dir[dirId];
         const GInt ghostId   = neighbor(linkedCell, linkedDir);
@@ -430,14 +437,14 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
           }
         }
       }
+      m_bndrySurfaces.at(surfId).removeCell(linkedCell);
     }
 
-    addDiagonalNghbrs(bndryGhostOffset);
+    //    addDiagonalNghbrs(bndryGhostOffset);
 
     if(m_noGhostsCells > 0) {
       cerr0 << "Added ghostlayers no cells:" << m_noGhostsCells << std::endl;
       logger << "Added ghostlayers no cells:" << m_noGhostsCells << std::endl;
-      size() += m_noGhostsCells;
     }
   }
 
@@ -449,7 +456,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     auto tmpN = [&](const GInt cellId, const GInt dir) { return tmpNghbr[cellId * cartesian::maxNoNghbrs<NDIM>() + dir]; };
 
 
-    for(GInt cellId = offset; cellId < size(); ++cellId) {
+    for(GInt cellId = offset; cellId < size() + m_noGhostsCells; ++cellId) {
       // dirs 0=-x 1=+x 2=-y 3=+y
 
       // copy existing neighbor connections

@@ -49,10 +49,12 @@ class Surface : public SurfaceInterface {
 
   void addCell(const GInt cellId, const GInt dir) override {
     m_cellId.emplace_back(cellId);
-    VectorD<NDIM> tmp;
-    tmp.fill(0);
-    tmp[dir / 2]     = 2 * (dir % 2) - 1;
-    m_normal[cellId] = tmp;
+    m_normal[cellId] = cartesian::dirVec<NDIM>(dir);
+  }
+
+  void removeCell(const GInt cellId) {
+    m_cellId.erase(std::find(m_cellId.begin(), m_cellId.end(), cellId));
+    m_normal.erase(cellId);
   }
 
   void updateNeighbors() {

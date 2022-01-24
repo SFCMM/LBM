@@ -122,6 +122,10 @@
 
 - Lattice Boltzmann Code
   - add D3Q19 and D3Q27
+  - Boundary conditions
+    - Wet node equilibrium method wall
+    - Wet node non-equilibrium extrapolation method wall
+    - Wet node non-equilibrium bounce-back method wall
 
 - Cartesian grid
   - allow generation of boundary ghost cells

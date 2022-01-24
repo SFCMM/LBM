@@ -33,15 +33,14 @@
     "type": "lbm",
     "method": "bgk",
     "relaxation": 1.0,
-    "reynoldsnumber": 0.0433013,
     "ma": 0.01,
-    "maxSteps": 2000,
+    "maxSteps": 20000,
     "info_interval": 100,
     "solution_interval": 500,
-    "convergence": 2E-11,
+    "convergence": 1E-12,
     "analyticalSolution": "couette2D_1_5",
-    "errorL2": 7E-10,
-    "errorMax": 4E-11,
+    "errorL2": 1E-13,
+    "errorMax": 1.2E-12,
     "assumeAxisAligned": true,
     "boundary": {
       "cube": {
@@ -62,8 +61,26 @@
         },
         "-y": {
           "type": "wall",
-          "model": "equilibrium"
+          "model": "equilibrium",
+          "velocity": [
+            0.0015625,
+            0
+          ]
         }
+      }
+    },
+    "postprocessing": {
+      "line1": {
+        "type": "line",
+        "execute": "atEnd",
+        "A": [
+          1.501,
+          0.0
+        ],
+        "B": [
+          1.501,
+          6.0
+        ]
       }
     }
   }

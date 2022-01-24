@@ -2,6 +2,7 @@
 #define LBM_BND_WALL_H
 #include "bnd_interface.h"
 #include "constants.h"
+#include "moments.h"
 
 template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
 class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
@@ -139,5 +140,109 @@ class LBMBnd_wallBB : public LBMBndInterface {
  private:
   GDouble                                                m_tangentialVelo = 0.1;
   std::vector<LBMBndCell_wallBB<LBTYPE, TANGENTIALVELO>> m_bndCells;
+};
+
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+class LBMBnd_wallEq : public LBMBndInterface {
+ private:
+  using method                = LBMethod<LBTYPE>;
+  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
+  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+
+  using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
+
+ public:
+  LBMBnd_wallEq(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) : m_bnd(surf) {
+    if(!config::has_config_value(properties, "velocity")) {
+      m_apply = &LBMBnd_wallEq::apply_0;
+      logger << " Wall with no-slip condition" << std::endl;
+    } else {
+      m_apply       = &LBMBnd_wallEq::apply_constV;
+      m_tangentialV = config::required_config_value<NDIM>(properties, "velocity");
+      logger << " Wall with constant velocity" << std::endl;
+    }
+  }
+  ~LBMBnd_wallEq() override = default;
+
+  // deleted constructors not needed
+  LBMBnd_wallEq(const LBMBnd_wallEq&) = delete;
+  LBMBnd_wallEq(LBMBnd_wallEq&&)      = delete;
+  auto operator=(const LBMBnd_wallEq&) -> LBMBnd_wallEq& = delete;
+  auto operator=(LBMBnd_wallEq&&) -> LBMBnd_wallEq& = delete;
+
+  void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
+
+  void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
+                const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
+
+  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+             const std::function<GDouble&(GInt, GInt)>& vars) override {
+    m_apply(this, f, fold, vars);
+  }
+
+ private:
+  void apply_0(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
+               const std::function<GDouble&(GInt, GInt)>& vars) {
+    //     at wall set 0 velocity
+    for(const auto cellId : m_bnd->getCellList()) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        vars(cellId, VAR::velocity(dir)) = 0;
+      }
+    }
+
+    for(const auto cellId : m_bnd->getCellList()) {
+      vars(cellId, VAR::rho()) =
+          1.0 / (1.0 - vars(cellId, VAR::velocity(1)))
+          * (fold(cellId, 8) + fold(cellId, 1) + fold(cellId, 0) + 2.0 * (fold(cellId, 6) + fold(cellId, 2) + fold(cellId, 5)));
+    }
+
+    // for wall with 0 velocity
+    for(const auto cellId : m_bnd->getCellList()) {
+      for(GInt dist = 0; dist < NDIST; ++dist) {
+        // todo: make settable
+        fold(cellId, dist) = eq::defaultEq(method::m_weights[dist], vars(cellId, VAR::rho()), 0, 0);
+      }
+    }
+  }
+
+  void apply_constV(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
+                    const std::function<GDouble&(GInt, GInt)>& vars) {
+    // update the density in the boundary cells
+    //    calcDensity<NDIM, NDIST, LBEquation::Navier_Stokes>(m_bnd->getCellList(), fold, vars);
+
+
+    for(const auto cellId : m_bnd->getCellList()) {
+      vars(cellId, VAR::rho()) =
+          1.0 / (1.0 - vars(cellId, VAR::velocity(1)))
+          * (fold(cellId, 8) + fold(cellId, 1) + fold(cellId, 0) + 2.0 * (fold(cellId, 6) + fold(cellId, 2) + fold(cellId, 5)));
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        vars(cellId, VAR::velocity(dir)) = m_tangentialV[dir];
+      }
+    }
+
+    // for wall with 0 velocity
+    for(const auto cellId : m_bnd->getCellList()) {
+      GDouble vsq = 0;
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        vsq += vars(cellId, VAR::velocity(dir)) * vars(cellId, VAR::velocity(dir));
+      }
+
+      for(GInt dist = 0; dist < NDIST; ++dist) {
+        GDouble cu = 0;
+        for(GInt dir = 0; dir < NDIM; ++dir) {
+          cu += vars(cellId, VAR::velocity(dir)) * LBMethod<LBTYPE>::m_dirs[dist][dir];
+        }
+        // todo: make settable
+        fold(cellId, dist) = eq::defaultEq(method::m_weights[dist], vars(cellId, VAR::rho()), cu, vsq);
+      }
+    }
+  }
+
+  const SurfaceInterface* m_bnd = nullptr;
+  std::function<void(LBMBnd_wallEq*, const std::function<GDouble&(GInt, GInt)>&, const std::function<GDouble&(GInt, GInt)>&,
+                     const std::function<GDouble&(GInt, GInt)>&)>
+      m_apply;
+
+  VectorD<NDIM> m_tangentialV;
 };
 #endif // LBM_BND_WALL_H

@@ -73,8 +73,12 @@ inline auto inDirection(const VectorD<NDIM>& normal, const std::array<GDouble, N
 }
 
 enum class BndryType {
-  Wall_BounceBack,                    // BounceBack Wall Boundary condition 1st order accurate
-  Wall_BounceBack_TangentialVelocity, // BounceBack Boundary condition 1st order accurate with tangential velocity
+  Wall_BounceBack,                    // BounceBack Wall Boundary condition 2nd order accurate but viscosity depends on relaxation
+  Wall_BounceBack_TangentialVelocity, // BounceBack Boundary condition 2nd order accurate with tangential velocity but viscosity depends
+                                      // on relaxation
+  Wall_Equilibrium,                   // Wet Node Equilibrium method 1st order accurate
+  Wall_NEEM,                          // Wet Node Non-equilibrium extrapolation method 2nd order accurate
+  Wall_NEBB,                          // Wet Node Non-equilibrium method bounceback method 3rd order accurate
   Inlet_BounceBack_ConstPressure,     // BounceBack Boundary condition 1st order accurate with tangential velocity
   Outlet_BounceBack_ConstPressure,    // BounceBack Boundary condition 1st order accurate with tangential velocity
   Periodic,                           // Periodic boundary condition handled through boundary class
