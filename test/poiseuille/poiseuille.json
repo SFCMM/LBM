@@ -31,7 +31,6 @@
   },
   "solver": {
     "type": "lbm",
-    "relaxation": 1,
     "reynoldsnumber": 0.1,
     "ma": 0.0001,
     "analyticalSolution": "poiseuille2D_1",

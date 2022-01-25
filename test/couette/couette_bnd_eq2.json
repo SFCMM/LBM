@@ -24,48 +24,51 @@
         0.0
       ],
       "B": [
-        1.0,
-        1.0
+        3.0,
+        5.0
       ]
     }
   },
   "solver": {
     "type": "lbm",
-    "reynoldsnumber": 0.1,
-    "ma": 0.0001,
-    "analyticalSolution": "poiseuille2D_1",
-    "analyticalSolutionExcludeSurface": [
-      "+x",
-      "-x"
-    ],
-    "maxSteps": 75000,
+    "method": "bgk",
+    "relaxation": 1.0,
+    "ma": 0.01,
+    "maxSteps": 20000,
     "info_interval": 100,
-    "solution_interval": 10000,
-    "convergence": 2E-11,
-    "errorL2": 3.3E-5,
-    "errorMax": 1.3E-7,
+    "solution_interval": 500,
+    "convergence": 5E-13,
+    "analyticalSolution": "couette2D_1_5",
+    "errorL2": 1E-13,
+    "errorMax": 6.3E-13,
     "assumeAxisAligned": true,
     "boundary": {
       "cube": {
         "+x": {
           "type": "periodic",
           "generateBndry": true,
-          "connection": "-x",
-          "pressure": 1.000000827
+          "connection": "-x"
         },
         "-x": {
           "type": "periodic",
           "generateBndry": true,
-          "connection": "+x",
-          "pressure": 1.0
-        },
-        "-y": {
-          "type": "wall",
-          "model": "bounceback"
+          "connection": "+x"
         },
         "+y": {
           "type": "wall",
-          "model": "bounceback"
+          "model": "equilibrium",
+          "velocity": [
+            0.0984375,
+            0
+          ]
+        },
+        "-y": {
+          "type": "wall",
+          "model": "equilibrium",
+          "velocity": [
+            0.0015625,
+            0
+          ]
         }
       }
     },
@@ -74,12 +77,12 @@
         "type": "line",
         "execute": "atEnd",
         "A": [
-          0.501,
+          1.501,
           0.0
         ],
         "B": [
-          0.501,
-          1.0
+          1.501,
+          6.0
         ]
       }
     }

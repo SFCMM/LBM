@@ -45,6 +45,8 @@ mkdir "$LOG_PATH"
 cd couette || exit
 run_test couette.json
 run_test couette_bnd.json
+run_test couette_bnd_eq.json
+run_test couette_bnd_eq2.json
 cd ..
 
 cd poiseuille || exit
