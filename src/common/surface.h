@@ -10,6 +10,9 @@ class SurfaceInterface {
   virtual void               setCellList(const std::vector<GInt>& cellList)  = 0;
   virtual void               addCell(const GInt cellId, const GInt dir)      = 0;
 
+  [[nodiscard]] virtual auto normal_p(const GInt surfCellId) const -> const GDouble*   = 0;
+  [[nodiscard]] virtual auto neighbor(const GInt cellId, const GInt dir) const -> GInt = 0;
+
  private:
 };
 
@@ -69,6 +72,9 @@ class Surface : public SurfaceInterface {
 
   auto normal(const GInt surfCellId) const -> const VectorD<NDIM>& { return m_normal.at(surfCellId); }
 
+  [[nodiscard]] auto normal_p(const GInt surfCellId) const -> const GDouble* override { return &m_normal.at(surfCellId)[0]; }
+
+
   [[nodiscard]] auto size() const -> GInt {
     ASSERT(!m_cellId.empty(), "Not inited!");
     return m_cellId.size();
@@ -80,7 +86,7 @@ class Surface : public SurfaceInterface {
 
   auto grid() const -> CartesianGridData<NDIM> { return m_grid; }
 
-  [[nodiscard]] auto neighbor(const GInt cellId, const GInt dir) const -> GInt {
+  [[nodiscard]] auto neighbor(const GInt cellId, const GInt dir) const -> GInt override {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       if(m_nghbrIds.empty()) {
         TERMM(-1, "Surface not initialized!");
