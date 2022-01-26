@@ -143,7 +143,7 @@ class LBMBnd_wallBB : public LBMBndInterface {
 };
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-class LBMBnd_wallEq : public LBMBndInterface {
+class LBMBnd_wallWetnode {
  private:
   using method                = LBMethod<LBTYPE>;
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
@@ -152,32 +152,13 @@ class LBMBnd_wallEq : public LBMBndInterface {
   using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
 
  public:
-  LBMBnd_wallEq(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) : m_bnd(surf) {
-    if(!config::has_config_value(properties, "velocity")) {
-      m_apply = &LBMBnd_wallEq::apply_0;
-      logger << " Wall with no-slip condition" << std::endl;
-    } else {
-      m_apply = &LBMBnd_wallEq::apply_constV;
-      m_wallV = config::required_config_value<NDIM>(properties, "velocity");
-      logger << " Wall with constant velocity" << std::endl;
-    }
-    init();
-  }
-  ~LBMBnd_wallEq() override = default;
-
-  // deleted constructors not needed
-  LBMBnd_wallEq(const LBMBnd_wallEq&) = delete;
-  LBMBnd_wallEq(LBMBnd_wallEq&&)      = delete;
-  auto operator=(const LBMBnd_wallEq&) -> LBMBnd_wallEq& = delete;
-  auto operator=(LBMBnd_wallEq&&) -> LBMBnd_wallEq& = delete;
-
-  void init() {
+  LBMBnd_wallWetnode(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf) {
     // determine limited dist set etc.
-    for(const GInt cellId : m_bnd->getCellList()) {
+    for(const GInt cellId : surf->getCellList()) {
       m_limDist.emplace_back();
       m_limConst.emplace_back();
       m_limConst.back().fill(0);
-      m_normal.emplace_back(VectorD<NDIM>(m_bnd->normal_p(cellId)));
+      m_normal.emplace_back(VectorD<NDIM>(surf->normal_p(cellId)));
       for(GInt dir = 0; dir < NDIST - 1; ++dir) {
         if(inDirection<dim(LBTYPE)>(m_normal.back(), LBMethod<LBTYPE>::m_dirs[dir])) {
           m_limDist.back().emplace(dir);
@@ -191,6 +172,48 @@ class LBMBnd_wallEq : public LBMBndInterface {
       m_limConst.back()[NDIST - 1] = 1;
     }
   }
+
+  [[nodiscard]] auto limitedDist() const -> const std::vector<std::set<GInt>>& { return m_limDist; }
+
+  auto limitedConst() const -> const std::vector<std::array<GDouble, NDIST>>& { return m_limConst; }
+
+  auto normal() const -> const std::vector<VectorD<NDIM>>& { return m_normal; }
+
+ private:
+  std::vector<std::set<GInt>>             m_limDist;
+  std::vector<std::array<GDouble, NDIST>> m_limConst;
+  std::vector<VectorD<NDIM>>              m_normal;
+};
+
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE> {
+ private:
+  using method                = LBMethod<LBTYPE>;
+  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
+  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+
+  using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
+
+ public:
+  LBMBnd_wallEq(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
+    : m_bnd(surf), LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf) {
+    if(!config::has_config_value(properties, "velocity")) {
+      m_apply = &LBMBnd_wallEq::apply_0;
+      logger << " Wall with no-slip condition" << std::endl;
+    } else {
+      m_apply = &LBMBnd_wallEq::apply_constV;
+      m_wallV = config::required_config_value<NDIM>(properties, "velocity");
+      logger << " Wall with constant velocity" << std::endl;
+    }
+  }
+  ~LBMBnd_wallEq() override = default;
+
+  // deleted constructors not needed
+  LBMBnd_wallEq(const LBMBnd_wallEq&) = delete;
+  LBMBnd_wallEq(LBMBnd_wallEq&&)      = delete;
+  auto operator=(const LBMBnd_wallEq&) -> LBMBnd_wallEq& = delete;
+  auto operator=(LBMBnd_wallEq&&) -> LBMBnd_wallEq& = delete;
+
   void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
@@ -213,7 +236,8 @@ class LBMBnd_wallEq : public LBMBndInterface {
 
     GInt index = 0;
     for(const auto cellId : m_bnd->getCellList()) {
-      calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, true>(cellId, m_limDist[index], m_limConst[index], nullptr, fold, vars);
+      calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, true>(cellId, this->limitedDist()[index], this->limitedConst()[index],
+                                                                        nullptr, fold, vars);
       ++index;
     }
 
@@ -230,29 +254,18 @@ class LBMBnd_wallEq : public LBMBndInterface {
                     const std::function<GDouble&(GInt, GInt)>& vars) {
     GInt index = 0;
     for(const auto cellId : m_bnd->getCellList()) {
-      calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, false>(cellId, m_limDist[index], m_limConst[index], &m_normal[index][0],
-                                                                         fold, vars);
+      calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, false>(cellId, this->limitedDist()[index], this->limitedConst()[index],
+                                                                         &this->normal()[index][0], fold, vars);
       ++index;
       for(GInt dir = 0; dir < NDIM; ++dir) {
         vars(cellId, VAR::velocity(dir)) = m_wallV[dir];
       }
     }
 
-    // for wall with 0 velocity
+    // for wall with constant velocity
     for(const auto cellId : m_bnd->getCellList()) {
-      GDouble vsq = 0;
-      for(GInt dir = 0; dir < NDIM; ++dir) {
-        vsq += vars(cellId, VAR::velocity(dir)) * vars(cellId, VAR::velocity(dir));
-      }
-
-      for(GInt dist = 0; dist < NDIST; ++dist) {
-        GDouble cu = 0;
-        for(GInt dir = 0; dir < NDIM; ++dir) {
-          cu += vars(cellId, VAR::velocity(dir)) * LBMethod<LBTYPE>::m_dirs[dist][dir];
-        }
-        // todo: make settable
-        fold(cellId, dist) = eq::defaultEq(method::m_weights[dist], vars(cellId, VAR::rho()), cu, vsq);
-      }
+      // todo: make settable
+      eq::defaultEq<LBTYPE>(&fold(cellId, 0), vars(cellId, VAR::rho()), &vars(cellId, VAR::velocity(0)));
     }
   }
 
@@ -263,9 +276,5 @@ class LBMBnd_wallEq : public LBMBndInterface {
       m_apply;
 
   VectorD<NDIM> m_wallV;
-
-  std::vector<std::set<GInt>>             m_limDist;
-  std::vector<std::array<GDouble, NDIST>> m_limConst;
-  std::vector<VectorD<NDIM>>              m_normal;
 };
 #endif // LBM_BND_WALL_H

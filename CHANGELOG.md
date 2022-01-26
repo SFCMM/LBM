@@ -75,12 +75,17 @@
 - check in output functions if fileformat ending is already included
 - simplify writing output
 
+- [LBM] add support for boundary ghost cells in periodic boundary
+- [LBM] use pressure boundary condition for poiseuille cases
+
 ### this month:
 
 - determine analytical solutions for 2D poisson cases
 - adjust settings for poisson D2Q9
 - run basic 2D NS sphere case
 - run basic 2D NS obstruction case
+- fix poiseuille_bnd_eq and poiseuille_eq by allowing alignment of the mesh nodes with the wall in the gridgenerator and
+  setting the forcing delta p
 
 - [LPT] terminal velocity test
 - [LPT] finish for release
@@ -95,8 +100,6 @@
 - [LBM] inflow pressure bc
 - [LBM] outflow pressure bc
 - [LBM] automatically run all the testcases and produce report
-- [LBM] use pressure boundary condition for poiseuille cases
-- [LBM] add support for boundary ghost cells in periodic boundary
 
 - [LPT] add additional analytical solutions
 - [LPT] add documentation

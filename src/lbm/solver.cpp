@@ -609,6 +609,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::forcing() {
     const GDouble outletPressure = 1.0;
     //    const GDouble inletPressure  = 1.010487; //rho_inlet=3*(NX-1)*gradP+outletPressure;
     //    const GDouble inletPressure = 1.01102192453;
+    // todo: make settable
     const GDouble inletPressure = outletPressure + 0.0000008;
 
 
