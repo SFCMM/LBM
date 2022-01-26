@@ -563,7 +563,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
     }
   }
 
-  m_omega = 1.0;
   for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST; ++dist) {
       f(cellId, dist) = (1 - m_omega) * fold(cellId, dist) + m_omega * feq(cellId, dist);
