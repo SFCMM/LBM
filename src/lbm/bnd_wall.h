@@ -178,14 +178,17 @@ class LBMBnd_wallEq : public LBMBndInterface {
       m_limConst.emplace_back();
       m_limConst.back().fill(0);
       m_normal.emplace_back(VectorD<NDIM>(m_bnd->normal_p(cellId)));
-      for(GInt dir = 0; dir < NDIST; ++dir) {
-        if(m_bnd->neighbor(cellId, dir) != INVALID_CELLID) {
+      for(GInt dir = 0; dir < NDIST - 1; ++dir) {
+        if(inDirection<dim(LBTYPE)>(m_normal.back(), LBMethod<LBTYPE>::m_dirs[dir])) {
           m_limDist.back().emplace(dir);
-          m_limConst.back()[dir] += 1;
-        } else {
-          m_limConst.back()[cartesian::oppositeDir<NDIM>(dir)] += 1;
+          m_limConst.back()[dir] = 2;
+        } else if(orthogonal<dim(LBTYPE)>(m_normal.back(), LBMethod<LBTYPE>::m_dirs[dir])) {
+          m_limDist.back().emplace(dir);
+          m_limConst.back()[dir] = 1;
         }
       }
+      m_limDist.back().emplace(NDIST - 1);
+      m_limConst.back()[NDIST - 1] = 1;
     }
   }
   void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
@@ -208,11 +211,6 @@ class LBMBnd_wallEq : public LBMBndInterface {
       }
     }
 
-    //    for(const auto cellId : m_bnd->getCellList()) {
-    //      vars(cellId, VAR::rho()) = (fold(cellId, 8) + fold(cellId, 1) + fold(cellId, 0) + 2.0 * (fold(cellId, 6) + fold(cellId, 2) +
-    //      fold(cellId, 5)));
-    //    }
-
     GInt index = 0;
     for(const auto cellId : m_bnd->getCellList()) {
       calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, true>(cellId, m_limDist[index], m_limConst[index], nullptr, fold, vars);
@@ -230,15 +228,6 @@ class LBMBnd_wallEq : public LBMBndInterface {
 
   void apply_constV(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
                     const std::function<GDouble&(GInt, GInt)>& vars) {
-    //    for(const auto cellId : m_bnd->getCellList()) {
-    //      vars(cellId, VAR::rho()) =
-    //          1.0 / (1.0 - vars(cellId, VAR::velocity(1)))
-    //          * (fold(cellId, 8) + fold(cellId, 1) + fold(cellId, 0) + 2.0 * (fold(cellId, 6) + fold(cellId, 2) + fold(cellId, 5)));
-    //      for(GInt dir = 0; dir < NDIM; ++dir) {
-    //        vars(cellId, VAR::velocity(dir)) = m_wallV[dir];
-    //      }
-    //    }
-
     GInt index = 0;
     for(const auto cellId : m_bnd->getCellList()) {
       calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, false>(cellId, m_limDist[index], m_limConst[index], &m_normal[index][0],

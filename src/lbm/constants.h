@@ -72,6 +72,11 @@ inline auto inDirection(const VectorD<NDIM>& normal, const std::array<GDouble, N
   return static_cast<GBool>(normal.dot(VectorD<NDIM>(direction.data())) >= GDoubleEps);
 }
 
+template <GInt NDIM>
+inline auto orthogonal(const VectorD<NDIM>& normal, const std::array<GDouble, NDIM>& direction) -> GBool {
+  return static_cast<GBool>(std::abs(normal.dot(VectorD<NDIM>(direction.data()))) <= GDoubleEps);
+}
+
 enum class BndryType {
   Wall_BounceBack,                    // BounceBack Wall Boundary condition 2nd order accurate but viscosity depends on relaxation
   Wall_BounceBack_TangentialVelocity, // BounceBack Boundary condition 2nd order accurate with tangential velocity but viscosity depends
