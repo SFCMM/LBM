@@ -208,6 +208,24 @@ inline auto dirVec(GInt /*dir*/) -> VectorD<NDIM> {
 }
 
 template <>
+inline auto dirVec<1>(GInt dir) -> VectorD<1> {
+  VectorD<1> tmp;
+  switch(dir) {
+    case 0:
+      tmp.fill(-1);
+      return tmp;
+    case 1:
+      tmp.fill(1);
+      return tmp;
+    default:
+      std::cerr << "Invalid dir in dirVec<1>()" << std::endl;
+      std::exit(-1);
+  }
+  tmp.fill(NAN);
+  return tmp;
+}
+
+template <>
 inline auto dirVec<2>(GInt dir) -> VectorD<2> {
   switch(dir) {
     case 0:

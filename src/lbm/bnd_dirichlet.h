@@ -22,10 +22,11 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
  public:
   // todo: allow setting specified variables
   LBMBnd_DirichletNEEM(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
-    : m_value(config::opt_config_value(properties, "value", NAN)), m_normal(surf->normal(0)) {
+    : m_value(config::opt_config_value(properties, "value", NAN)) {
     for(const GInt cellId : surf->getCellList()) {
       m_bndCells.emplace_back(cellId);
     }
+    m_normal = surf->normal(m_bndCells[0]);
 
     for(const auto bndCellId : m_bndCells) {
       GInt extrapolationDir = -1;
