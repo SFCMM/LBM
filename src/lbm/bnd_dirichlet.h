@@ -90,8 +90,8 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
-  void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
-             const std::function<GDouble&(GInt, GInt)>& vars) override {
+  void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>&   fold,
+             const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& vars) override {
     for(GUint id = 0; id < m_bndCells.size(); ++id) {
       const GInt cellId              = m_bndCells[id];
       const GInt extraPolationCellId = m_extrapolationCellId[id];

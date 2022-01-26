@@ -73,7 +73,7 @@ class LBMBnd_InOutBB : public LBMBndInterface {
   }
 
   void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
-             const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {
+             const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {
     //    const GDouble targetRho = 1.075;
     // todo: both rho and velocity need to be recalculated move to a separate function
     // todo: function to recalculate feq

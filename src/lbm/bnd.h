@@ -71,6 +71,9 @@ class LBMBndManager : private Configuration {
           } else if(model == "equilibrium") {
             logger << " wall equilibrium wet node model" << std::endl;
             addBndry(BndryType::Wall_Equilibrium, surfBndConfig, bndrySrf);
+          } else if(model == "neem") {
+            logger << " wall equilibrium wet node model" << std::endl;
+            addBndry(BndryType::Wall_NEEM, surfBndConfig, bndrySrf);
           } else {
             TERMM(-1, "Invalid wall boundary model: " + model);
           }
@@ -110,9 +113,9 @@ class LBMBndManager : private Configuration {
   }
 
   void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-             const std::function<GDouble&(GInt, GInt)>& vars) {
+             const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
     for(const auto& bndry : m_bndrys) {
-      bndry->apply(f, fold, vars);
+      bndry->apply(f, fold, feq, vars);
     }
   }
 
@@ -134,6 +137,9 @@ class LBMBndManager : private Configuration {
           break;
         case BndryType::Wall_Equilibrium:
           m_bndrys.emplace_back(std::make_unique<LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
+          break;
+        case BndryType::Wall_NEEM:
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_wallNEEM<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
           break;
         case BndryType::Inlet_BounceBack_ConstPressure:
           m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
@@ -177,6 +183,6 @@ class LBMBnd_dummy : public LBMBndInterface {
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
   void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
-             const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
+             const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 };
 #endif // LBM_BND_H

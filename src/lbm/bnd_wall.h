@@ -131,7 +131,7 @@ class LBMBnd_wallBB : public LBMBndInterface {
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
   void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-             const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {
+             const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {
     for(auto& bndCell : m_bndCells) {
       bndCell.apply(f, fold);
     }
@@ -219,8 +219,8 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-             const std::function<GDouble&(GInt, GInt)>& vars) override {
+  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>&       fold,
+             const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& vars) override {
     m_apply(this, f, fold, vars);
   }
 
@@ -276,5 +276,145 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
       m_apply;
 
   VectorD<NDIM> m_wallV;
+};
+
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+class LBMBnd_wallNEEM : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE> {
+ private:
+  using method                = LBMethod<LBTYPE>;
+  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
+  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+
+  using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
+
+ public:
+  LBMBnd_wallNEEM(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
+    : m_bnd(surf), LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf) {
+    if(!config::has_config_value(properties, "velocity")) {
+      m_apply = &LBMBnd_wallNEEM::apply_0;
+      logger << " Wall with no-slip condition" << std::endl;
+    } else {
+      m_apply = &LBMBnd_wallNEEM::apply_constV;
+      m_wallV = config::required_config_value<NDIM>(properties, "velocity");
+      logger << " Wall with constant velocity" << std::endl;
+    }
+    init();
+  }
+  ~LBMBnd_wallNEEM() override = default;
+
+  // deleted constructors not needed
+  LBMBnd_wallNEEM(const LBMBnd_wallNEEM&) = delete;
+  LBMBnd_wallNEEM(LBMBnd_wallNEEM&&)      = delete;
+  auto operator=(const LBMBnd_wallNEEM&) -> LBMBnd_wallNEEM& = delete;
+  auto operator=(LBMBnd_wallNEEM&&) -> LBMBnd_wallNEEM& = delete;
+
+  void init() {
+    for(const auto bndCellId : m_bnd->getCellList()) {
+      GInt extrapolationDir = -1;
+      for(GInt dist = 0; dist < cartesian::maxNoNghbrs<NDIM>(); ++dist) {
+        if(m_bnd->neighbor(bndCellId, dist) == INVALID_CELLID) {
+          if(extrapolationDir < 0) {
+            extrapolationDir = dist;
+          } else {
+            // todo: move to function
+            //  we are at a corner so we have to use a diagonal neighbor
+            if(extrapolationDir == 0 && dist == 2) {
+              extrapolationDir = 6;
+            }
+            if(extrapolationDir == 0 && dist == 3) {
+              extrapolationDir = 7;
+            }
+            if(extrapolationDir == 1 && dist == 3) {
+              extrapolationDir = 4;
+            }
+            if(extrapolationDir == 1 && dist == 2) {
+              extrapolationDir = 5;
+            }
+          }
+        }
+      }
+      const GInt extrapolationCellId = m_bnd->neighbor(bndCellId, cartesian::oppositeDir<NDIM>(extrapolationDir));
+      m_extrapolationCellId.emplace_back(extrapolationCellId);
+      if(extrapolationCellId == INVALID_CELLID) {
+        cerr0 << "bndCellId " << bndCellId << " extrapolationDir " << extrapolationDir << std::endl;
+        TERMM(-1, "No valid extrapolation cellId");
+      }
+    }
+  }
+
+  void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
+
+  void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
+                const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
+
+  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+             const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) override {
+    m_apply(this, f, fold, feq, vars);
+  }
+
+ private:
+  void apply_0(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
+               const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
+    // at wall set 0 velocity
+    for(const auto cellId : m_bnd->getCellList()) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        vars(cellId, VAR::velocity(dir)) = 0;
+      }
+    }
+
+    GInt index = 0;
+    for(const auto cellId : m_bnd->getCellList()) {
+      calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, true>(cellId, this->limitedDist()[index], this->limitedConst()[index],
+                                                                        nullptr, fold, vars);
+      ++index;
+    }
+
+    // for wall with 0 velocity
+    index = 0;
+    for(const auto cellId : m_bnd->getCellList()) {
+      const GInt extraPolationCellId = m_extrapolationCellId[index];
+      for(GInt dist = 0; dist < NDIST; ++dist) {
+        // todo: make settable
+        fold(cellId, dist) = eq::defaultEq(method::m_weights[dist], vars(cellId, VAR::rho()), 0, 0) + fold(extraPolationCellId, dist)
+                             - feq(extraPolationCellId, dist);
+      }
+      ++index;
+    }
+  }
+
+  void apply_constV(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
+                    const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
+    GInt index = 0;
+    for(const auto cellId : m_bnd->getCellList()) {
+      calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, false>(cellId, this->limitedDist()[index], this->limitedConst()[index],
+                                                                         &this->normal()[index][0], fold, vars);
+      ++index;
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        vars(cellId, VAR::velocity(dir)) = m_wallV[dir];
+      }
+    }
+
+    // for wall with constant velocity
+    index = 0;
+    for(const auto cellId : m_bnd->getCellList()) {
+      const GInt extraPolationCellId = m_extrapolationCellId[index];
+      // todo: make settable
+      eq::defaultEq<LBTYPE>(&fold(cellId, 0), vars(cellId, VAR::rho()), &vars(cellId, VAR::velocity(0)));
+      for(GInt dist = 0; dist < NDIST; ++dist) {
+        // todo: make settable
+        fold(cellId, dist) += fold(extraPolationCellId, dist) - feq(extraPolationCellId, dist);
+      }
+      ++index;
+    }
+  }
+
+  const SurfaceInterface* m_bnd = nullptr;
+
+  std::function<void(LBMBnd_wallNEEM*, const std::function<GDouble&(GInt, GInt)>&, const std::function<GDouble&(GInt, GInt)>&,
+                     const std::function<GDouble&(GInt, GInt)>&, const std::function<GDouble&(GInt, GInt)>&)>
+      m_apply;
+
+  VectorD<NDIM>     m_wallV;
+  std::vector<GInt> m_extrapolationCellId;
 };
 #endif // LBM_BND_WALL_H

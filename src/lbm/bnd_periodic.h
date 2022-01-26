@@ -177,7 +177,7 @@ class LBMBnd_Periodic : public LBMBndInterface {
     }
   }
   void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
-             const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
+             const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
  private:
   std::vector<LBMBndCell_periodic<DEBUG_LEVEL, LBTYPE>> m_bndCells;
