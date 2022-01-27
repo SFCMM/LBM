@@ -20,6 +20,7 @@ class LBMBndInterface {
  private:
 };
 
+// todo: remove?
 template <LBMethodType LBTYPE>
 class LBMBndCell {
  public:

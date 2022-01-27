@@ -72,8 +72,11 @@ class LBMBndManager : private Configuration {
             logger << " wall equilibrium wet node model" << std::endl;
             addBndry(BndryType::Wall_Equilibrium, surfBndConfig, bndrySrf);
           } else if(model == "neem") {
-            logger << " wall equilibrium wet node model" << std::endl;
+            logger << " wall nonequilibrium extrapolation wet node model" << std::endl;
             addBndry(BndryType::Wall_NEEM, surfBndConfig, bndrySrf);
+          } else if(model == "nebb") {
+            logger << " wall nonequilibrium bounce back wet node model" << std::endl;
+            addBndry(BndryType::Wall_NEBB, surfBndConfig, bndrySrf);
           } else {
             TERMM(-1, "Invalid wall boundary model: " + model);
           }
@@ -140,6 +143,9 @@ class LBMBndManager : private Configuration {
           break;
         case BndryType::Wall_NEEM:
           m_bndrys.emplace_back(std::make_unique<LBMBnd_wallNEEM<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
+          break;
+        case BndryType::Wall_NEBB:
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_wallNEBB<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
           break;
         case BndryType::Inlet_BounceBack_ConstPressure:
           m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));

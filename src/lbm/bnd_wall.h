@@ -4,6 +4,7 @@
 #include "constants.h"
 #include "moments.h"
 
+// todo: remove!
 template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
 class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
   // class LBMBndCell_wallBB {
@@ -226,8 +227,8 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
   }
 
  protected:
-  void apply_0(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
-               const std::function<GDouble&(GInt, GInt)>& vars) {
+  virtual void apply_0(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
+                       const std::function<GDouble&(GInt, GInt)>& vars) {
     // at wall set 0 velocity
     for(const auto cellId : m_bnd->getCellList()) {
       for(GInt dir = 0; dir < NDIM; ++dir) {
@@ -251,8 +252,8 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
     }
   }
 
-  void apply_constV(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
-                    const std::function<GDouble&(GInt, GInt)>& vars) {
+  virtual void apply_constV(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
+                            const std::function<GDouble&(GInt, GInt)>& vars) {
     GInt index = 0;
     for(const auto cellId : m_bnd->getCellList()) {
       calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, false>(cellId, this->limitedDist()[index], this->limitedConst()[index],
@@ -270,8 +271,8 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
     }
   }
 
-  auto bnd() const -> const SurfaceInterface* { return m_bnd; }
-  auto v_wall() -> VectorD<NDIM>& { return m_wallV; }
+  [[nodiscard]] auto bnd() const -> const SurfaceInterface* { return m_bnd; }
+  auto               v_wall() -> VectorD<NDIM>& { return m_wallV; }
 
  private:
   const SurfaceInterface* m_bnd = nullptr;
@@ -393,5 +394,176 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
       m_apply;
 
   std::vector<GInt> m_extrapolationCellId;
+};
+
+
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE> {
+ private:
+  using method                = LBMethod<LBTYPE>;
+  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
+  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+
+  using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
+
+ public:
+  LBMBnd_wallNEBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
+    : m_bnd(surf), LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf) {
+    if(LBTYPE != LBMethodType::D2Q9) {
+      // Note: there is doubt in the current literature that this type of boundary condition make sense in 3D
+      TERMM(-1, "Not implemented for this distribution!");
+    }
+
+    if(!config::has_config_value(properties, "velocity")) {
+      m_apply = &LBMBnd_wallNEBB::apply_0;
+      logger << " NEBB with no-slip condition" << std::endl;
+    } else {
+      m_apply = &LBMBnd_wallNEBB::apply_constV;
+      m_wallV = config::required_config_value<NDIM>(properties, "velocity");
+      logger << " NEBB with constant velocity" << std::endl;
+    }
+    init();
+  }
+  ~LBMBnd_wallNEBB() override = default;
+
+  // deleted constructors not needed
+  LBMBnd_wallNEBB(const LBMBnd_wallNEBB&) = delete;
+  LBMBnd_wallNEBB(LBMBnd_wallNEBB&&)      = delete;
+  auto operator=(const LBMBnd_wallNEBB&) -> LBMBnd_wallNEBB& = delete;
+  auto operator=(LBMBnd_wallNEBB&&) -> LBMBnd_wallNEBB& = delete;
+
+  void init() {}
+
+  void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
+
+  void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
+                const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
+
+  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+             const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) override {
+    m_apply(this, f, fold, feq, vars);
+  }
+
+ private:
+  void apply_0(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+               const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
+    // at wall set 0 velocity
+    for(const auto cellId : m_bnd->getCellList()) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        vars(cellId, VAR::velocity(dir)) = 0;
+      }
+    }
+
+    GInt index = 0;
+    for(const auto cellId : m_bnd->getCellList()) {
+      calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, true>(cellId, this->limitedDist()[index], this->limitedConst()[index],
+                                                                        nullptr, fold, vars);
+      ++index;
+    }
+
+    // reflect main direction
+    for(const auto bndCellId : m_bnd->getCellList()) {
+      for(GInt dist = 0; dist < cartesian::maxNoNghbrs<NDIM>(); ++dist) {
+        if(m_bnd->neighbor(bndCellId, dist) == INVALID_CELLID) {
+          fold(bndCellId, cartesian::oppositeDir(dist)) = fold(bndCellId, dist);
+        }
+      }
+    }
+
+    // reflect diagonal direction
+    index = 0;
+    for(const auto bndCellId : m_bnd->getCellList()) {
+      const auto& normal = this->normal()[index];
+      if(normal[0] < 0) {
+        // +x
+        fold(bndCellId, 6) = fold(bndCellId, 4) + 0.5 * (fold(bndCellId, 3) - fold(bndCellId, 2));
+        fold(bndCellId, 7) = fold(bndCellId, 5) - 0.5 * (fold(bndCellId, 3) - fold(bndCellId, 2));
+      } else if(normal[0] > 0) {
+        // -x
+        fold(bndCellId, 4) = fold(bndCellId, 6) - 0.5 * (fold(bndCellId, 3) - fold(bndCellId, 2));
+        fold(bndCellId, 5) = fold(bndCellId, 7) + 0.5 * (fold(bndCellId, 3) - fold(bndCellId, 2));
+      } else if(normal[1] < 0) {
+        // +y
+        fold(bndCellId, 5) = fold(bndCellId, 7) - 0.5 * (fold(bndCellId, 1) - fold(bndCellId, 0));
+        fold(bndCellId, 6) = fold(bndCellId, 4) + 0.5 * (fold(bndCellId, 1) - fold(bndCellId, 0));
+      } else if(normal[1] > 0) {
+        //-y
+        fold(bndCellId, 7) = fold(bndCellId, 5) + 0.5 * (fold(bndCellId, 1) - fold(bndCellId, 0));
+        fold(bndCellId, 4) = fold(bndCellId, 6) - 0.5 * (fold(bndCellId, 1) - fold(bndCellId, 0));
+      }
+    }
+    ++index;
+  }
+
+  void apply_constV(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+                    const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
+    GInt index = 0;
+    for(const auto cellId : m_bnd->getCellList()) {
+      calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, false>(cellId, this->limitedDist()[index], this->limitedConst()[index],
+                                                                         &this->normal()[index][0], fold, vars);
+      ++index;
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        vars(cellId, VAR::velocity(dir)) = m_wallV[dir];
+      }
+    }
+
+    index = 0;
+    for(const auto bndCellId : m_bnd->getCellList()) {
+      const auto& normal = this->normal()[index];
+      // reflect main direction
+      for(GInt dist = 0; dist < cartesian::maxNoNghbrs<NDIM>(); ++dist) {
+        const GInt dir = dist / 2;
+        if(m_bnd->neighbor(bndCellId, dist) == INVALID_CELLID && std::abs(normal[dir]) > 0) {
+          fold(bndCellId, cartesian::oppositeDir(dist)) = fold(bndCellId, dist);
+          if(normal[dir] < 0) {
+            fold(bndCellId, cartesian::oppositeDir(dist)) -= 2.0 / 3.0 * vars(bndCellId, VAR::rho()) * m_wallV[dir];
+          } else {
+            fold(bndCellId, cartesian::oppositeDir(dist)) += 2.0 / 3.0 * vars(bndCellId, VAR::rho()) * m_wallV[dir];
+          }
+        }
+      }
+      ++index;
+    }
+
+    // reflect diagonal direction
+    index = 0;
+    for(const auto bndCellId : m_bnd->getCellList()) {
+      const GDouble rho    = vars(bndCellId, VAR::rho());
+      const auto&   normal = this->normal()[index];
+      if(normal[0] > 0) {
+        // +x right wall
+        fold(bndCellId, 6) =
+            fold(bndCellId, 4) + 0.5 * (fold(bndCellId, 3) - fold(bndCellId, 2)) - 0.5 * rho * m_wallV[1] - 1.0 / 6.0 * rho * m_wallV[0];
+        fold(bndCellId, 7) =
+            fold(bndCellId, 5) - 0.5 * (fold(bndCellId, 3) - fold(bndCellId, 2)) + 0.5 * rho * m_wallV[1] - 1.0 / 6.0 * rho * m_wallV[0];
+      } else if(normal[0] < 0) {
+        // -x left wall
+        fold(bndCellId, 4) =
+            fold(bndCellId, 6) - 0.5 * (fold(bndCellId, 3) - fold(bndCellId, 2)) + 0.5 * rho * m_wallV[1] + 1.0 / 6.0 * rho * m_wallV[0];
+        fold(bndCellId, 5) =
+            fold(bndCellId, 7) + 0.5 * (fold(bndCellId, 3) - fold(bndCellId, 2)) - 0.5 * rho * m_wallV[1] + 1.0 / 6.0 * rho * m_wallV[0];
+      } else if(normal[1] > 0) {
+        // +y top wall
+        fold(bndCellId, 5) =
+            fold(bndCellId, 7) - 0.5 * (fold(bndCellId, 1) - fold(bndCellId, 0)) + 0.5 * rho * m_wallV[0] - 1.0 / 6.0 * rho * m_wallV[1];
+        fold(bndCellId, 6) =
+            fold(bndCellId, 4) + 0.5 * (fold(bndCellId, 1) - fold(bndCellId, 0)) - 0.5 * rho * m_wallV[0] - 1.0 / 6.0 * rho * m_wallV[1];
+      } else if(normal[1] < 0) {
+        //-y bottom wall
+        fold(bndCellId, 7) =
+            fold(bndCellId, 5) + 0.5 * (fold(bndCellId, 1) - fold(bndCellId, 0)) - 0.5 * rho * m_wallV[0] + 1.0 / 6.0 * rho * m_wallV[1];
+        fold(bndCellId, 4) =
+            fold(bndCellId, 6) - 0.5 * (fold(bndCellId, 1) - fold(bndCellId, 0)) + 0.5 * rho * m_wallV[0] + 1.0 / 6.0 * rho * m_wallV[1];
+      }
+      ++index;
+    }
+  }
+
+  std::function<void(LBMBnd_wallNEBB*, const std::function<GDouble&(GInt, GInt)>&, const std::function<GDouble&(GInt, GInt)>&,
+                     const std::function<GDouble&(GInt, GInt)>&, const std::function<GDouble&(GInt, GInt)>&)>
+      m_apply;
+
+  const SurfaceInterface* m_bnd = nullptr;
+  VectorD<NDIM>           m_wallV;
 };
 #endif // LBM_BND_WALL_H
