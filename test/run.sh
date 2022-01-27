@@ -47,6 +47,7 @@ run_test couette.json
 run_test couette_bnd.json
 run_test couette_bnd_eq.json
 run_test couette_bnd_eq2.json
+run_test couette_bnd_NEEM.json
 cd ..
 
 cd poiseuille || exit
