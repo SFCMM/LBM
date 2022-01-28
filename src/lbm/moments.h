@@ -2,6 +2,7 @@
 #define LBM_MOMENTS_H
 
 #include <array>
+#include <set>
 #include <sfcmm_common.h>
 #include "constants.h"
 #include "variables.h"

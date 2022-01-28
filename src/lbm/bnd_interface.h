@@ -1,5 +1,8 @@
 #ifndef LBM_BND_INTERFACE_H
 #define LBM_BND_INTERFACE_H
+
+#include "constants.h"
+
 class LBMBndInterface {
  public:
   LBMBndInterface()          = default;

@@ -35,6 +35,7 @@
 - initial material point method
 - mpi communication methods
 - [LBM] calculate total energy/internal energy for output purposes (also output pressure and temperature)
+- compare timings between runs of the testing tool
 
 # V0.0.2
 

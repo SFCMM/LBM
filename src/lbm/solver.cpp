@@ -670,8 +670,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::prePropBoundaryCnd() {
   using namespace std::placeholders;
   std::function<GDouble&(GInt, GInt)> _fold = std::bind(&LBMSolver::fold, this, _1, _2);
   std::function<GDouble&(GInt, GInt)> _f    = std::bind(&LBMSolver::f, this, _1, _2);
-  std::function<GDouble&(GInt, GInt)> _feq = std::bind(static_cast<GDouble& (LBMSolver::*)(GInt, GInt)>(&LBMSolver::feq), this, _1, _2);
-  std::function<GDouble&(GInt, GInt)> _v = std::bind(&LBMSolver::vars, this, _1, _2);
+  std::function<GDouble&(GInt, GInt)> _feq  = std::bind(static_cast<GDouble& (LBMSolver::*)(GInt, GInt)>(&LBMSolver::feq), this, _1, _2);
+  std::function<GDouble&(GInt, GInt)> _v    = std::bind(&LBMSolver::vars, this, _1, _2);
 
   m_bndManager->preApply(_f, _fold, _feq, _v);
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMBnd]);

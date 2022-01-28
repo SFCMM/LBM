@@ -1,13 +1,13 @@
 #ifndef LBM_SOLVER_H
 #define LBM_SOLVER_H
 #include <sfcmm_common.h>
+#include "bnd.h"
 #include "cartesiangrid.h"
 #include "common/configuration.h"
-#include "interface/solver_interface.h"
-#include "bnd.h"
 #include "constants.h"
-#include "variables.h"
+#include "interface/solver_interface.h"
 #include "postprocessing.h"
+#include "variables.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
 class LBMSolver : public Runnable,
@@ -31,7 +31,7 @@ class LBMSolver : public Runnable,
 
  public:
   LBMSolver(GInt32 domainId, GInt32 noDomains) : POST(), m_domainId(domainId), m_noDomains(noDomains){};
-  ~LBMSolver() override       = default;
+  ~LBMSolver() override = default;
 
   LBMSolver(const LBMSolver&) = delete;
   LBMSolver(LBMSolver&&)      = delete;

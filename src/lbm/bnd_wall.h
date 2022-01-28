@@ -28,7 +28,7 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
     }
   }
 
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold) {
+  void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold) {
     // iterate over the distributions that need to be set
     for(GInt id = 0; id < m_noSetDists; ++id) {
       // dists that point into the outside direction
@@ -37,7 +37,7 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
       GInt oppositeDist = LBMethod<LBTYPE>::oppositeDist(dist);
 
       // standard bounceback i.e. distribution that hits the wall is reflected to the opposite distribution direction
-      fold(mapped(), oppositeDist) = f(mapped(), dist);
+      fold(mapped(), oppositeDist) = fpre(mapped(), dist);
 
       if constexpr(TANGENTIALVELO) {
         // todo: actually calculate this
@@ -56,8 +56,8 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
       for(GInt id = 0; id < m_noSetDists; ++id) {
         const GInt           dist = LBMethod<LBTYPE>::oppositeDist(m_bndIndex[id]);
         VectorD<dim(LBTYPE)> dir;
-        for(GInt n = 0; n < dim(LBTYPE); ++n) {
-          dir[n] = LBMethod<LBTYPE>::m_dirs[dist][n];
+        for(GInt axis = 0; axis < dim(LBTYPE); ++axis) {
+          dir[axis] = LBMethod<LBTYPE>::m_dirs[dist][axis];
         }
 
         VectorD<dim(LBTYPE)> tangentialVec;
@@ -131,10 +131,10 @@ class LBMBnd_wallBB : public LBMBndInterface {
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+  void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {
     for(auto& bndCell : m_bndCells) {
-      bndCell.apply(f, fold);
+      bndCell.apply(fpre, fold);
     }
   }
 
@@ -143,6 +143,9 @@ class LBMBnd_wallBB : public LBMBndInterface {
   std::vector<LBMBndCell_wallBB<LBTYPE, TANGENTIALVELO>> m_bndCells;
 };
 
+/// Base class for wet node boundary conditions.
+/// \tparam DEBUG_LEVEL
+/// \tparam LBTYPE
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBnd_wallWetnode {
  private:
@@ -186,6 +189,9 @@ class LBMBnd_wallWetnode {
   std::vector<VectorD<NDIM>>              m_normal;
 };
 
+/// Equilibrium wall boundary condition.
+/// \tparam DEBUG_LEVEL
+/// \tparam LBTYPE
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE> {
  private:
@@ -221,9 +227,9 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>&       fold,
+  void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>&    fold,
              const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& vars) override {
-    m_apply(this, f, fold, vars);
+    m_apply(this, fpre, fold, vars);
   }
 
  protected:
@@ -284,6 +290,9 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
   VectorD<NDIM> m_wallV;
 };
 
+/// Non-equilibrium extrapolation wall boundary condition.
+/// \tparam DEBUG_LEVEL
+/// \tparam LBTYPE
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE> {
  private:
@@ -305,7 +314,7 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
     }
     init();
   }
-  virtual ~LBMBnd_wallNEEM() override = default;
+  ~LBMBnd_wallNEEM() override = default;
 
   // deleted constructors not needed
   LBMBnd_wallNEEM(const LBMBnd_wallNEEM&) = delete;
@@ -352,15 +361,15 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+  void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) override {
-    m_apply(this, f, fold, feq, vars);
+    m_apply(this, fpre, fold, feq, vars);
   }
 
  private:
-  void apply_0NEEM(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+  void apply_0NEEM(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
                    const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
-    LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>::apply_0(f, fold, vars);
+    LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>::apply_0(fpre, fold, vars);
 
     // for wall with 0 velocity
     GInt index = 0;
@@ -374,9 +383,9 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
     }
   }
 
-  void apply_constVNEEM(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+  void apply_constVNEEM(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
                         const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
-    LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>::apply_constV(f, fold, vars);
+    LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>::apply_constV(fpre, fold, vars);
 
     // for wall with constant velocity
     GInt index = 0;
@@ -397,6 +406,11 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
 };
 
 
+// todo: add literature info
+/// Nonequilibrium bounce-back model can be *only* used for D2Q9. In the literature there is doubt that it is useful in 3D.
+/// The model leads to a relaxation independent result!
+/// \tparam DEBUG_LEVEL
+/// \tparam LBTYPE
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE> {
  private:
@@ -436,9 +450,9 @@ class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
-  void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+  void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) override {
-    m_apply(this, f, fold, feq, vars);
+    m_apply(this, fpre, fold, feq, vars);
   }
 
  private:
