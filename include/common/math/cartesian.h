@@ -192,6 +192,7 @@ constexpr auto inbetweenDiagDirs<2>(GInt dir1, GInt dir2) -> GInt {
       std::cerr << "Invalid dist in inbetweenDiagDirs<2>()" << std::endl;
       std::exit(-1);
   }
+  return -1;
 }
 
 /// Return the direction unit vector.

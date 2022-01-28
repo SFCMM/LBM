@@ -197,7 +197,7 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
 
  public:
   LBMBnd_wallEq(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
-    : m_bnd(surf), LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf) {
+    : LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf), m_bnd(surf) {
     if(!config::has_config_value(properties, "velocity")) {
       m_apply = &LBMBnd_wallEq::apply_0;
       logger << " Wall with no-slip condition" << std::endl;
@@ -207,7 +207,7 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
       logger << " Wall with constant velocity" << std::endl;
     }
   }
-  LBMBnd_wallEq(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf) : m_bnd(surf), LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf) {}
+  LBMBnd_wallEq(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf) : LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf), m_bnd(surf) {}
   ~LBMBnd_wallEq() override = default;
 
   // deleted constructors not needed
@@ -296,16 +296,16 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
  public:
   LBMBnd_wallNEEM(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) : LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>(surf) {
     if(!config::has_config_value(properties, "velocity")) {
-      m_apply = &LBMBnd_wallNEEM::apply_0;
+      m_apply = &LBMBnd_wallNEEM::apply_0NEEM;
       logger << " NEEM with no-slip condition" << std::endl;
     } else {
-      m_apply        = &LBMBnd_wallNEEM::apply_constV;
+      m_apply        = &LBMBnd_wallNEEM::apply_constVNEEM;
       this->v_wall() = config::required_config_value<NDIM>(properties, "velocity");
       logger << " NEEM with constant velocity" << std::endl;
     }
     init();
   }
-  ~LBMBnd_wallNEEM() override = default;
+  virtual ~LBMBnd_wallNEEM() override = default;
 
   // deleted constructors not needed
   LBMBnd_wallNEEM(const LBMBnd_wallNEEM&) = delete;
@@ -358,8 +358,8 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
   }
 
  private:
-  void apply_0(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-               const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
+  void apply_0NEEM(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+                   const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
     LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>::apply_0(f, fold, vars);
 
     // for wall with 0 velocity
@@ -374,8 +374,8 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
     }
   }
 
-  void apply_constV(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-                    const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
+  void apply_constVNEEM(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
+                        const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
     LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>::apply_constV(f, fold, vars);
 
     // for wall with constant velocity
@@ -408,7 +408,7 @@ class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_
 
  public:
   LBMBnd_wallNEBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
-    : m_bnd(surf), LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf) {
+    : LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf), m_bnd(surf) {
     if(LBTYPE != LBMethodType::D2Q9) {
       // Note: there is doubt in the current literature that this type of boundary condition make sense in 3D
       TERMM(-1, "Not implemented for this distribution!");
@@ -422,7 +422,6 @@ class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_
       m_wallV = config::required_config_value<NDIM>(properties, "velocity");
       logger << " NEBB with constant velocity" << std::endl;
     }
-    init();
   }
   ~LBMBnd_wallNEBB() override = default;
 
@@ -431,8 +430,6 @@ class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_
   LBMBnd_wallNEBB(LBMBnd_wallNEBB&&)      = delete;
   auto operator=(const LBMBnd_wallNEBB&) -> LBMBnd_wallNEBB& = delete;
   auto operator=(LBMBnd_wallNEBB&&) -> LBMBnd_wallNEBB& = delete;
-
-  void init() {}
 
   void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
@@ -445,8 +442,8 @@ class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_
   }
 
  private:
-  void apply_0(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-               const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
+  void apply_0(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>&   fold,
+               const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& vars) {
     // at wall set 0 velocity
     for(const auto cellId : m_bnd->getCellList()) {
       for(GInt dir = 0; dir < NDIM; ++dir) {
@@ -495,8 +492,8 @@ class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_
     ++index;
   }
 
-  void apply_constV(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
-                    const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
+  void apply_constV(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>&   fold,
+                    const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& vars) {
     GInt index = 0;
     for(const auto cellId : m_bnd->getCellList()) {
       calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, false>(cellId, this->limitedDist()[index], this->limitedConst()[index],
