@@ -14,6 +14,38 @@ fi
 DEFAULT_OMP_THREADS=4
 LOG_PATH="run_log_"$(date +%s)
 
+write_report() {
+  touch "$LOG_PATH"/report.csv.txt
+  echo "testcase, passed?, time" >>"$LOG_PATH"/report.csv.txt
+}
+
+time_test() {
+  exec 3>&1 4>&2
+  #  time_result=$({ time run_test "$1" 1>&3 2>&4; } 2>&1)
+  time_result=$({ time run_test "$1" 1>&3 2>&4; } 2>&1)
+  exec 3>&- 4>&-
+
+  #only get user time
+  usertime=$(echo -n "$time_result" | grep user)
+
+  #only get numerical value by delimiting the space
+  usertime=$(echo $usertime | cut -d' ' -f2)
+
+  #replace , with .
+  usertime=$(echo $usertime | tr , .)
+
+  if [ -f ../"$LOG_PATH"/SUCCESS ]; then
+    echo "$1" ", passed," "$usertime" >>../"$LOG_PATH"/report.csv.txt
+    SUCCESS=$((SUCCESS + 1))
+    rm ../"$LOG_PATH"/SUCCESS
+  fi
+  if [ -f ../"$LOG_PATH"/FAILED ]; then
+    echo "$1" ", failed," "$usertime" >>../"$LOG_PATH"/report.csv.txt
+    FAILED=$((FAILED + 1))
+    rm ../"$LOG_PATH"/FAILED
+  fi
+}
+
 run_test() {
   NAME="$(cut -d'.' -f1 <<<"$1")"
 
@@ -21,10 +53,10 @@ run_test() {
 
   if OMP_NUM_THREADS=$DEFAULT_OMP_THREADS $BINPATH "$1" &>"$NAME".stdout; then
     echo "passed"
-    SUCCESS=$((SUCCESS + 1))
+    touch ../"$LOG_PATH"/SUCCESS
   else
     echo "FAILED"
-    FAILED=$((FAILED + 1))
+    touch ../"$LOG_PATH"/FAILED
   fi
 
   if [ -f "lbm_log" ]; then
@@ -39,31 +71,32 @@ run_test() {
   cp "$NAME".stdout ../"$LOG_PATH"/"$NAME".stdout.txt
 }
 
-mkdir "$LOG_PATH"
-
 ./clean.sh
+mkdir "$LOG_PATH"
+write_report
+
 cd couette || exit
-run_test couette.json
-run_test couette_bnd.json
-run_test couette_bnd_eq.json
-run_test couette_bnd_eq2.json
-run_test couette_bnd_NEEM.json
-run_test couette_bnd_NEBB.json
+time_test couette.json
+time_test couette_bnd.json
+time_test couette_bnd_eq.json
+time_test couette_bnd_eq2.json
+time_test couette_bnd_NEEM.json
+time_test couette_bnd_NEBB.json
 cd ..
 
 cd poiseuille || exit
-run_test poiseuille.json
-run_test poiseuille_bnd.json
+time_test poiseuille.json
+time_test poiseuille_bnd.json
 cd ..
 
 cd poisson || exit
-run_test poisson1D.json
-run_test poisson2D.json
+time_test poisson1D.json
+time_test poisson2D.json
 cd ..
 
 cd lpt || exit
-run_test falling.json
-run_test falling3d.json
+time_test falling.json
+time_test falling3d.json
 cd ..
 
 ./clean.sh

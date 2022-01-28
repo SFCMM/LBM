@@ -36,6 +36,7 @@
 - mpi communication methods
 - [LBM] calculate total energy/internal energy for output purposes (also output pressure and temperature)
 - compare timings between runs of the testing tool
+- port testing tool over to python
 
 # V0.0.2
 
@@ -100,7 +101,6 @@
 
 - [LBM] inflow pressure bc
 - [LBM] outflow pressure bc
-- [LBM] automatically run all the testcases and produce report
 
 - [LPT] add additional analytical solutions
 - [LPT] add documentation
@@ -139,6 +139,7 @@
 ### Testing
 
 - check for divergence when debug is active
+- write test report in CSV
 
 ### Usability
 
