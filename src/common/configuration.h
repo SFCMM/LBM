@@ -269,12 +269,17 @@ class Configuration {
 
   /// Print out a list of unused configuration values
   void unusedConfigValues() {
-    GInt noUnusedConfigValues = 0;
+    GBool none                 = true;
+    GInt  noUnusedConfigValues = 0;
     logger << "The following values in the configuration file are unused: \n";
     for(const auto& configKey : m_unusedKeys) {
       if(!configKey.second) {
         logger << "[" << ++noUnusedConfigValues << "] " << configKey.first << "\n";
+        none = false;
       }
+    }
+    if(none) {
+      logger << "None \n";
     }
     logger << std::endl;
   }
