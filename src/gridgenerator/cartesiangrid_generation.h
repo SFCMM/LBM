@@ -1,5 +1,6 @@
 #ifndef GRIDGENERATOR_CARTESIANGRID_GENERATION_H
 #define GRIDGENERATOR_CARTESIANGRID_GENERATION_H
+#include <sfcmm_common.h>
 #include "cartesiangrid_base.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
@@ -20,6 +21,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::empty;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::size;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::capacity;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::boundingBox;
 
   using PropertyBitsetType = grid::cell::BitsetType;
   using ChildListType      = std::array<GInt, cartesian::maxNoChildren<NDIM>()>;
@@ -272,6 +274,39 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       VTK::BINARY::writePoints<NDIM>(fileName, size(), center(), index, values, outputFilter);
     } else {
       TERMM(-1, "Unknown output format " + format);
+    }
+  }
+
+  /// Move the leaf nodes to the surface of the geometry.
+  void transformMaxRfnmtLvlToExtent() {
+    BoundingBoxCT<NDIM> actualExtent;
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      actualExtent.min(dir) = std::numeric_limits<GDouble>::max();
+      actualExtent.max(dir) = std::numeric_limits<GDouble>::min();
+    }
+
+    for(GInt cellId = m_levelOffsets[maxLvl()].begin; cellId < m_levelOffsets[maxLvl()].end; ++cellId) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        if(actualExtent.min(dir) > center(cellId, dir)) {
+          actualExtent.min(dir) = center(cellId, dir);
+        }
+        if(actualExtent.max(dir) < center(cellId, dir)) {
+          actualExtent.max(dir) = center(cellId, dir);
+        }
+      }
+    }
+
+    cerr0 << "actual nodal extent: " << actualExtent.str() << std::endl;
+    std::array<GDouble, NDIM> transformationValues;
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      transformationValues[dir] = boundingBox().max(dir) / (actualExtent.max(dir) - actualExtent.min(dir));
+    }
+
+    for(GInt cellId = m_levelOffsets[maxLvl()].begin; cellId < m_levelOffsets[maxLvl()].end; ++cellId) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        center(cellId, dir) =
+            center(cellId, dir) * transformationValues[dir] - (transformationValues[dir] * actualExtent.max(dir) - boundingBox().max(dir));
+      }
     }
   }
 

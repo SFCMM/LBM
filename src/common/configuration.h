@@ -87,7 +87,7 @@ class Configuration {
   /// \param key Key of the value
   /// \return Configuration value if it exist or exit
   template <typename T>
-  auto required_config_value(const GString& key) -> T {
+  [[nodiscard]] auto required_config_value(const GString& key) -> T {
     // todo: check for types
     if(m_config.template contains(key)) {
       m_unusedKeys[key] = true;
@@ -101,7 +101,7 @@ class Configuration {
   /// \param key Key of the value
   /// \return Configuration value if it exist or exit
   template <typename T>
-  auto required_config_value(const GString& key) const -> T {
+  [[nodiscard]] auto required_config_value(const GString& key) const -> T {
     // todo: check for types
     if(m_config.template contains(key)) {
       return static_cast<T>(m_config[key]);
@@ -114,7 +114,7 @@ class Configuration {
   /// \param key Key of the value
   /// \return Configuration value if it exist or exit
   template <GInt NDIM>
-  auto required_config_value(const GString& key) -> Point<NDIM> {
+  [[nodiscard]] auto required_config_value(const GString& key) -> Point<NDIM> {
     // todo: check for types
     if(m_config.template contains(key)) {
       m_unusedKeys[key] = true;
@@ -132,7 +132,7 @@ class Configuration {
   /// \param parentObj Parent object path
   /// \return Configuration value if it exist or exit
   template <typename T>
-  auto required_config_value(const std::vector<GString>& parentObjPath, const GString& key) -> T {
+  [[nodiscard]] auto required_config_value(const std::vector<GString>& parentObjPath, const GString& key) -> T {
     // todo: check for types
     json conf = m_config;
     for(const auto& parentKey : parentObjPath) {
@@ -152,7 +152,7 @@ class Configuration {
   /// \param defaultValue Default value
   /// \return Configuration value if it exists or the given default
   template <typename T>
-  auto opt_config_value(const GString& key, const T& defaultValue) -> T {
+  [[nodiscard]] auto opt_config_value(const GString& key, const T& defaultValue) -> T {
     // todo: check for types
     if(m_config.template contains(key)) {
       m_unusedKeys[key] = true;

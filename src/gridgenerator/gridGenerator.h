@@ -70,6 +70,7 @@ class GridGenerator : public Runnable, private Configuration {
   GInt                               m_maxRefinementLvl     = -1;
   GBool                              m_dryRun               = false;
   GBool                              m_benchmark            = false;
+  GBool                              m_alignWithSurface     = false;
   GString                            m_outputDir            = "out";
   GString                            m_outGridFilename      = "grid";
   std::unique_ptr<WeightMethod>      m_weightMethod;
