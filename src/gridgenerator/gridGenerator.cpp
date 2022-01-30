@@ -139,8 +139,7 @@ void GridGenerator<DEBUG_LEVEL>::loadConfiguration() {
 
   // align the leaf nodes with the surface (only works with analytical geometries)
   m_alignWithSurface = false;
-  m_alignWithSurface = required_config_value<GBool>("alignNodesWithSurface");
-  cerr0 << "m_alignSurface " << m_alignWithSurface << std::endl;
+  m_alignWithSurface = opt_config_value("alignNodesWithSurface", m_alignWithSurface);
 
   RECORD_TIMER_STOP(TimeKeeper[Timers::IO]);
   RECORD_TIMER_STOP(TimeKeeper[Timers::GridIo]);
