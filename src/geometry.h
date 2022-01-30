@@ -7,9 +7,9 @@
 #include <utility>
 #include <vector>
 #include <sfcmm_common.h>
-#include "common/configuration.h"
 #include "common/kdtree.h"
 #include "common/triangle.h"
+#include "common/configuration.h"
 #include "functions.h"
 
 
@@ -223,18 +223,18 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
       m_kd.retrieveNodes(targetRegion, nodeList);
       if(DEBUG_LEVEL > Debug_Level::debug) {
         if(!nodeList.empty()) {
-          cerr0 << "possible nodes " << strStreamify(nodeList).str() << std::endl;
+          logger << "possible nodes " << strStreamify(nodeList).str() << std::endl;
         } else {
-          cerr0 << "no nodes!" << std::endl;
+          logger << "no nodes!" << std::endl;
         }
       }
       removeNonOverlappingNodes(targetRegion, nodeList);
 
       if(DEBUG_LEVEL > Debug_Level::debug) {
         if(!nodeList.empty()) {
-          cerr0 << "possible nodes after non-overlapping removal " << strStreamify(nodeList).str() << std::endl;
+          logger << "possible nodes after non-overlapping removal " << strStreamify(nodeList).str() << std::endl;
         } else {
-          cerr0 << "no nodes left after non-overlapping removal!" << std::endl;
+          logger << "no nodes left after non-overlapping removal!" << std::endl;
         }
       }
 
