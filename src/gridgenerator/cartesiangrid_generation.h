@@ -22,6 +22,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::size;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::capacity;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::boundingBox;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::transformMaxLvl;
 
   using PropertyBitsetType = grid::cell::BitsetType;
   using ChildListType      = std::array<GInt, cartesian::maxNoChildren<NDIM>()>;
@@ -297,17 +298,24 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
 
     cerr0 << "actual nodal extent: " << actualExtent.str() << std::endl;
-    std::array<GDouble, NDIM> transformationValues;
-    for(GInt dir = 0; dir < NDIM; ++dir) {
-      transformationValues[dir] = boundingBox().max(dir) / (actualExtent.max(dir) - actualExtent.min(dir));
-    }
+    GInt    alignDir            = 1;
+    GDouble transformationValue = boundingBox().max(alignDir) / (actualExtent.max(alignDir) - actualExtent.min(alignDir));
+
 
     for(GInt cellId = m_levelOffsets[maxLvl()].begin; cellId < m_levelOffsets[maxLvl()].end; ++cellId) {
       for(GInt dir = 0; dir < NDIM; ++dir) {
-        center(cellId, dir) =
-            center(cellId, dir) * transformationValues[dir] - (transformationValues[dir] * actualExtent.max(dir) - boundingBox().max(dir));
+        if(dir == alignDir) {
+          center(cellId, dir) =
+              center(cellId, dir) * transformationValue - (transformationValue * actualExtent.max(dir) - boundingBox().max(dir));
+        } else {
+          center(cellId, dir) = center(cellId, dir) * transformationValue;
+        }
       }
     }
+    transformMaxLvl(transformationValue);
+
+    // afterwards there are cells which will be outside
+    deleteOutsideCells<true>(maxLvl());
   }
 
   static constexpr auto memorySizePerCell() -> GInt {
@@ -512,8 +520,9 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
   }
 
+  template <GBool CHECKALL = false>
   void deleteOutsideCells(const GInt _level) {
-    markOutsideCells(m_levelOffsets, _level);
+    markOutsideCells<CHECKALL>(m_levelOffsets, _level);
 
     // delete cells that have been marked as being outside
     for(GInt cellId = m_levelOffsets[_level].end - 1; cellId >= m_levelOffsets[_level].begin; --cellId) {
@@ -523,11 +532,15 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       // remove cell since it is not inside
       if(!property(cellId, CellProperties::inside)) {
         const GInt parentId = parent(cellId);
-        ASSERT(parentId != INVALID_CELLID, "Invalid parentId! (cellId: " + std::to_string(cellId) + ")");
 
-        // remove from parent
-        updateParent(parent(cellId), cellId, INVALID_CELLID);
-        --m_noChildren[parentId];
+        // partitionlvl doesn't have parents
+        if(_level != partitionLvl()) {
+          ASSERT(parentId != INVALID_CELLID, "Invalid parentId! (cellId: " + std::to_string(cellId) + ")");
+
+          // remove from parent
+          updateParent(parent(cellId), cellId, INVALID_CELLID);
+          --m_noChildren[parentId];
+        }
 
         // remove from neighbors
         for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
@@ -548,20 +561,30 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     std::cout << SP3 << "* grid has " << size() << " cells" << std::endl;
   }
 
+  template <GBool CHECKALL = false>
   void markOutsideCells(const std::vector<LevelOffsetType>& levelOffset, const GInt _level) {
-    for(GInt cellId = levelOffset[_level].begin; cellId < levelOffset[_level].end; ++cellId) {
-      property(cellId, CellProperties::marked) = false;
-    }
-
-    for(GInt cellId = levelOffset[_level].begin; cellId < levelOffset[_level].end; ++cellId) {
-      if(property(cellId, CellProperties::marked)) {
-        continue;
+    if(CHECKALL) {
+      for(GInt cellId = levelOffset[_level].begin; cellId < levelOffset[_level].end; ++cellId) {
+        const GBool isBndryCell                  = cellHasCut(cellId);
+        property(cellId, CellProperties::bndry)  = isBndryCell;
+        property(cellId, CellProperties::inside) = isBndryCell || pointIsInside(center(cellId));
       }
-      property(cellId, CellProperties::marked) = true;
-      const GBool isBndryCell                  = property(cellId, CellProperties::bndry);
-      property(cellId, CellProperties::inside) = isBndryCell || pointIsInside(center(cellId));
-      if(!isBndryCell) {
-        floodCells(cellId);
+    } else {
+      // reset marked property
+      for(GInt cellId = levelOffset[_level].begin; cellId < levelOffset[_level].end; ++cellId) {
+        property(cellId, CellProperties::marked) = false;
+      }
+
+      for(GInt cellId = levelOffset[_level].begin; cellId < levelOffset[_level].end; ++cellId) {
+        if(property(cellId, CellProperties::marked)) {
+          continue;
+        }
+        property(cellId, CellProperties::marked) = true;
+        const GBool isBndryCell                  = property(cellId, CellProperties::bndry);
+        property(cellId, CellProperties::inside) = isBndryCell || pointIsInside(center(cellId));
+        if(!isBndryCell) {
+          floodCells(cellId);
+        }
       }
     }
   }

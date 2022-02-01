@@ -86,8 +86,7 @@
 - adjust settings for poisson D2Q9
 - run basic 2D NS sphere case
 - run basic 2D NS obstruction case
-- fix poiseuille_bnd_eq and poiseuille_eq by allowing alignment of the mesh nodes with the wall in the gridgenerator and
-  setting the forcing delta p
+- allow poiseuille_bnd_eq and poiseuille_eq setting the forcing delta p
 
 - [LPT] terminal velocity test
 - [LPT] finish for release
@@ -140,6 +139,7 @@
 
 - check for divergence when debug is active
 - write test report in CSV
+- for analytical testcases allow alignment with the boundary
 
 ### Usability
 

@@ -52,13 +52,14 @@ class LBMBndManager : private Configuration {
         // todo: convert to switch
         if(bndType == "periodic") {
           const auto surfConnected = bndrySurface(config::required_config_value<GString>(surfBndConfig, "connection"));
+          ASSERT(surfConnected.size() > 0, "Invalid surface");
           bndrySrf.emplace_back(&surfConnected);
           logger << " with periodic conditions" << std::endl;
           addBndry(BndryType::Periodic, surfBndConfig, bndrySrf);
           continue;
         }
         if(bndType == "wall") {
-          const GString model = config::required_config_value<GString>(surfBndConfig, "model");
+          const auto model = config::required_config_value<GString>(surfBndConfig, "model");
           if(model == "bounceback") {
             const GDouble tangentialV = config::opt_config_value(surfBndConfig, "tangentialVelocity", 0.0);
             if(std::abs(tangentialV) > GDoubleEps) {
@@ -156,6 +157,7 @@ class LBMBndManager : private Configuration {
           TERMM(-1, "Broken");
           //          break;
         case BndryType::Periodic:
+          ASSERT(surf[1]->size() > 0, "Invalid connected surface");
           m_bndrys.emplace_back(std::make_unique<LBMBnd_Periodic<DEBUG_LEVEL, LBTYPE>>(surf[0], surf[1], properties));
           break;
         case BndryType::Dirichlet_NEEM:

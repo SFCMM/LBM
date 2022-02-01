@@ -96,8 +96,10 @@ class Surface : public SurfaceInterface {
     return m_nghbrIds.at(cellId)[dir];
   }
 
+  // todo: probably not needed
   void setBndryGhostCells() { m_hasBndryGhosts = true; }
 
+  // todo: probably not needed
   [[nodiscard]] auto hasBndryGhostCells() const -> GBool { return m_hasBndryGhosts; }
 
  private:

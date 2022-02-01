@@ -62,7 +62,7 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
 
     // todo: this needs to be moved since we cannot guarantee double matching cells are handled correctly
     for(GInt id = 0; id < m_noSetDists; ++id) {
-      m_linkedCell[id]   = -1;
+      m_linkedCell[id]   = INVALID_CELLID;
       const GInt dist    = m_bndIndex[id];
       auto       centerA = center;
       for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
@@ -78,17 +78,41 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
         const auto& centerB = surfConnected->center(cellIdB);
         for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
           const GDouble diff = std::abs(centerA[dir] - centerB[dir]);
-          if(diff <= GDoubleEps) {
+          if(diff <= 10 * GDoubleEps) {
             m_linkedCell[id] = cellIdB;
             break;
           }
         }
-        if(m_linkedCell[id] >= 0) {
+        if(m_linkedCell[id] != INVALID_CELLID) {
           break;
         }
       }
 
-      ASSERT(m_linkedCell[id] >= 0, "Invalid Cellid");
+      if(m_linkedCell[id] == INVALID_CELLID && DEBUG_LEVEL == Debug_Level::max_debug) {
+        GDouble min       = std::numeric_limits<GDouble>::max();
+        GInt    minCellId = INVALID_CELLID;
+        ASSERT(!surfConnected->getCellList().empty(), "Surface is empty!");
+        for(const GInt cellIdB : surfConnected->getCellList()) {
+          const auto& centerB = surfConnected->center(cellIdB);
+          for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
+            const GDouble diff = std::abs(centerA[dir] - centerB[dir]);
+            if(diff < min) {
+              min       = diff;
+              minCellId = cellIdB;
+            } else if(minCellId == INVALID_CELLID) {
+              cerr0 << cellIdB << std::endl;
+            }
+          }
+        }
+        cerr0 << "Only found a matching cell to: " << min << " with cellId: " << minCellId << std::endl;
+        cerr0 << "For the location: " << strStreamify<NDIM>(centerA).str() << " with the matching cell center "
+              << strStreamify<NDIM>(surfConnected->center(minCellId)).str() << std::endl;
+        cerr0 << "The orientation was " << dist << std::endl;
+        cerr0 << "CellLength " << cellLength << std::endl;
+      }
+
+      ASSERT(m_linkedCell[id] != INVALID_CELLID,
+             "No cell to link has been found for: " + std::to_string(mapped()) + " at: " + strStreamify<NDIM>(centerA).str());
     }
 
     for(GInt idA = 0; idA < m_noSetDists; ++idA) {
@@ -150,6 +174,8 @@ class LBMBnd_Periodic : public LBMBndInterface {
  public:
   LBMBnd_Periodic(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected,
                   const json& properties) {
+    ASSERT(surfConnected->size() > 0, "Invalid connected surface");
+
     for(const GInt cellId : surf->getCellList()) {
       m_bndCells.emplace_back(cellId, surf->normal(cellId));
     }

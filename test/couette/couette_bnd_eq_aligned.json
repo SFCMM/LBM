@@ -1,0 +1,87 @@
+{
+  "dry-run": true,
+  "dim": 2,
+  "partitionLevel": 5,
+  "uniformLevel": 5,
+  "maxRfnmtLvl": 5,
+  "maxNoCells": 1000000,
+  "outputDir": "out",
+  "gridFileName": "gridD",
+  "alignNodesWithSurface": true,
+  "gridOutput": {
+    "format": "VTKB",
+    "cellFilter": "leafCells",
+    "type": "points",
+    "outputValues": [
+      "level",
+      "noChildren"
+    ]
+  },
+  "geometry": {
+    "cube": {
+      "type": "box",
+      "A": [
+        0.0,
+        0.0
+      ],
+      "B": [
+        3.0,
+        5.0
+      ]
+    }
+  },
+  "solver": {
+    "type": "lbm",
+    "method": "bgk",
+    "relaxation": 1.0,
+    "ma": 0.01,
+    "maxSteps": 20000,
+    "info_interval": 100,
+    "solution_interval": 500,
+    "convergence": 5E-13,
+    "analyticalSolution": "couette2D_1_5",
+    "errorL2": 1E-13,
+    "errorMax": 6.31E-13,
+    "assumeAxisAligned": true,
+    "boundary": {
+      "cube": {
+        "+x": {
+          "type": "periodic",
+          "generateBndry": true,
+          "connection": "-x"
+        },
+        "-x": {
+          "type": "periodic",
+          "generateBndry": true,
+          "connection": "+x"
+        },
+        "+y": {
+          "type": "wall",
+          "model": "equilibrium",
+          "velocity": [
+            0.1,
+            0
+          ]
+        },
+        "-y": {
+          "type": "wall",
+          "model": "equilibrium"
+        }
+      }
+    },
+    "postprocessing": {
+      "line1": {
+        "type": "line",
+        "execute": "atEnd",
+        "A": [
+          1.501,
+          0.0
+        ],
+        "B": [
+          1.501,
+          6.0
+        ]
+      }
+    }
+  }
+}

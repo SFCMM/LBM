@@ -144,6 +144,7 @@ class BaseCartesianGrid : public GridInterface {
   [[nodiscard]] inline auto partitionLvl() const -> GInt override { return m_partitioningLvl; };
   inline auto               partitionLvl() -> GInt& override { return m_partitioningLvl; }
   [[nodiscard]] inline auto maxLvl() const -> GInt override { return m_maxLvl; };
+
   [[nodiscard]] inline auto lengthOnLvl(const GInt lvl) const -> GDouble override {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       return m_lengthOnLevel.at(lvl);
@@ -152,6 +153,7 @@ class BaseCartesianGrid : public GridInterface {
   };
   [[nodiscard]] inline auto lengthOnLvl(const std::byte lvl) const -> GDouble override { return lengthOnLvl(static_cast<GInt>(lvl)); };
   [[nodiscard]] inline auto lengthOnLvl() const -> const auto& { return m_lengthOnLevel; };
+  inline auto               transformMaxLvl(const GDouble transformationValue) { m_lengthOnLevel[maxLvl()] *= transformationValue; }
 
   [[nodiscard]] inline auto cellLength(const GInt cellId) const -> GDouble override {
     const GInt lvl = static_cast<GInt>(level(cellId));

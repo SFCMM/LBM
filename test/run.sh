@@ -82,6 +82,7 @@ time_test couette_bnd_eq.json
 time_test couette_bnd_eq2.json
 time_test couette_bnd_NEEM.json
 time_test couette_bnd_NEBB.json
+time_test couette_bnd_eq_aligned.json
 cd ..
 
 cd poiseuille || exit

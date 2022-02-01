@@ -46,6 +46,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMaxLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::boundingBox;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setBoundingBox;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::maxLvl;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::transformMaxLvl;
 
   CartesianGrid()                     = default;
   ~CartesianGrid() override           = default;
@@ -265,6 +267,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     partitionLvl()      = grid.partitionLvl();
     setMaxLvl(grid.maxLvl());
     setBoundingBox(grid.boundingBox());
+    transformMaxLvl(grid.lengthOnLvl(maxLvl()) / lengthOnLvl(maxLvl()));
 
 #ifdef _OPENMP
 #pragma omp parallel default(none) shared(grid)
@@ -546,9 +549,9 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     if(m_axisAlignedBnd) {
       for(GInt surfId = 0; surfId < cartesian::maxNoNghbrs<NDIM>(); ++surfId) {
         m_bndrySurfaces.insert({static_cast<GString>(DirIdString[surfId]), Surface<DEBUG_LEVEL, NDIM>(this->getCartesianGridData())});
-        GString modelName =
-            config::opt_config_value<GString>(bndryConfig["cube"][static_cast<GString>(DirIdString[surfId])], "model", "none");
+        auto modelName = config::opt_config_value<GString>(bndryConfig["cube"][static_cast<GString>(DirIdString[surfId])], "model", "none");
         if(modelName == "equilibrium") {
+          // todo: probably not needed
           m_bndrySurfaces.at(static_cast<GString>(DirIdString[surfId])).setBndryGhostCells();
         }
       }
@@ -560,6 +563,13 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
               m_bndrySurfaces.at(static_cast<GString>(DirIdString[dir])).addCell(cellId, dir);
             }
           }
+        }
+      }
+      if(DEBUG_LEVEL == Debug_Level::max_debug) {
+        cerr0 << "Total number boundary cells: " << m_noBndCells << std::endl;
+        cerr0 << "created surfaces with:" << std::endl;
+        for(const auto& [name, bndry] : m_bndrySurfaces) {
+          cerr0 << "name: " << name << " cells: " << bndry.size() << std::endl;
         }
       }
     } else {
