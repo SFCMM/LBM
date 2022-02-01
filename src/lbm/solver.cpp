@@ -373,7 +373,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
   const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");
   GDouble    dp                     = 0;
   if(analyticalSolutionName == "poiseuille2D_1") {
-    dp = 0.0000008;
+    dp = required_config_value<GDouble>("poiseuillePressureGradient");
   }
   const analytical::SolutionConfig conf = {m_nu, dp};
   // from the analyticalSolutionName we can get a functional representation of the solution
@@ -608,9 +608,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::forcing() {
     //    const GDouble gradP = 0.00011276015; //gradP=8*nu*u_max/(NY)^2;
     const GDouble outletPressure = 1.0;
     //    const GDouble inletPressure  = 1.010487; //rho_inlet=3*(NX-1)*gradP+outletPressure;
-    //    const GDouble inletPressure = 1.01102192453;
-    // todo: make settable
-    const GDouble inletPressure = outletPressure + 0.0000008;
+    const GDouble inletPressure = outletPressure + required_config_value<GDouble>("poiseuillePressureGradient");
 
 
     // set Outlet forcing

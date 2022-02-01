@@ -7,6 +7,7 @@
   "maxNoCells": 1000000,
   "outputDir": "out",
   "gridFileName": "gridD",
+  "alignNodesWithSurface": true,
   "gridOutput": {
     "format": "VTKB",
     "cellFilter": "leafCells",
@@ -31,19 +32,18 @@
   },
   "solver": {
     "type": "lbm",
-    "reynoldsnumber": 0.1,
+    "relaxation": 1,
     "ma": 0.0001,
     "analyticalSolution": "poiseuille2D_1",
-    "poiseuillePressureGradient": 0.0000008,
+    "poiseuillePressureGradient": "1.000133328",
     "analyticalSolutionExcludeSurface": [
       "+x",
       "-x"
     ],
-    "forcing": "poiseuille2D_1",
-    "maxSteps": 34250,
+    "maxSteps": 75000,
     "info_interval": 100,
     "solution_interval": 10000,
-    "convergence": 2E-11,
+    "convergence": 1E-14,
     "errorL2": 3.3E-5,
     "errorMax": 1.3E-7,
     "assumeAxisAligned": true,
@@ -51,21 +51,23 @@
       "cube": {
         "+x": {
           "type": "periodic",
-          "generateBndry": false,
-          "connection": "-x"
+          "generateBndry": true,
+          "connection": "-x",
+          "pressure": 0.000133328
         },
         "-x": {
           "type": "periodic",
-          "generateBndry": false,
-          "connection": "+x"
+          "generateBndry": true,
+          "connection": "+x",
+          "pressure": 1.0
         },
         "-y": {
           "type": "wall",
-          "model": "bounceback"
+          "model": "neem"
         },
         "+y": {
           "type": "wall",
-          "model": "bounceback"
+          "model": "neem"
         }
       }
     },

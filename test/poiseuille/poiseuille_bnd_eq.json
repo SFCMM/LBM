@@ -7,6 +7,7 @@
   "maxNoCells": 1000000,
   "outputDir": "out",
   "gridFileName": "gridD",
+  "alignNodesWithSurface": true,
   "gridOutput": {
     "format": "VTKB",
     "cellFilter": "leafCells",
@@ -34,6 +35,7 @@
     "relaxation": 1,
     "ma": 0.0001,
     "analyticalSolution": "poiseuille2D_1",
+    "poiseuillePressureGradient": 0.000133328,
     "analyticalSolutionExcludeSurface": [
       "+x",
       "-x"
@@ -41,7 +43,7 @@
     "maxSteps": 75000,
     "info_interval": 100,
     "solution_interval": 10000,
-    "convergence": 2E-11,
+    "convergence": 1E-14,
     "errorL2": 3.3E-5,
     "errorMax": 1.3E-7,
     "assumeAxisAligned": true,
@@ -61,19 +63,11 @@
         },
         "-y": {
           "type": "wall",
-          "model": "equilibrium",
-          "velocity": [
-            0.00000615234375,
-            0
-          ]
+          "model": "equilibrium"
         },
         "+y": {
           "type": "wall",
-          "model": "equilibrium",
-          "velocity": [
-            0.00000615234375,
-            0
-          ]
+          "model": "equilibrium"
         }
       }
     },

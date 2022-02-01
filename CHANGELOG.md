@@ -86,7 +86,6 @@
 - adjust settings for poisson D2Q9
 - run basic 2D NS sphere case
 - run basic 2D NS obstruction case
-- allow poiseuille_bnd_eq and poiseuille_eq setting the forcing delta p
 
 - [LPT] terminal velocity test
 - [LPT] finish for release
@@ -95,6 +94,9 @@
 - [LIB] move line to common lib project.
 
 - [DOC] add documentation for the testcases
+
+- [BUG] NEEM with poiseuille diverges
+- [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution?
 
 ### next week:
 
