@@ -13,8 +13,11 @@ static constexpr int MAX_DIM = 4;
 #include "common/log.h"
 #include "common/macros.h"
 #include "common/randxor.h"
+#include "common/random_special.h"
 #include "common/sfcmm_types.h"
 #include "common/timer.h"
+
+#include "common/geometry/circle.h"
 
 #include "common/util/backtrace.h"
 #include "common/util/base64.h"

@@ -79,4 +79,10 @@ template <class T>
   return num % 2 == 0;
 }
 
+/// Convert degrees to radians.
+/// \param degrees Angle in degrees
+/// \return Angle in Radians
+[[nodiscard]] static constexpr inline auto toRadians(const GDouble degrees) { return degrees / 180.0 * M_PI; }
+
+
 #endif // SFCMM_MATHFUNCTIONS_H
