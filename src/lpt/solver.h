@@ -10,15 +10,6 @@
 #include "interface/solver_interface.h"
 #include "particle.h"
 
-enum class IntegrationMethod {
-  ForwardEuler,
-  ForwardEulerPredCor, // s.a. + Predictor-Corrector Step
-  ImplicitEuler,       // for high relative velocities (Note: underpredicts actual velocity)
-  Berger20, // Implicit First-order Exponential Integrator Method as in Sven Berger et al., Large-Eddy Simulation Study of Biofuel Injection
-            // in an Optical Direct Injection Engine (Note: stable and more accurate for high-relative velocities)
-  Berger20PredCor // s.a. + Predictor-Corrector Step
-};
-
 /// Solver for Lagrange particles
 /// Memory consumption 1MB = ~10000 Particles (Normal), ~5000 Particles (Evaporation, High Accuracy)
 /// \tparam DEBUG_LEVEL
@@ -67,6 +58,10 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   void calcA();
   template <IntegrationMethod IM>
   void timeIntegration();
+  void generateNewParticles();
+
+  void injection();
+  void generateConst();
 
   void compareToAnalyticalResult();
   void output(const GBool forced, const GString& postfix = "");
@@ -132,6 +127,7 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   GInt                                                  m_capacity         = default_number_particles_capacity;
   GInt                                                  m_maxNoSteps       = {};
   LPTInitCond                                           m_initialCondition = LPTInitCond::none;
+  GenerationMethod                                      m_generationMethod = GenerationMethod::none;
   std::function<void(LPTSolver<DEBUG_LEVEL, NDIM, P>*)> m_timeIntegration;
   std::function<void(LPTSolver<DEBUG_LEVEL, NDIM, P>*)> m_calcA;
 
@@ -153,6 +149,7 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   GInt                 m_noParticles = 0;
   GDouble              m_dt          = NAN;
 
+  /// Initial Conditions
   VectorD<NDIM> m_init_v;
 
   // ambient condition
@@ -160,6 +157,8 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   GDouble       m_rho_a_infty = 1.205;   // air density at 20C [kg/m^3]
   GDouble       m_nu_a_infty  = 1.82E-5; // air viscosity at 20C [Pa s]
   VectorD<NDIM> m_velo_a_infty;
+
+  // generation conditions
 };
 
 

@@ -190,6 +190,8 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityRatioGravBuoStokesDrag, IntegrationMethod::ImplicitEuler>;
 
   for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
+    // 1. particle generation step
+    generateNewParticles();
     // 1. Step update acceleration
     m_calcA(this);
     // 2. Integrate to update velocity, position
@@ -334,6 +336,28 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeIntegration() {
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::LPTInt]);
 }
+
+template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::generateNewParticles() {
+  if(m_generationMethod != GenerationMethod::None) {
+    switch(m_generationMethod) {
+      case GenerationMethod::ConstantRate:
+        generateConst();
+        break;
+      case GenerationMethod::InjectionModel:
+        injection();
+        break;
+      default:
+        TERMM(-1, "Invalid generation method selected.");
+    }
+  }
+}
+
+template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::generateConst() {}
+
+template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::injection() {}
 
 // todo: allow choice of output variables
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
