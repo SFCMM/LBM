@@ -192,9 +192,9 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
     // 1. particle generation step
     generateNewParticles();
-    // 1. Step update acceleration
+    // 2. Step update acceleration
     m_calcA(this);
-    // 2. Integrate to update velocity, position
+    // 3. Integrate to update velocity, position
     m_timeIntegration(this);
     m_currentTime += m_dt;
   }
