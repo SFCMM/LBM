@@ -85,6 +85,9 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::loadConfiguration() {
   m_dt         = required_config_value<GDouble>("dt");
   m_maxNoSteps = required_config_value<GInt>("maxSteps");
 
+  GString generationMethodName = "none";
+  m_generationMethod           = generationMethod(opt_config_value("generation_method", generationMethodName));
+
   if(!isPath(m_outputDir, m_generatePath)) {
     TERMM(-1, "Invalid output directory set! (value: " + m_outputDir + ")");
   }
@@ -92,6 +95,10 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::loadConfiguration() {
   if(m_outputDir.back() != '/') {
     m_outputDir += '/';
   }
+
+  cerr0 << "<<<<<<<<<<<<>>>>>>>>>>>>>" << std::endl;
+  cerr0 << "Generation method " << GenerationMethodName[static_cast<GInt>(m_generationMethod)] << std::endl;
+  cerr0 << "+++++++++++++++++++++++++" << std::endl;
 }
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
@@ -363,7 +370,9 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::generateConst() {}
 
 // todo: implement
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
-void LPTSolver<DEBUG_LEVEL, NDIM, P>::injection() {}
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::injection() {
+  cerr0 << "Injecting" << std::endl;
+}
 
 // todo: implement
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>

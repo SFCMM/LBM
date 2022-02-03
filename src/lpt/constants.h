@@ -8,17 +8,6 @@ enum class LPTType { Normal, High };
 
 enum class LPTInitCond { none, load_from_CSV, randomvol_pos, randomplane_pos };
 
-enum class IntegrationMethod {
-  ForwardEuler,
-  ForwardEulerPredCor, // s.a. + Predictor-Corrector Step
-  ImplicitEuler,       // for high relative velocities (Note: underpredicts actual velocity)
-  Berger20, // Implicit First-order Exponential Integrator Method as in Sven Berger et al., Large-Eddy Simulation Study of Biofuel Injection
-            // in an Optical Direct Injection Engine (Note: stable and more accurate for high-relative velocities)
-  Berger20PredCor // s.a. + Predictor-Corrector Step
-};
-
-enum class GenerationMethod { None, ConstantRate, InjectionModel };
-
 static constexpr std::array<std::string_view, 4> LPTInitCondName = {"none", "load_from_CSV", "randomvol_pos", "randomplane_pos"};
 
 static constexpr auto getLPTInitCond(const std::string_view condName) -> LPTInitCond {
@@ -35,5 +24,32 @@ static constexpr auto getLPTInitCond(const std::string_view condName) -> LPTInit
     return LPTInitCond::randomplane_pos;
   }
   TERMM(-1, "Invalid initial condition configuration!");
+}
+
+enum class IntegrationMethod {
+  ForwardEuler,
+  ForwardEulerPredCor, // s.a. + Predictor-Corrector Step
+  ImplicitEuler,       // for high relative velocities (Note: underpredicts actual velocity)
+  Berger20, // Implicit First-order Exponential Integrator Method as in Sven Berger et al., Large-Eddy Simulation Study of Biofuel Injection
+            // in an Optical Direct Injection Engine (Note: stable and more accurate for high-relative velocities)
+  Berger20PredCor // s.a. + Predictor-Corrector Step
+};
+
+enum class GenerationMethod { None, ConstantRate, InjectionModel };
+
+static constexpr std::array<std::string_view, 4> GenerationMethodName = {"none", "constant_rate", "injection"};
+
+static constexpr auto generationMethod(const std::string_view generationName) -> GenerationMethod {
+  if(generationName == "none") {
+    return GenerationMethod::None;
+  }
+  if(generationName == "constant_rate") {
+    return GenerationMethod::ConstantRate;
+  }
+  if(generationName == "injection") {
+    return GenerationMethod::InjectionModel;
+  }
+
+  TERMM(-1, "Invalid generation method configuration!");
 }
 #endif // LPT_CONSTANTS_H

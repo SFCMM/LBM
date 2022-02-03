@@ -1,0 +1,47 @@
+{
+  "dry-run": true,
+  "dim": 3,
+  "seed": 123456789,
+  "gravity": [
+    0,
+    0,
+    10
+  ],
+  "solver": {
+    "type": "lpt",
+    "capacity": 100,
+    "maxSteps": 100,
+    "dt": 0.01,
+    "gravity": [
+      0,
+      0,
+      10
+    ],
+    "analyticalSolution": "freefall_stokes",
+    "initialcondition": "randomvol_pos",
+    "randomvol_pos": {
+      "noparticles": 10,
+      "init_rho_p": 2,
+      "init_r_p": 0.01,
+      "init_velo": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "volume": {
+        "type": "box",
+        "A": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "B": [
+          1.0,
+          1.0,
+          0.1
+        ]
+      }
+    },
+    "generation_method": "injection"
+  }
+}

@@ -129,7 +129,7 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   GInt                                                  m_capacity         = default_number_particles_capacity;
   GInt                                                  m_maxNoSteps       = {};
   LPTInitCond                                           m_initialCondition = LPTInitCond::none;
-  GenerationMethod                                      m_generationMethod = GenerationMethod::none;
+  GenerationMethod                                      m_generationMethod = GenerationMethod::None;
   std::function<void(LPTSolver<DEBUG_LEVEL, NDIM, P>*)> m_timeIntegration;
   std::function<void(LPTSolver<DEBUG_LEVEL, NDIM, P>*)> m_calcA;
 
