@@ -196,6 +196,8 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
     m_calcA(this);
     // 3. Integrate to update velocity, position
     m_timeIntegration(this);
+    // 4. Delete invalid particles
+    deleteInvalidParticles();
     m_currentTime += m_dt;
   }
 
@@ -353,11 +355,21 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::generateNewParticles() {
   }
 }
 
+// todo: implement
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::generateConst() {}
 
+// todo: implement
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::injection() {}
+
+// todo: implement
+template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::deleteInvalidParticles() {
+  // 1. Mark particles for deletion which have left the computational domain
+
+  // 2. Delete particles which are marked for deletion
+}
 
 // todo: allow choice of output variables
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>

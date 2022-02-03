@@ -59,6 +59,7 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   template <IntegrationMethod IM>
   void timeIntegration();
   void generateNewParticles();
+  void deleteInvalidParticles();
 
   void injection();
   void generateConst();
