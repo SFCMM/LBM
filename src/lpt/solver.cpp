@@ -196,7 +196,9 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
     m_calcA(this);
     // 3. Integrate to update velocity, position
     m_timeIntegration(this);
-    // 4. Delete invalid particles
+    // 4. collision between geometry and particles
+    collision();
+    // 5. Delete invalid particles
     deleteInvalidParticles();
     m_currentTime += m_dt;
   }
@@ -362,6 +364,10 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::generateConst() {}
 // todo: implement
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::injection() {}
+
+// todo: implement
+template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::collision() {}
 
 // todo: implement
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>

@@ -106,6 +106,8 @@
 - [LPT] add additional analytical solutions
   - other time integration method
   - initial velocity
+- [LPT] add test case
+  - injection
 - [LPT] add documentation
 - [LPT] add tutorial
 - [LPT] add simple injection model

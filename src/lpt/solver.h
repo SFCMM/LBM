@@ -60,6 +60,7 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   void timeIntegration();
   void generateNewParticles();
   void deleteInvalidParticles();
+  void collision();
 
   void injection();
   void generateConst();
