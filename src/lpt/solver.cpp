@@ -184,12 +184,16 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
+  // todo: make settable
+  m_timeIntegration = &LPTSolver<DEBUG_LEVEL, NDIM, P>::timeIntegration<IntegrationMethod::ImplicitEuler>;
+  // todo: make settable
+  m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityRatioGravBuoStokesDrag, IntegrationMethod::ImplicitEuler>;
+
   for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
     // 1. Step update acceleration
-    // todo: make settable
-    calcA<force::Model::constDensityRatioGravBuoStokesDrag, IntegrationMethod::ImplicitEuler>();
-    // todo: make settable
-    timeIntegration<IntegrationMethod::ImplicitEuler>();
+    m_calcA(this);
+    // 2. Integrate to update velocity, position
+    m_timeIntegration(this);
     m_currentTime += m_dt;
   }
 

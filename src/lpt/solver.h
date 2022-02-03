@@ -126,12 +126,14 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
 
 
   /// Configuration
-  GString     m_exe;
-  GString     m_configurationFileName;
-  GBool       m_benchmark        = false;
-  GInt        m_capacity         = default_number_particles_capacity;
-  GInt        m_maxNoSteps       = {};
-  LPTInitCond m_initialCondition = LPTInitCond::none;
+  GString                                               m_exe;
+  GString                                               m_configurationFileName;
+  GBool                                                 m_benchmark        = false;
+  GInt                                                  m_capacity         = default_number_particles_capacity;
+  GInt                                                  m_maxNoSteps       = {};
+  LPTInitCond                                           m_initialCondition = LPTInitCond::none;
+  std::function<void(LPTSolver<DEBUG_LEVEL, NDIM, P>*)> m_timeIntegration;
+  std::function<void(LPTSolver<DEBUG_LEVEL, NDIM, P>*)> m_calcA;
 
   /// MPI
   GInt32 m_domainId  = -1;
