@@ -88,6 +88,11 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::loadConfiguration() {
   GString generationMethodName = "none";
   m_generationMethod           = generationMethod(opt_config_value("generation_method", generationMethodName));
 
+  // if some is set init the method
+  if(m_generationMethod != GenerationMethod::None) {
+    initGenerationMethod();
+  }
+
   if(!isPath(m_outputDir, m_generatePath)) {
     TERMM(-1, "Invalid output directory set! (value: " + m_outputDir + ")");
   }
@@ -98,8 +103,24 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::loadConfiguration() {
 
   cerr0 << "<<<<<<<<<<<<>>>>>>>>>>>>>" << std::endl;
   cerr0 << "Generation method " << GenerationMethodName[static_cast<GInt>(m_generationMethod)] << std::endl;
+  cerr0 << "Output interval " << m_outputSolutionInterval << std::endl;
   cerr0 << "+++++++++++++++++++++++++" << std::endl;
 }
+template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::initGenerationMethod() {
+  if(m_generationMethod != GenerationMethod::None) {
+    switch(m_generationMethod) {
+      case GenerationMethod::ConstantRate:
+        break;
+      case GenerationMethod::InjectionModel:
+        m_injectors.emplace_back(Injector<NDIM>(getObject("injection_model")));
+        break;
+      default:
+        TERMM(-1, "Invalid generation method selected.");
+    }
+  }
+}
+
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::allocateMemory() {
@@ -120,12 +141,13 @@ auto LPTSolver<DEBUG_LEVEL, NDIM, P>::run() -> GInt {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LPTInit]);
 
   RECORD_TIMER_START(TimeKeeper[Timers::LPTMainLoop]);
+  // todo:implement
+  //   executePostprocess(pp::HOOK::ATSTART);
+  //  todo: make settable
+  m_timeIntegration = &LPTSolver<DEBUG_LEVEL, NDIM, P>::timeIntegration<IntegrationMethod::ImplicitEuler>;
   // todo: make settable
-  const GInt noTimesteps = required_config_value<GInt>("maxSteps");
-
-  //  executePostprocess(pp::HOOK::ATSTART);
-
-  for(m_timeStep = 0; m_timeStep < noTimesteps; ++m_timeStep) {
+  m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityRatioGravBuoStokesDrag, IntegrationMethod::ImplicitEuler>;
+  for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
     RECORD_TIMER_START(TimeKeeper[Timers::LPTCalc]);
     timeStep();
     RECORD_TIMER_STOP(TimeKeeper[Timers::LPTCalc]);
@@ -133,13 +155,13 @@ auto LPTSolver<DEBUG_LEVEL, NDIM, P>::run() -> GInt {
 
     // also write an output if it's the last time step or if the solution has converged
     RECORD_TIMER_START(TimeKeeper[Timers::LPTIo]);
-    output(m_timeStep == noTimesteps - 1);
+    output(m_timeStep == m_maxNoSteps - 1);
     RECORD_TIMER_STOP(TimeKeeper[Timers::LPTIo]);
   }
 
-  //  if(has_config_value("analyticalSolution")) {
-  //    compareToAnalyticalResult();
-  //  }
+  if(has_config_value("analyticalSolution")) {
+    compareToAnalyticalResult();
+  }
 
   //  executePostprocess(pp::HOOK::ATEND);
 
@@ -191,28 +213,17 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
-  // todo: make settable
-  m_timeIntegration = &LPTSolver<DEBUG_LEVEL, NDIM, P>::timeIntegration<IntegrationMethod::ImplicitEuler>;
-  // todo: make settable
-  m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityRatioGravBuoStokesDrag, IntegrationMethod::ImplicitEuler>;
-
-  for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
-    // 1. particle generation step
-    generateNewParticles();
-    // 2. Step update acceleration
-    m_calcA(this);
-    // 3. Integrate to update velocity, position
-    m_timeIntegration(this);
-    // 4. collision between geometry and particles
-    collision();
-    // 5. Delete invalid particles
-    deleteInvalidParticles();
-    m_currentTime += m_dt;
-  }
-
-  if(has_config_value("analyticalSolution")) {
-    compareToAnalyticalResult();
-  }
+  // 1. particle generation step
+  generateNewParticles();
+  // 2. Step update acceleration
+  m_calcA(this);
+  // 3. Integrate to update velocity, position
+  m_timeIntegration(this);
+  // 4. collision between geometry and particles
+  collision();
+  // 5. Delete invalid particles
+  deleteInvalidParticles();
+  m_currentTime += m_dt;
 }
 
 // todo: roll all the ifs into constexpr functions
@@ -368,10 +379,48 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::generateNewParticles() {
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::generateConst() {}
 
-// todo: implement
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::injection() {
-  cerr0 << "Injecting" << std::endl;
+  if constexpr(NDIM == 3) {
+    GInt totalNoOfParticlesInjected = 0;
+    // todo: move
+    // todo: make seed settable
+    static randxor prng(1223);
+
+    VectorD<NDIM> initialLocation;
+    VectorD<NDIM> initialV;
+    for(auto& inj : m_injectors) {
+      const GInt noOfParticlesToInject = inj.timeStep(m_dt);
+      for(GInt newP = 0; newP < noOfParticlesToInject; ++newP) {
+        initialLocation  = inj.location() + randomPoint_inCircle(inj.orientation(), inj.holeDiameter(), prng);
+        initialV         = inj.injectionVelocity() * randomNormalizedDirection_inCone(inj.orientation(), inj.openingAngle(), prng);
+        const GInt index = addParticle(initialLocation, initialV, inj.injectedDensity(), 0.5 * inj.dropletDiameter());
+      }
+
+      totalNoOfParticlesInjected += noOfParticlesToInject;
+    }
+    cerr0 << "Injected " << totalNoOfParticlesInjected << std::endl;
+  } else {
+    TERMM(-1, "Not implemented");
+  }
+}
+
+template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
+auto LPTSolver<DEBUG_LEVEL, NDIM, P>::addParticle(const VectorD<NDIM>& pos, const VectorD<NDIM>& velo, const GDouble rho, const GDouble r)
+    -> GInt {
+  const GInt partId = m_noParticles;
+  ++m_noParticles;
+
+  if(DEBUG_LEVEL == Debug_Level::max_debug && !isnan(center(partId, 0))) {
+    TERMM(-1, "overwriting");
+  }
+
+  center(partId)   = pos;
+  velocity(partId) = velo;
+  density(partId)  = rho;
+  radius(partId)   = r;
+  volume(partId)   = sphere::volumeR(r);
+  return partId;
 }
 
 // todo: implement

@@ -110,7 +110,6 @@
   - injection
 - [LPT] add documentation
 - [LPT] add tutorial
-- [LPT] add simple injection model
 
 ## Done:
 
@@ -128,6 +127,7 @@
   - analytical tests:
     - free fall
     - stokes drag
+  - simple injection model
 
 - Lattice Boltzmann Code
   - add D3Q19 and D3Q27

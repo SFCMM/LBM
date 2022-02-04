@@ -1,5 +1,4 @@
 {
-  "dry-run": true,
   "dim": 3,
   "seed": 123456789,
   "gravity": [
@@ -9,39 +8,32 @@
   ],
   "solver": {
     "type": "lpt",
-    "capacity": 100,
-    "maxSteps": 100,
-    "dt": 0.01,
+    "capacity": 100000,
+    "maxSteps": 1000,
+    "solution_interval": 10,
+    "dt": 0.0005,
     "gravity": [
       0,
       0,
-      10
+      -10
     ],
-    "analyticalSolution": "freefall_stokes",
-    "initialcondition": "randomvol_pos",
-    "randomvol_pos": {
-      "noparticles": 10,
-      "init_rho_p": 2,
-      "init_r_p": 0.01,
-      "init_velo": [
-        0.0,
-        0.0,
-        0.0
+    "generation_method": "injection",
+    "injection_model": {
+      "injector_location": [
+        0,
+        0,
+        0
       ],
-      "volume": {
-        "type": "box",
-        "A": [
-          0.0,
-          0.0,
-          0.0
-        ],
-        "B": [
-          1.0,
-          1.0,
-          0.1
-        ]
-      }
-    },
-    "generation_method": "injection"
+      "injector_orientation": [
+        0,
+        0,
+        1
+      ],
+      "injector_hole_diameter": 0.0003,
+      "injector_opening_angle": 60,
+      "mass_rate": 0.000333,
+      "injected_density": 1000,
+      "injection_velocity": 4.7
+    }
   }
 }

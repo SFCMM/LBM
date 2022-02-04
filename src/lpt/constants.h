@@ -1,6 +1,8 @@
 #ifndef LPT_CONSTANTS_H
 #define LPT_CONSTANTS_H
 
+#include "common/term.h"
+
 // default values
 static constexpr GInt default_number_particles_capacity = 100;
 

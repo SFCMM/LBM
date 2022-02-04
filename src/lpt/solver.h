@@ -7,8 +7,10 @@
 #include "common/configuration.h"
 #include "common/random.h"
 #include "forces.h"
+#include "injection.h"
 #include "interface/solver_interface.h"
 #include "particle.h"
+
 
 /// Solver for Lagrange particles
 /// Memory consumption 1MB = ~10000 Particles (Normal), ~5000 Particles (Evaporation, High Accuracy)
@@ -53,6 +55,8 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   void initialCondition();
   void init_randomVolPos();
 
+  void initGenerationMethod();
+
   void timeStep();
   template <force::Model FM, IntegrationMethod IM>
   void calcA();
@@ -61,7 +65,7 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   void generateNewParticles();
   void deleteInvalidParticles();
   void collision();
-
+  auto addParticle(const VectorD<NDIM>& pos, const VectorD<NDIM>& velo, const GDouble density, const GDouble radius) -> GInt;
   void injection();
   void generateConst();
 
@@ -90,6 +94,12 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   inline auto center(const GInt pid) -> Eigen::Map<VectorD<NDIM>> {
     return Eigen::Map<VectorD<NDIM>>(&m_vars[pid * NVARS + PTYPE::center(0)]);
   }
+
+  /// Set/Get center of a particle
+  /// \param pid Particle Id
+  /// \param dir direction
+  /// \return Center of the particle
+  inline auto center(const GInt pid, const GInt dir) -> GDouble& { return m_vars[pid * NVARS + PTYPE::center(dir)]; }
 
   /// Set/Get acceleration of a particle
   /// \param pid Particle Id
@@ -161,6 +171,7 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   VectorD<NDIM> m_velo_a_infty;
 
   // generation conditions
+  std::vector<Injector<NDIM>> m_injectors;
 };
 
 
