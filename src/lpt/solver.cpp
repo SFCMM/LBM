@@ -467,7 +467,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::injection() {
       const GInt noOfParticlesToInject = inj.timeStep(m_dt);
       for(GInt newP = 0; newP < noOfParticlesToInject; ++newP) {
         initialLocation  = inj.location() + randomPoint_inCircle(inj.orientation(), inj.holeDiameter(), prng);
-        initialV         = inj.injectionVelocity() * randomNormalizedDirection_inCone(inj.orientation(), inj.openingAngle(), prng);
+        initialV         = inj.injectionVelocity() * randomNormalizedDirection_inCone(inj.orientation(), 0.5 * inj.openingAngle(), prng);
         const GInt index = addParticle(initialLocation, initialV, inj.injectedDensity(), 0.5 * inj.dropletDiameter());
       }
 

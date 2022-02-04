@@ -30,7 +30,7 @@
         1
       ],
       "injector_hole_diameter": 0.0003,
-      "injector_opening_angle": 60,
+      "injector_opening_angle": 120,
       "mass_rate": 0.000333,
       "injected_density": 1000,
       "injection_velocity": 4.7
