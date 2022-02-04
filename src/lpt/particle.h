@@ -7,7 +7,8 @@
 template <GInt NDIM, LPTType P>
 class Particle {};
 
-// Base class for 1st order methods with one particle species
+/// Base class for 1st order methods with one particle species
+/// \tparam NDIM Dimensionality
 template <GInt NDIM>
 class Particle<NDIM, LPTType::Normal> {
  public:
@@ -38,7 +39,8 @@ class Particle<NDIM, LPTType::Normal> {
   static constexpr auto DC() -> GInt { return 3 * NDIM + 4; }
 };
 
-// Base class for 2nd order and higher methods
+/// Base class for 2nd order and higher methods
+/// \tparam NDIM Dimensionality
 template <GInt NDIM>
 class Particle<NDIM, LPTType::High> {
  public:
@@ -69,6 +71,10 @@ class Particle<NDIM, LPTType::High> {
   static constexpr auto DC() -> GInt { return 6 * NDIM + 7; }
 };
 
+
+/// Data access class to pass the result around
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
 template <GInt NDIM, LPTType P>
 class ParticleData : Particle<NDIM, P> {
  public:

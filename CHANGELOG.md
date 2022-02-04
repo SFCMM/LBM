@@ -1,5 +1,7 @@
 # V0.1
+
 ## Planned
+
 - add python frontend
 - add gpu acceleration
 - reduce todo to 0
@@ -8,7 +10,9 @@
 - [LPT] breakup model
 
 # V0.0.3
+
 ## Planned
+
 - run basic 3D NS Case
 - restart
 - store meta data in output files (version, node etc.)
@@ -41,6 +45,7 @@
 # V0.0.2
 
 ## Planned
+
 - load grid from disk
 - Couette in 3D
 - Poiseuille flow in 3D
@@ -104,11 +109,8 @@
 - [LBM] outflow pressure bc
 
 - [LPT] add additional analytical solutions
-  - other time integration method
-  - initial velocity
-- [LPT] add test case
-  - injection
-- [LPT] add documentation
+    - other time integration method
+    - initial velocity
 - [LPT] add tutorial
 
 ## Done:
@@ -116,28 +118,28 @@
 ### Features
 
 - Lagrange Particle Solver
-  - Forces:
-    - Gravity
-    - Buoyancy
-    - Stokes Drag
-    - Non-linear Drag
-  - Integration methods:
-    - Forward Euler
-    - Implicit Euler
-  - analytical tests:
-    - free fall
-    - stokes drag
-  - simple injection model
+    - Forces:
+        - Gravity
+        - Buoyancy
+        - Stokes Drag
+        - Non-linear Drag
+    - Integration methods:
+        - Forward Euler
+        - Implicit Euler
+    - analytical tests:
+        - free fall
+        - stokes drag
+    - simple injection model
 
 - Lattice Boltzmann Code
-  - add D3Q19 and D3Q27
-  - Boundary conditions
-    - Wet node equilibrium method wall
-    - Wet node non-equilibrium extrapolation method wall
-    - Wet node non-equilibrium bounce-back method wall
+    - add D3Q19 and D3Q27
+    - Boundary conditions
+        - Wet node equilibrium method wall
+        - Wet node non-equilibrium extrapolation method wall
+        - Wet node non-equilibrium bounce-back method wall
 
 - Cartesian grid
-  - allow generation of boundary ghost cells
+    - allow generation of boundary ghost cells
 
 ### Buildsystem
 
@@ -181,21 +183,24 @@
 - load bnd conditions from configuration file
 - added forcing
 - Postprocessing
-  - Lines
+    - Lines
 - basic openMP
 - supports D1Q3, D2Q5 and D2Q9
 - Support the solution of Navier-Stokes and Poisson-Boltzmann equation
 
 ### Testing
+
 - Added Couette flow testcase
 - Added Poiseuille flow testcase
 - option to exclude surfaces from error calculation
 
 ### Usability
+
 - exit on nan during convergence check
 - Add postprocessing structures
 - define boundary condition in the configuration file
 
 ### IO
+
 - differentiate between float and integers correctly in the VTK output
 - write lines output to csv

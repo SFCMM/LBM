@@ -29,6 +29,7 @@ class Injector : private Configuration {
     const GDouble dropletV    = 1.0 / 6.0 * M_PI * gcem::pow(m_holeDiameter, 3);
     const GDouble dropletMass = m_injectedDensity * dropletV;
 
+    // no particle size distribution set just divide the mass up
     if(!m_distributedSize) {
       // rounded down number of droplets since we only want complete droplets
       const GInt newDroplets = gcem::floor(m_mass / dropletMass);
@@ -37,6 +38,8 @@ class Injector : private Configuration {
       m_mass -= newDroplets * dropletMass;
       return newDroplets;
     }
+
+    //<- particle size distribution is used
 
     GInt newDroplets = 0;
 
@@ -63,10 +66,8 @@ class Injector : private Configuration {
     return newDroplets;
   }
 
-  [[nodiscard]] auto location() const -> const VectorD<NDIM>& { return m_location; }
-  [[nodiscard]] auto orientation() const -> const VectorD<NDIM>& { return m_orientation; }
-  [[nodiscard]] auto openingAngle() const -> GDouble { return m_openingAngle; }
-  [[nodiscard]] auto holeDiameter() const -> GDouble { return m_holeDiameter; }
+  /// Getter for the next droplet diameter that is to be added
+  /// \return Droplet diameter of the next droplet to be injected
   [[nodiscard]] auto dropletDiameter() -> GDouble {
     if(m_distributedSize) {
       const GDouble next = m_injectionDiameter.front();
@@ -75,16 +76,39 @@ class Injector : private Configuration {
     }
     return m_holeDiameter;
   }
+
+  /// Getter for location
+  /// \return Location of the injector
+  [[nodiscard]] auto location() const -> const VectorD<NDIM>& { return m_location; }
+
+  /// Getter for location
+  /// \return Location of the injector
+  [[nodiscard]] auto orientation() const -> const VectorD<NDIM>& { return m_orientation; }
+
+  /// Getter for orientation
+  /// \return orientation of the injector
+  [[nodiscard]] auto openingAngle() const -> GDouble { return m_openingAngle; }
+
+  /// Getter for the hole diameter of the injector
+  /// \return the hole diameter of the injector
+  [[nodiscard]] auto holeDiameter() const -> GDouble { return m_holeDiameter; }
+
+  /// Getter for the density of the injected droplets
+  /// \return density of the injected droplets
   [[nodiscard]] auto injectedDensity() const -> GDouble { return m_injectedDensity; }
+
+  /// Getter for the injection velocity
+  /// \return Initial velocity of the droplets
   [[nodiscard]] auto injectionVelocity() const -> GDouble { return m_injectionVelocity; }
-  [[nodiscard]] auto mass() const -> GDouble { return m_mass; }
 
 
  private:
+  /// Clear for next time step
   void clear() {
     std::queue<GDouble> empty;
     std::swap(m_injectionDiameter, empty);
   }
+
   /// Configuration values
   VectorD<NDIM> m_location;
   VectorD<NDIM> m_orientation;

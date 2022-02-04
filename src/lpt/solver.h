@@ -133,45 +133,110 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
 
 
   /// Configuration
-  GString                                               m_exe;
-  GString                                               m_configurationFileName;
-  GBool                                                 m_benchmark        = false;
-  GInt                                                  m_capacity         = default_number_particles_capacity;
-  GInt                                                  m_maxNoSteps       = {};
-  LPTInitCond                                           m_initialCondition = LPTInitCond::none;
-  GenerationMethod                                      m_generationMethod = GenerationMethod::None;
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /// Executable path
+  GString m_exe;
+
+  /// Name of the configuration file
+  GString m_configurationFileName;
+
+  /// Is this a benchmark run?
+  GBool m_benchmark = false;
+
+  /// The current capacity of particles
+  GInt m_capacity = default_number_particles_capacity;
+
+  /// The maximum number of timesteps to be performed
+  GInt m_maxNoSteps = {};
+
+  /// Initial condition to be used
+  LPTInitCond m_initialCondition = LPTInitCond::none;
+
+  /// Generation method for new particles
+  GenerationMethod m_generationMethod = GenerationMethod::None;
+
+  /// Integration method
   std::function<void(LPTSolver<DEBUG_LEVEL, NDIM, P>*)> m_timeIntegration;
+
+  /// Calculation of the acceleration
   std::function<void(LPTSolver<DEBUG_LEVEL, NDIM, P>*)> m_calcA;
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   /// MPI
-  GInt32 m_domainId  = -1;
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /// My own MPI rank id
+  GInt32 m_domainId = -1;
+
+  /// Total number of ranks
   GInt32 m_noDomains = -1;
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   /// Output
-  GString m_outputDir              = "out/";
-  GString m_solutionFileName       = "solution";
-  GInt    m_outputInfoInterval     = 100;
-  GInt    m_outputSolutionInterval = 1000;
-  GBool   m_generatePath           = true;
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /// Output directory path
+  GString m_outputDir = "out/";
+
+  /// Output solution file names
+  GString m_solutionFileName = "solution";
+
+  /// Interval of the info to be written to stdout or stderr and log
+  GInt m_outputInfoInterval = 100;
+
+  /// Interval of the solution to be written to a file
+  GInt m_outputSolutionInterval = 1000;
+
+  /// If output path doesnot exist generate it
+  GBool m_generatePath = true;
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   /// Variables
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /// Storage of all the variables
   std::vector<GDouble> m_vars;
-  GInt                 m_timeStep    = 0;
-  GDouble              m_currentTime = 0;
-  GInt                 m_noParticles = 0;
-  GDouble              m_dt          = NAN;
+
+  /// Current timestep number
+  GInt m_timeStep = 0;
+
+  /// Current time e.g. sum m_dt_i
+  GDouble m_currentTime = 0;
+
+  /// Current number of particles
+  GInt m_noParticles = 0;
+
+  /// Current time step to be used
+  GDouble m_dt = NAN;
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   /// Initial Conditions
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /// Initial velocity
+  // todo: remove
   VectorD<NDIM> m_init_v;
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   // ambient condition
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /// The gravity field
   VectorD<NDIM> m_gravity;
-  GDouble       m_rho_a_infty = 1.205;   // air density at 20C [kg/m^3]
-  GDouble       m_nu_a_infty  = 1.82E-5; // air viscosity at 20C [Pa s]
+
+  /// The density of the ambient surrounding medium
+  GDouble m_rho_a_infty = 1.205; // air density at 20C [kg/m^3]
+
+  /// The viscosity of the ambient surrounding medium
+  GDouble m_nu_a_infty = 1.82E-5; // air viscosity at 20C [Pa s]
+
+  /// The infinity values of the surrounding medium
   VectorD<NDIM> m_velo_a_infty;
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   // generation conditions
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  /// The injector present on this domain
   std::vector<Injector<NDIM>> m_injectors;
+  //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 };
 
 

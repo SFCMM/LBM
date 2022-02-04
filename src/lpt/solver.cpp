@@ -5,6 +5,12 @@
 
 using namespace std;
 
+/// Common init for both benchmark and normal run.
+/// \tparam DEBUG_LEVEL Debug Mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
+/// \param argc cmd argument count
+/// \param argv cmd argument list
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::init(int argc, GChar** argv) {
   m_exe = argv[0]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -23,6 +29,13 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init(int argc, GChar** argv) {
   initTimers();
 }
 
+/// Entry point for normal simulations
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
+/// \param argc cmd arguments count
+/// \param argv cmd argument list
+/// \param config_file config file name
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::init(int argc, GChar** argv, GString config_file) {
   setConfiguration(config_file);
@@ -34,6 +47,12 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init(int argc, GChar** argv, GString confi
   RECORD_TIMER_STOP(TimeKeeper[Timers::LPTInit]);
 }
 
+/// Entry point for benchmark runs
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
+/// \param argc cmd arguments count
+/// \param argv cmd argument list
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::initBenchmark(int argc, GChar** argv) {
   m_benchmark = true;
@@ -44,6 +63,10 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::initBenchmark(int argc, GChar** argv) {
   TERMM(-1, "Not implemented!");
 }
 
+/// Init the timers for this solver
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::initTimers() {
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LPTSolverTotal], "Total run time of the LPT Solver.", TimeKeeper[Timers::timertotal]);
@@ -63,13 +86,17 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::initTimers() {
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LPTIo], "IO", TimeKeeper[Timers::LPTMainLoop]);
 }
 
+/// Load the configuration from the configuration file
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::loadConfiguration() {
   m_outputDir              = opt_config_value<GString>("output_dir", m_outputDir);
   m_outputInfoInterval     = opt_config_value<GInt>("info_interval", m_outputInfoInterval);
   m_outputSolutionInterval = opt_config_value<GInt>("solution_interval", m_outputSolutionInterval);
   m_solutionFileName       = opt_config_value<GString>("solution_filename", m_solutionFileName);
-  m_initialCondition       = getLPTInitCond(opt_config_value<GString>("initialcondition", "none"));
+  m_initialCondition       = initCond(opt_config_value<GString>("initialcondition", "none"));
 
   m_capacity = opt_config_value<GInt>("capacity", m_capacity);
 
@@ -106,6 +133,11 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::loadConfiguration() {
   cerr0 << "Output interval " << m_outputSolutionInterval << std::endl;
   cerr0 << "+++++++++++++++++++++++++" << std::endl;
 }
+
+/// Init the generation methods by loading there configuraition
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::initGenerationMethod() {
   if(m_generationMethod != GenerationMethod::None) {
@@ -121,7 +153,10 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::initGenerationMethod() {
   }
 }
 
-
+/// Allocate the memory for the solver
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::allocateMemory() {
   // allocate memory
@@ -131,6 +166,11 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::allocateMemory() {
   cerr0 << "allocated memory: " << mem() << "KB" << std::endl;
 }
 
+/// Run the main loop of the solver
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
+/// \return Error code
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 auto LPTSolver<DEBUG_LEVEL, NDIM, P>::run() -> GInt {
   RECORD_TIMER_START(TimeKeeper[Timers::LPTInit]);
@@ -172,6 +212,10 @@ auto LPTSolver<DEBUG_LEVEL, NDIM, P>::run() -> GInt {
   return 0;
 }
 
+/// Inital condition of the solver
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::initialCondition() {
   switch(m_initialCondition) {
@@ -185,6 +229,10 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::initialCondition() {
   }
 }
 
+/// Init particles at random position with a given volume
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
   auto config = getAccessor("randomvol_pos");
@@ -210,7 +258,10 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init_randomVolPos() {
   }
 }
 
-
+/// Perform one timestep
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   // 1. particle generation step
@@ -226,6 +277,12 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeStep() {
   m_currentTime += m_dt;
 }
 
+/// Calculate the acceleration of the particles
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
+/// \tparam FM Force model to be used
+/// \tparam IM Integration method to be used
 // todo: roll all the ifs into constexpr functions
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 template <force::Model FM, IntegrationMethod IM>
@@ -316,6 +373,11 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LPTForce]);
 }
 
+/// Perform the time integration
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
+/// \tparam IM Integration method
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 template <IntegrationMethod IM>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeIntegration() {
@@ -359,6 +421,10 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::timeIntegration() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LPTInt]);
 }
 
+/// Function which switches between the different modes which can generate new particles i.e. injection, breakup...
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::generateNewParticles() {
   if(m_generationMethod != GenerationMethod::None) {
@@ -375,10 +441,18 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::generateNewParticles() {
   }
 }
 
+/// Generate particles with a constant rate (mostly for testcases)
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
 // todo: implement
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::generateConst() {}
 
+/// Use an injection model to introduce new particles
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::injection() {
   if constexpr(NDIM == 3) {
@@ -405,6 +479,15 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::injection() {
   }
 }
 
+/// Add a new particle
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
+/// \param pos The position of the new particle
+/// \param velo The velocity of the new particle
+/// \param rho The density of the new particle
+/// \param r The radius of the new particle
+/// \return Id of the added particle
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 auto LPTSolver<DEBUG_LEVEL, NDIM, P>::addParticle(const VectorD<NDIM>& pos, const VectorD<NDIM>& velo, const GDouble rho, const GDouble r)
     -> GInt {
@@ -423,10 +506,18 @@ auto LPTSolver<DEBUG_LEVEL, NDIM, P>::addParticle(const VectorD<NDIM>& pos, cons
   return partId;
 }
 
+/// Perform the collision of particles with geometry/particles etc.
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
 // todo: implement
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::collision() {}
 
+/// Delete invalid particles e.g. particles of insufficient size, particles which have left the computational domain
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
 // todo: implement
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::deleteInvalidParticles() {
@@ -435,6 +526,12 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::deleteInvalidParticles() {
   // 2. Delete particles which are marked for deletion
 }
 
+/// Save the output of the particles
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
+/// \param forced Perform an output *now*
+/// \param postfix Add a postfix to the written files
 // todo: allow choice of output variables
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::output(const GBool forced, const GString& postfix) {
@@ -488,6 +585,10 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::output(const GBool forced, const GString& 
   }
 }
 
+/// Compare the result to an analytical solution
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
   const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");

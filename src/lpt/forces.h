@@ -6,6 +6,7 @@
 // Note: all forces are based on a=forces/mass so they are given as acceleration!!!!
 namespace force {
 
+/// Available force models
 enum class Model {
   constDensityRatioGrav,              // all particles have the same density ratio to the ambient which is constant
   constDensityRatioGravStokesDrag,    // s.a. + Stokes Drag (Re_p << 1)
@@ -18,6 +19,7 @@ enum class Model {
   constDensityaGravBuoNlinDrag        // s.a. + Non-linear Drag
 };
 
+/// Available drag models
 enum class DragModel {
   Stokes,          // linear drag valid for Stokes flow (Rep << 1)
   SchillerNaumann, // non-linear drag by Schiller-Naumann
@@ -25,22 +27,44 @@ enum class DragModel {
   Putnam61         // Mixture Formation in Internal Combustion Engines, 2005, Carsten Baumgarten
 };
 
+/// Calculate gravity
+/// \tparam NDIM Dimensionality
+/// \param gravity Gravity
+/// \return Gravity
 template <GInt NDIM>
 static constexpr auto gravity(const VectorD<NDIM>& gravity) {
   return gravity;
 }
 
+/// Calculate net gravity i.e. gravity - buoyancy effect
+/// \tparam NDIM Dimensionality
+/// \param gravity Gravity
+/// \param ambientDensity Ambient density of the particle surrounding medium
+/// \param particleDensity Particle density
+/// \return Net Gravity effect
 template <GInt NDIM>
 static constexpr auto gravityBuoyancy(const VectorD<NDIM>& gravity, const GDouble ambientDensity, const GDouble particleDensity) {
   return gravity * (1.0 - ambientDensity / particleDensity);
 }
 
+/// Calculate the drag force using the Stokes drag formula
+/// \tparam NDIM Dimensionality
+/// \param radius Radius of the particle
+/// \param particleDensity Particle density
+/// \param ambientViscosity Density of the particle surrounding medium
+/// \param velocity Speed of the particle
+/// \return Stokes drag force
 template <GInt NDIM>
 static constexpr auto dragForceStokes(const GDouble radius, const GDouble particleDensity, const GDouble ambientViscosity,
                                       const VectorD<NDIM>& velocity) {
   return 18.0 * ambientViscosity / (4.0 * radius * radius * particleDensity) * velocity;
 }
 
+
+/// Calculates the drag coefficient
+/// \tparam DM Drag model to be used
+/// \param rep Particle Reynoldsnumber
+/// \return Drag coefficient
 template <DragModel DM>
 static constexpr auto dragCoefficient(const GDouble rep) {
   switch(DM) {
