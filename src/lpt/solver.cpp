@@ -632,12 +632,12 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
     cerr0 << "Error bounds for the maximum error have failed!!! ( < " << maximumExpectedError << ")" << std::endl;
     logger << "Error bounds for the maximum error have failed!!! ( < " << maximumExpectedError << ")" << std::endl;
   }
-  if(maximumExpectedErrorL2 < L2error) {
+  if(maximumExpectedErrorL2 < L2error || isnan(L2error)) {
     failedErrorCheck = true;
     cerr0 << "Error bounds for the L2 error have failed!!! ( < " << maximumExpectedErrorL2 << ")" << std::endl;
     logger << "Error bounds for the L2 error have failed!!! ( < " << maximumExpectedErrorL2 << ")" << std::endl;
   }
-  if(maximumExpectedErrorGRE < gre) {
+  if(maximumExpectedErrorGRE < gre || isnan(gre)) {
     failedErrorCheck = true;
     cerr0 << "Error bounds for the global relative error have failed!!! ( < " << maximumExpectedErrorGRE << ")" << std::endl;
     logger << "Error bounds for the global relative error have failed!!! ( < " << maximumExpectedErrorGRE << ")" << std::endl;
