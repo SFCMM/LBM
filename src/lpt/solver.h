@@ -51,6 +51,8 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   void initTimers();
   void allocateMemory();
   void loadConfiguration();
+  void setIntegrationMethod();
+  void setForceModel();
 
   void initialCondition();
   void init_randomVolPos();

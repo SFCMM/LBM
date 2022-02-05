@@ -128,6 +128,9 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::loadConfiguration() {
     m_outputDir += '/';
   }
 
+  setIntegrationMethod();
+  setForceModel();
+
   cerr0 << "<<<<<<<<<<<<>>>>>>>>>>>>>" << std::endl;
   cerr0 << "Generation method " << GenerationMethodName[static_cast<GInt>(m_generationMethod)] << std::endl;
   cerr0 << "Output interval " << m_outputSolutionInterval << std::endl;
@@ -151,6 +154,35 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::initGenerationMethod() {
         TERMM(-1, "Invalid generation method selected.");
     }
   }
+}
+
+/// Set the time integration method
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
+template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::setIntegrationMethod() {
+  GString integrationName = opt_config_value("integrationMethod", static_cast<GString>("ForwardEuler"));
+
+  switch(integrationMethod(integrationName)) {
+    case IntegrationMethod::ForwardEuler:
+      m_timeIntegration = &LPTSolver<DEBUG_LEVEL, NDIM, P>::timeIntegration<IntegrationMethod::ForwardEuler>;
+      break;
+    case IntegrationMethod::ImplicitEuler:
+      m_timeIntegration = &LPTSolver<DEBUG_LEVEL, NDIM, P>::timeIntegration<IntegrationMethod::ImplicitEuler>;
+      break;
+    default:
+      TERMM(-1, "Invalid integration method: " + integrationName + " " + to_string(static_cast<GInt>(integrationMethod(integrationName))));
+  }
+}
+
+/// Set the force model
+/// \tparam DEBUG_LEVEL Debug mode
+/// \tparam NDIM Dimensionality
+/// \tparam P Particle type
+template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::setForceModel() {
+  m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityRatioGravBuoStokesDrag, IntegrationMethod::ImplicitEuler>;
 }
 
 /// Allocate the memory for the solver
@@ -183,10 +215,6 @@ auto LPTSolver<DEBUG_LEVEL, NDIM, P>::run() -> GInt {
   RECORD_TIMER_START(TimeKeeper[Timers::LPTMainLoop]);
   // todo:implement
   //   executePostprocess(pp::HOOK::ATSTART);
-  //  todo: make settable
-  m_timeIntegration = &LPTSolver<DEBUG_LEVEL, NDIM, P>::timeIntegration<IntegrationMethod::ImplicitEuler>;
-  // todo: make settable
-  m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityRatioGravBuoStokesDrag, IntegrationMethod::ImplicitEuler>;
   for(m_timeStep = 0; m_timeStep < m_maxNoSteps; ++m_timeStep) {
     RECORD_TIMER_START(TimeKeeper[Timers::LPTCalc]);
     timeStep();

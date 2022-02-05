@@ -97,6 +97,7 @@ cd ..
 
 cd lpt || exit
 time_test falling.json
+time_test falling_implicit.json
 time_test falling3d.json
 cd ..
 

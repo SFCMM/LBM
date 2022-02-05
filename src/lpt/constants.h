@@ -46,12 +46,36 @@ enum class IntegrationMethod {
   Berger20PredCor // s.a. + Predictor-Corrector Step
 };
 
+/// String names of IntegrationMethod
+static constexpr std::array<std::string_view, 5> IntegrationMethodName = {"ForwardEuler", "ForwardEulerPredCor", "ImplicitEuler",
+                                                                          "Berger20", "Berger20PredCor"};
+
+static constexpr auto integrationMethod(const std::string_view integrationName) -> IntegrationMethod {
+  if(integrationName == "ForwardEuler") {
+    return IntegrationMethod::ForwardEuler;
+  }
+  if(integrationName == "ForwardEulerPredCor") {
+    return IntegrationMethod::ForwardEulerPredCor;
+  }
+  if(integrationName == "ImplicitEuler") {
+    return IntegrationMethod::ImplicitEuler;
+  }
+  if(integrationName == "Berger20") {
+    return IntegrationMethod::Berger20;
+  }
+  if(integrationName == "Berger20PredCor") {
+    return IntegrationMethod::Berger20PredCor;
+  }
+
+  TERMM(-1, "Invalid generation method configuration!");
+}
+
 /// Method that generate particles
 // todo:implement
 enum class GenerationMethod { None, ConstantRate, InjectionModel };
 
 /// String names of generationMethod
-static constexpr std::array<std::string_view, 4> GenerationMethodName = {"none", "constant_rate", "injection"};
+static constexpr std::array<std::string_view, 3> GenerationMethodName = {"none", "constant_rate", "injection"};
 
 /// Convert between string and GenerationMethod type
 /// \param generationName GenerationMethod type associated string
