@@ -128,8 +128,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::loadConfiguration() {
     m_outputDir += '/';
   }
 
-  setIntegrationMethod();
-  setForceModel();
+  setMethods();
 
   cerr0 << "<<<<<<<<<<<<>>>>>>>>>>>>>" << std::endl;
   cerr0 << "Generation method " << GenerationMethodName[static_cast<GInt>(m_generationMethod)] << std::endl;
@@ -161,15 +160,17 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::initGenerationMethod() {
 /// \tparam NDIM Dimensionality
 /// \tparam P Particle type
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
-void LPTSolver<DEBUG_LEVEL, NDIM, P>::setIntegrationMethod() {
+void LPTSolver<DEBUG_LEVEL, NDIM, P>::setMethods() {
   GString integrationName = opt_config_value("integrationMethod", static_cast<GString>("ForwardEuler"));
 
   switch(integrationMethod(integrationName)) {
     case IntegrationMethod::ForwardEuler:
       m_timeIntegration = &LPTSolver<DEBUG_LEVEL, NDIM, P>::timeIntegration<IntegrationMethod::ForwardEuler>;
+      setForceModel<IntegrationMethod::ForwardEuler>();
       break;
     case IntegrationMethod::ImplicitEuler:
       m_timeIntegration = &LPTSolver<DEBUG_LEVEL, NDIM, P>::timeIntegration<IntegrationMethod::ImplicitEuler>;
+      setForceModel<IntegrationMethod::ImplicitEuler>();
       break;
     default:
       TERMM(-1, "Invalid integration method: " + integrationName + " " + to_string(static_cast<GInt>(integrationMethod(integrationName))));
@@ -181,8 +182,41 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::setIntegrationMethod() {
 /// \tparam NDIM Dimensionality
 /// \tparam P Particle type
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
+template <IntegrationMethod IM>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::setForceModel() {
-  m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityRatioGravBuoStokesDrag, IntegrationMethod::ImplicitEuler>;
+  GString modelName = opt_config_value("model", static_cast<GString>("constDensityRatioGravBuoStokesDrag"));
+
+  switch(force::model(modelName)) {
+    case force::Model::constDensityRatioGrav:
+      m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityRatioGrav, IM>;
+      break;
+    case force::Model::constDensityRatioGravStokesDrag:
+      m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityRatioGravStokesDrag, IM>;
+      break;
+    case force::Model::constDensityRatioGravNlinDrag:
+      m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityRatioGravNlinDrag, IM>;
+      break;
+    case force::Model::constDensityRatioGravBuo:
+      m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityRatioGravBuo, IM>;
+      break;
+    case force::Model::constDensityRatioGravBuoStokesDrag:
+      m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityRatioGravBuoStokesDrag, IM>;
+      break;
+    case force::Model::constDensityRatioGravBuoNlinDrag:
+      m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityRatioGravBuoNlinDrag, IM>;
+      break;
+    case force::Model::constDensityaGravBuo:
+      m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityaGravBuo, IM>;
+      break;
+    case force::Model::constDensityaGravBuoStokesDrag:
+      m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityaGravBuoStokesDrag, IM>;
+      break;
+    case force::Model::constDensityaGravBuoNlinDrag:
+      m_calcA = &LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA<force::Model::constDensityaGravBuoNlinDrag, IM>;
+      break;
+    default:
+      TERMM(-1, "Invalid integration method: " + modelName + " " + to_string(static_cast<GInt>(integrationMethod(modelName))));
+  }
 }
 
 /// Allocate the memory for the solver

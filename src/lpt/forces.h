@@ -19,6 +19,46 @@ enum class Model {
   constDensityaGravBuoNlinDrag        // s.a. + Non-linear Drag
 };
 
+static constexpr std::array<std::string_view, 9> ModelName = {
+    "constDensityRatioGrav",    "constDensityRatioGravStokesDrag",    "constDensityRatioGravNlinDrag",
+    "constDensityRatioGravBuo", "constDensityRatioGravBuoStokesDrag", "constDensityRatioGravBuoNlinDrag",
+    "constDensityaGravBuo",     "constDensityaGravBuoStokesDrag",     "constDensityaGravBuoNlinDrag"};
+
+/// Convert between string and model type
+/// \param modelName model type associated string
+/// \return model type associated to the string
+static constexpr auto model(const std::string_view modelName) -> Model {
+  if(modelName == "constDensityRatioGrav") {
+    return Model::constDensityRatioGrav;
+  }
+  if(modelName == "constDensityRatioGravStokesDrag") {
+    return Model::constDensityRatioGravStokesDrag;
+  }
+  if(modelName == "constDensityRatioGravNlinDrag") {
+    return Model::constDensityRatioGravNlinDrag;
+  }
+  if(modelName == "constDensityRatioGravBuo") {
+    return Model::constDensityRatioGravBuo;
+  }
+  if(modelName == "constDensityRatioGravBuoStokesDrag") {
+    return Model::constDensityRatioGravBuoStokesDrag;
+  }
+  if(modelName == "constDensityRatioGravBuoNlinDrag") {
+    return Model::constDensityRatioGravBuoNlinDrag;
+  }
+  if(modelName == "constDensityaGravBuo") {
+    return Model::constDensityaGravBuo;
+  }
+  if(modelName == "constDensityaGravBuoStokesDrag") {
+    return Model::constDensityaGravBuoStokesDrag;
+  }
+  if(modelName == "constDensityaGravBuoNlinDrag") {
+    return Model::constDensityaGravBuoNlinDrag;
+  }
+
+  TERMM(-1, "Invalid model configuration!");
+}
+
 /// Available drag models
 enum class DragModel {
   Stokes,          // linear drag valid for Stokes flow (Rep << 1)
