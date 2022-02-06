@@ -9,9 +9,9 @@
   "solver": {
     "type": "lpt",
     "capacity": 100000,
-    "maxSteps": 1000,
+    "maxSteps": 1500,
     "solution_interval": 10,
-    "model": "constDensityaGravBuoStokesDrag",
+    "model": "constDensityaGravBuoNlinDrag",
     "dt": 0.0005,
     "gravity": [
       0,
@@ -30,11 +30,11 @@
         0,
         1
       ],
-      "injector_hole_diameter": 0.0003,
+      "injector_hole_diameter": 0.000225,
       "injector_opening_angle": 120,
       "mass_rate": 0.000333,
       "injected_density": 1000,
-      "injection_velocity": 4.7
+      "injection_velocity": 8.4
     }
   }
 }

@@ -109,8 +109,8 @@
 - [LBM] outflow pressure bc
 
 - [LPT] add additional analytical solutions
-    - other time integration method
     - initial velocity
+    - different force models
 - [LPT] add tutorial
 
 ## Done:
