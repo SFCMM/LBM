@@ -10,11 +10,12 @@
     "type": "lpt",
     "capacity": 100,
     "maxSteps": 1000000,
-    "solution_interval": 500000,
-    "dt": 1E-7,
+    "solution_interval": 50000,
+    "dt": 0.0000001,
     "analyticalSolution": "freefall_stokes",
+    "model": "constDensityaGravBuo",
     "errorL2": 1E-13,
-    "errorMax": 4E-11,
+    "errorMax": 9E-12,
     "initialcondition": "randomvol_pos",
     "gravity": [
       0,
@@ -22,7 +23,7 @@
     ],
     "randomvol_pos": {
       "noparticles": 10,
-      "init_rho_p": 800,
+      "init_rho_p": 0.5,
       "init_r_p": 0.01,
       "init_velo": [
         0.0,

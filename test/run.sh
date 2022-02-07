@@ -97,14 +97,15 @@ cd ..
 
 cd lpt || exit
 time_test falling.json
+time_test falling1k.json
+time_test falling1m.json
 time_test falling_implicit.json
 time_test falling3d.json
 cd ..
 
-./clean.sh
-
 if [ $FAILED == 0 ]; then
   echo "All $SUCCESS testcases have been successful"
+  ./clean.sh
   exit 0
 else
   echo "$FAILED testcases have failed"

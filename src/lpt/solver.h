@@ -76,7 +76,7 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   void output(const GBool forced, const GString& postfix = "");
 
   // Variable accessor functions
-  inline auto part(const GInt pid) -> ParticleData<NDIM, P> { return ParticleData<NDIM, P>(&m_vars[pid * NVARS]); }
+  inline auto part(const GInt pid) -> ParticleData<NDIM, P> { return ParticleData<NDIM, P>(&m_vars[pid * NVARS], m_init_v); }
 
   /// Set/Get velocity of a particle
   /// \param pid Particle Id

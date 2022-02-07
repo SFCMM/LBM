@@ -655,15 +655,25 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
   const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");
 
+  // setup ambient properties
+  analytical::lpt::AmbientProperties<NDIM> ambient;
+
+  ambient.m_rho_a   = m_rho_a_infty;
+  ambient.m_nu_a    = m_nu_a_infty;
+  ambient.m_gravity = m_gravity;
+  ambient.m_v_infty = m_velo_a_infty;
+
   GDouble maxError      = 0;
   GDouble sumError      = 0;
   GDouble sumErrorSq    = 0;
   GDouble sumSolution   = 0;
   GDouble sumSolutionSq = 0;
 
+  auto solution_function = analytical::getAnalyticalSolution<NDIM, P>(analyticalSolutionName + "_vel");
+
   for(GInt partId = 0; partId < m_noParticles; ++partId) {
-    VectorD<NDIM> ana_sol = analytical::lpt::freefall_stokes_vel<NDIM, P>(part(partId), m_init_v, m_nu_a_infty, m_rho_a_infty,
-                                                                          m_velo_a_infty, m_currentTime, m_gravity);
+    //    VectorD<NDIM> ana_sol = analytical::lpt::freefall_stokes_vel<NDIM, P>(part(partId), ambient, m_currentTime);
+    VectorD<NDIM> ana_sol = solution_function(part(partId), ambient, m_currentTime);
     const GDouble error   = (ana_sol - velocity(partId)).norm();
     maxError              = std::max(error, maxError);
     sumErrorSq += gcem::pow(error, 2);

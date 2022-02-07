@@ -94,6 +94,7 @@
 
 - [LPT] terminal velocity test
 - [LPT] finish for release
+- [LPT] compare solution at multiple time points
 
 - [LIB] move kdtree to common lib project.
 - [LIB] move line to common lib project.
@@ -102,6 +103,8 @@
 
 - [BUG] NEEM with poiseuille diverges
 - [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution? (corners?)
+
+- add INFO_OUTPUT with physical time update
 
 ### next week:
 

@@ -8,20 +8,20 @@
   ],
   "solver": {
     "type": "lpt",
-    "capacity": 100,
-    "maxSteps": 1000000,
-    "solution_interval": 500000,
+    "capacity": 2000,
+    "maxSteps": 100000,
+    "solution_interval": 50000,
     "dt": 1E-7,
     "analyticalSolution": "freefall_stokes",
     "errorL2": 1E-13,
-    "errorMax": 4E-11,
+    "errorMax": 6E-12,
     "initialcondition": "randomvol_pos",
     "gravity": [
       0,
       10
     ],
     "randomvol_pos": {
-      "noparticles": 10,
+      "noparticles": 1000,
       "init_rho_p": 800,
       "init_r_p": 0.01,
       "init_velo": [
