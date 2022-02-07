@@ -101,6 +101,8 @@ time_test falling1k.json
 time_test falling1m.json
 time_test falling_implicit.json
 time_test falling3d.json
+time_test falling_noDrag.json
+time_test falling_Buoyancy.json
 cd ..
 
 if [ $FAILED == 0 ]; then

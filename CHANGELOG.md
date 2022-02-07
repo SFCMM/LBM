@@ -113,7 +113,6 @@
 
 - [LPT] add additional analytical solutions
     - initial velocity
-    - different force models
 - [LPT] add tutorial
 
 ## Done:

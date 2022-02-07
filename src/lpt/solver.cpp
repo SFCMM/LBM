@@ -658,8 +658,8 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
   // setup ambient properties
   analytical::lpt::AmbientProperties<NDIM> ambient;
 
-  ambient.m_rho_a   = m_rho_a_infty;
-  ambient.m_nu_a    = m_nu_a_infty;
+  ambient.m_rho     = m_rho_a_infty;
+  ambient.m_nu      = m_nu_a_infty;
   ambient.m_gravity = m_gravity;
   ambient.m_v_infty = m_velo_a_infty;
 

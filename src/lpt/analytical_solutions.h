@@ -13,15 +13,21 @@ struct AmbientProperties {
   VectorD<NDIM> m_gravity;
   VectorD<NDIM> m_v_infty;
 
-  GDouble m_rho_a;
-  GDouble m_nu_a;
+  GDouble m_rho;
+  GDouble m_nu;
 };
 
 
+// template <GInt NDIM, LPTType P>
+// static constexpr auto freefall_noDrag_vel(const ParticleData<NDIM, P>& part, const VectorD<NDIM>& init_v, const GDouble t,
+//                                           const Point<NDIM>& gravity, const GDouble rho_a = 0) -> Point<NDIM> {
+//   return gravity * (1 - rho_a / part.density()) * t + init_v;
+// }
+
 template <GInt NDIM, LPTType P>
-static constexpr auto freefall_noDrag_vel(const ParticleData<NDIM, P>& part, const VectorD<NDIM>& init_v, const GDouble t,
-                                          const Point<NDIM>& gravity, const GDouble rho_a = 0) -> Point<NDIM> {
-  return gravity * (1 - rho_a / part.density()) * t + init_v;
+static constexpr auto freefall_noDrag_vel(const ParticleData<NDIM, P>& part, const lpt::AmbientProperties<NDIM>& amb, const GDouble t)
+    -> Point<NDIM> {
+  return amb.m_gravity * (1 - amb.m_rho / part.density()) * t + part.initV();
 }
 
 template <GInt NDIM, LPTType P>
@@ -33,9 +39,9 @@ static constexpr auto freefall_noDrag_pos(const Point<NDIM>& start, const Partic
 template <GInt NDIM, LPTType P>
 static constexpr auto freefall_stokes_vel(const ParticleData<NDIM, P>& part, const lpt::AmbientProperties<NDIM>& amb, const GDouble t)
     -> VectorD<NDIM> {
-  const GDouble c1 = amb.m_rho_a / part.density();
-  const GDouble c2 = 18.0 * amb.m_nu_a / (4.0 * part.radius() * part.radius() * part.density()); // Pas /(m^2 * kg/m^3) -> kg/ms / (kg/m) =
-                                                                                                 // 1/s
+  const GDouble c1 = amb.m_rho / part.density();
+  const GDouble c2 = 18.0 * amb.m_nu / (4.0 * part.radius() * part.radius() * part.density()); // Pas /(m^2 * kg/m^3) -> kg/ms / (kg/m) =
+                                                                                               // 1/s
   return (gcem::exp(-c2 * t)
           * (c2 * (amb.m_v_infty * (gcem::exp(c2 * t) - 1) + part.initV()) - (c1 - 1) * amb.m_gravity * (gcem::exp(c2 * t) - 1)))
          / c2;
@@ -63,9 +69,9 @@ auto getAnalyticalSolution(const GString& name)
   //    return &lpt::freefall_stokes_pos;
   //  }
   //
-  //  if(name == "freefall_nodrag_vel") {
-  //    return &lpt::freefall_noDrag_vel;
-  //  }
+  if(name == "freefall_nodrag_vel") {
+    return &lpt::freefall_noDrag_vel<NDIM, P>;
+  }
   //
   //  if(name == "freefall_nodrag_pos") {
   //    return &lpt::freefall_noDrag_pos;

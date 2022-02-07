@@ -10,12 +10,13 @@
     "type": "lpt",
     "capacity": 100,
     "maxSteps": 1000000,
-    "solution_interval": 50000,
-    "dt": 0.0000001,
-    "analyticalSolution": "freefall_stokes",
+    "solution_interval": 500000,
+    "dt": 1E-7,
+    "integrationMethod": "ImplicitEuler",
+    "analyticalSolution": "freefall_nodrag",
     "model": "constDensityaGravBuo",
-    "errorL2": 1E-13,
-    "errorMax": 9E-12,
+    "errorL2": 8E-12,
+    "errorMax": 3E-8,
     "initialcondition": "randomvol_pos",
     "gravity": [
       0,
@@ -23,7 +24,7 @@
     ],
     "randomvol_pos": {
       "noparticles": 10,
-      "init_rho_p": 0.5,
+      "init_rho_p": 0.001,
       "init_r_p": 0.01,
       "init_velo": [
         0.0,
