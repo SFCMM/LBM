@@ -94,7 +94,10 @@
 
 - [LPT] terminal velocity test
 - [LPT] finish for release
+- [LPT] also compare the position of particles
+- [LPT] switch to relative max error
 - [LPT] compare solution at multiple time points
+- [LPT] add tutorial
 
 - [LIB] move kdtree to common lib project.
 - [LIB] move line to common lib project.
@@ -110,10 +113,6 @@
 
 - [LBM] inflow pressure bc
 - [LBM] outflow pressure bc
-
-- [LPT] add additional analytical solutions
-    - initial velocity
-- [LPT] add tutorial
 
 ## Done:
 
