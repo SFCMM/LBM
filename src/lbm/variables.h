@@ -4,7 +4,7 @@
 /// Class to keep the positions of variables consistent
 /// \tparam EQ The equation that is in use.
 /// \tparam NDIM The number of dimensions that are used.
-template <LBEquation EQ, GInt NDIM>
+template <LBEquationType EQ, GInt NDIM>
 class LBMVariables {
  public:
   /// Get the position of the x-axis velocity
@@ -78,7 +78,7 @@ class LBMVariables {
 
   // todo: fix for thermal
   static constexpr auto electricPotential() -> GInt {
-    if(EQ == LBEquation::Poisson) {
+    if(EQ == LBEquationType::Poisson) {
       return 0;
     }
     return rho() + 1;

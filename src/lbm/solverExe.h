@@ -31,7 +31,7 @@ class LBMSolverExecutor : public Runnable {
     }
     LBMethodType modelType = getLBMethodType(model);
     // todo: communicate the model
-    LBEquation equationType = getLBEquationType(equation);
+    LBEquationType equationType = getLBEquationType(equation);
 
     switch(modelType) {
       case LBMethodType::D1Q3:
@@ -39,8 +39,8 @@ class LBMSolverExecutor : public Runnable {
             //          case LBEquation::Navier_Stokes:
             //            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3, LBEquation::Navier_Stokes>>(m_domainId,
             //            m_noDomains); break;
-          case LBEquation::Poisson:
-            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3, LBEquation::Poisson>>(m_domainId, m_noDomains);
+          case LBEquationType::Poisson:
+            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D1Q3, LBEquationType::Poisson>>(m_domainId, m_noDomains);
             break;
             //          case LBEquation::Navier_Stokes_Poisson:
             //            m_lbmSolver =
@@ -56,8 +56,8 @@ class LBMSolverExecutor : public Runnable {
             //          case LBEquation::Navier_Stokes:
             //            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q5, LBEquation::Navier_Stokes>>(m_domainId,
             //            m_noDomains); break;
-          case LBEquation::Poisson:
-            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q5, LBEquation::Poisson>>(m_domainId, m_noDomains);
+          case LBEquationType::Poisson:
+            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q5, LBEquationType::Poisson>>(m_domainId, m_noDomains);
             break;
             //          case LBEquation::Navier_Stokes_Poisson:
             //            m_lbmSolver =
@@ -70,11 +70,12 @@ class LBMSolverExecutor : public Runnable {
         break;
       case LBMethodType::D2Q9:
         switch(equationType) {
-          case LBEquation::Navier_Stokes:
-            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q9, LBEquation::Navier_Stokes>>(m_domainId, m_noDomains);
+          case LBEquationType::Navier_Stokes:
+            m_lbmSolver =
+                std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q9, LBEquationType::Navier_Stokes>>(m_domainId, m_noDomains);
             break;
-          case LBEquation::Poisson:
-            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q9, LBEquation::Poisson>>(m_domainId, m_noDomains);
+          case LBEquationType::Poisson:
+            m_lbmSolver = std::make_unique<LBMSolver<DEBUG_LEVEL, LBMethodType::D2Q9, LBEquationType::Poisson>>(m_domainId, m_noDomains);
             break;
             //          case LBEquation::Navier_Stokes_Poisson:
             //            m_lbmSolver =

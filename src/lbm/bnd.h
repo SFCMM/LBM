@@ -15,7 +15,7 @@ class LBMBnd_wallBB;
 
 class LBMBnd_dummy;
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 class LBMBndManager : private Configuration {
  private:
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
@@ -94,8 +94,14 @@ class LBMBndManager : private Configuration {
           continue;
         }
         if(bndType == "dirichlet") {
-          logger << " dirichlet boundary condition using neem" << std::endl;
-          addBndry(BndryType::Dirichlet_NEEM, surfBndConfig, bndrySrf);
+          const auto model = config::required_config_value<GString>(surfBndConfig, "model");
+          if(model == "bounceback") {
+            logger << " dirichlet boundary condition using bb" << std::endl;
+            addBndry(BndryType::Dirichlet_BounceBack, surfBndConfig, bndrySrf);
+          } else if(model == "neem") {
+            logger << " dirichlet boundary condition using neem" << std::endl;
+            addBndry(BndryType::Dirichlet_NEEM, surfBndConfig, bndrySrf);
+          }
           continue;
         }
         TERMM(-1, "Invalid bndCndType: " + bndType);
@@ -162,6 +168,9 @@ class LBMBndManager : private Configuration {
           break;
         case BndryType::Dirichlet_NEEM:
           m_bndrys.emplace_back(std::make_unique<LBMBnd_DirichletNEEM<DEBUG_LEVEL, LBTYPE, EQ>>(surf[0], properties));
+          break;
+        case BndryType::Dirichlet_BounceBack:
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_DirichletBB<DEBUG_LEVEL, LBTYPE, EQ>>(surf[0], properties));
           break;
         default:
           TERMM(-1, "Invalid bndry Type!");

@@ -1,0 +1,72 @@
+{
+  "dry-run": true,
+  "dim": 2,
+  "partitionLevel": 5,
+  "uniformLevel": 5,
+  "maxRfnmtLvl": 5,
+  "maxNoCells": 1000000,
+  "outputDir": "out",
+  "gridFileName": "gridD",
+  "gridOutput": {
+    "format": "VTKB",
+    "cellFilter": "leafCells",
+    "type": "points",
+    "outputValues": [
+      "level",
+      "noChildren"
+    ]
+  },
+  "geometry": {
+    "cube": {
+      "type": "box",
+      "A": [
+        0.0,
+        0.0
+      ],
+      "B": [
+        3.0,
+        5.0
+      ]
+    }
+  },
+  "solver": {
+    "type": "lbm",
+    "method": "bgk",
+    "reynoldsnumber": 0.0433013,
+    "ma": 0.01,
+    "maxSteps": 1500,
+    "info_interval": 100,
+    "solution_interval": 500,
+    "convergence": 2E-11,
+    "analyticalSolution": "couette2D_1_5",
+    "errorL2": 7E-10,
+    "errorMax": 4E-11,
+    "assumeAxisAligned": true,
+    "boundary": {
+      "cube": {
+        "+x": {
+          "type": "periodic",
+          "generateBndry": true,
+          "connection": "-x"
+        },
+        "-x": {
+          "type": "periodic",
+          "generateBndry": true,
+          "connection": "+x"
+        },
+        "+y": {
+          "type": "dirichlet",
+          "model": "bounceback",
+          "value": [
+            0.1,
+            0
+          ]
+        },
+        "-y": {
+          "type": "wall",
+          "model": "bounceback"
+        }
+      }
+    }
+  }
+}

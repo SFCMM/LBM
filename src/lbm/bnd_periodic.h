@@ -12,7 +12,7 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
 
-  using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
+  using VAR = LBMVariables<LBEquationType::Navier_Stokes, NDIM>;
 
  public:
   LBMBndCell_periodic() = delete;

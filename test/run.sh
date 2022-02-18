@@ -78,6 +78,7 @@ write_report
 cd couette || exit
 time_test couette.json
 time_test couette_bnd.json
+time_test couette_bnd_bbDirichlet.json
 time_test couette_bnd_eq.json
 time_test couette_bnd_eq2.json
 time_test couette_bnd_NEEM.json

@@ -21,22 +21,22 @@ static constexpr GInt maxNumberDistributions  = 30;
 static constexpr GDouble lbm_cs   = 1.0 / gcem::sqrt(3.0); // assuming dx/dt = 1
 static constexpr GDouble lbm_cssq = 1.0 / 3.0;             // assuming dx/dt = 1
 
-enum class LBEquation { Navier_Stokes, Poisson, Navier_Stokes_Poisson };
+enum class LBEquationType { Navier_Stokes, Poisson, Navier_Stokes_Poisson };
 static constexpr std::array<std::string_view, 3> LBEquationName = {"Navier-Stokes",
                                                                    // Implementation based on "A novel lattice Boltzmann model for the
                                                                    // Poisson equation", 2008, Applied Mathematical Modeling, Chai and
                                                                    // Shi [CHAI08]
                                                                    "Poisson", "Navier-Stokes-Poisson"};
 
-static constexpr auto getLBEquationType(const std::string_view equationName) -> LBEquation {
+static constexpr auto getLBEquationType(const std::string_view equationName) -> LBEquationType {
   if(equationName == "navierstokes") {
-    return LBEquation::Navier_Stokes;
+    return LBEquationType::Navier_Stokes;
   }
   if(equationName == "poisson") {
-    return LBEquation::Poisson;
+    return LBEquationType::Poisson;
   }
   if(equationName == "navierstokespoisson") {
-    return LBEquation::Navier_Stokes_Poisson;
+    return LBEquationType::Navier_Stokes_Poisson;
   }
   TERMM(-1, "Invalid equation configuration!");
 }
@@ -87,7 +87,8 @@ enum class BndryType {
   Inlet_BounceBack_ConstPressure,     // BounceBack Boundary condition 1st order accurate with tangential velocity
   Outlet_BounceBack_ConstPressure,    // BounceBack Boundary condition 1st order accurate with tangential velocity
   Periodic,                           // Periodic boundary condition handled through boundary class
-  Dirichlet_NEEM                      // Dirichlet boundary condition using Non-equilibrium extrapolation method
+  Dirichlet_NEEM,                     // Dirichlet boundary condition using Non-equilibrium extrapolation method
+  Dirichlet_BounceBack                // Dirichlet boundary condition using bounce-back
 };
 
 enum class LBMethodType { D1Q3, D2Q5, D2Q9, D3Q19, D3Q27, D4Q40, INVALID };
@@ -332,9 +333,10 @@ class LBMethod<LBMethodType::D3Q19> {
                                                         1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0,
                                                         1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0, 1.0 / 3.0};
 
-  static constexpr GDouble m_poissonAlpha = NAN;
-  //  static constexpr std::array<GDouble, 19> m_poissonWeights = {1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0,
-  //                                                              1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 0.0};
+  static constexpr GDouble                 m_poissonAlpha   = NAN;
+  static constexpr std::array<GDouble, 19> m_poissonWeights = {
+      1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0,
+      1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 1.0 / 18.0, 0.0};
 
 
   static constexpr GInt             m_dim        = 3;
@@ -387,9 +389,11 @@ class LBMethod<LBMethodType::D3Q27> {
       1.0 / 54.0,  1.0 / 54.0,  1.0 / 54.0,  1.0 / 54.0,  1.0 / 54.0,  1.0 / 54.0,  1.0 / 54.0, 1.0 / 54.0, 1.0 / 54.0,
       1.0 / 216.0, 1.0 / 216.0, 1.0 / 216.0, 1.0 / 216.0, 1.0 / 216.0, 1.0 / 216.0, 8.0 / 27.0};
 
-  static constexpr GDouble m_poissonAlpha = NAN;
-  //  static constexpr std::array<GDouble, 19> m_poissonWeights = {1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0,
-  //                                                              1.0 / 8.0, 1.0 / 8.0, 1.0 / 8.0, 0.0};
+  static constexpr GDouble                 m_poissonAlpha   = NAN;
+  static constexpr std::array<GDouble, 27> m_poissonWeights = {
+      1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0,
+      1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0,
+      1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 1.0 / 26.0, 0.0};
 
 
   static constexpr GInt             m_dim        = 3;
@@ -400,15 +404,15 @@ class LBMethod<LBMethodType::D3Q27> {
 };
 
 template <LBMethodType LBTYPE>
-static constexpr auto noVars(const LBEquation equation) -> GInt {
+static constexpr auto noVars(const LBEquationType equation) -> GInt {
   switch(equation) {
-    case LBEquation::Navier_Stokes:
+    case LBEquationType::Navier_Stokes:
       // Velocities + Density + Temperature
       return LBMethod<LBTYPE>::m_dim + 1 + static_cast<GInt>(LBMethod<LBTYPE>::m_isThermal);
-    case LBEquation::Poisson:
+    case LBEquationType::Poisson:
       // Potential
       return 1;
-    case LBEquation::Navier_Stokes_Poisson:
+    case LBEquationType::Navier_Stokes_Poisson:
       // Velocities + Density + Temperature + Potential
       return LBMethod<LBTYPE>::m_dim + 1 + static_cast<GInt>(LBMethod<LBTYPE>::m_isThermal) + 1;
     default:

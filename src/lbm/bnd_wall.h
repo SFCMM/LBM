@@ -153,7 +153,7 @@ class LBMBnd_wallWetnode {
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
 
-  using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
+  using VAR = LBMVariables<LBEquationType::Navier_Stokes, NDIM>;
 
  public:
   LBMBnd_wallWetnode(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf) {
@@ -199,7 +199,7 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
 
-  using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
+  using VAR = LBMVariables<LBEquationType::Navier_Stokes, NDIM>;
 
  public:
   LBMBnd_wallEq(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
@@ -242,10 +242,11 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
       }
     }
 
+    // update the density value with velocity set to 0
     GInt index = 0;
     for(const auto cellId : m_bnd->getCellList()) {
-      calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, true>(cellId, this->limitedDist()[index], this->limitedConst()[index],
-                                                                        nullptr, fold, vars);
+      calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, true>(cellId, this->limitedDist()[index], this->limitedConst()[index],
+                                                                            nullptr, fold, vars);
       ++index;
     }
 
@@ -262,8 +263,8 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
                             const std::function<GDouble&(GInt, GInt)>& vars) {
     GInt index = 0;
     for(const auto cellId : m_bnd->getCellList()) {
-      calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, false>(cellId, this->limitedDist()[index], this->limitedConst()[index],
-                                                                         &this->normal()[index][0], fold, vars);
+      calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, false>(
+          cellId, this->limitedDist()[index], this->limitedConst()[index], &this->normal()[index][0], fold, vars);
       ++index;
       for(GInt dir = 0; dir < NDIM; ++dir) {
         vars(cellId, VAR::velocity(dir)) = m_wallV[dir];
@@ -300,7 +301,7 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
 
-  using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
+  using VAR = LBMVariables<LBEquationType::Navier_Stokes, NDIM>;
 
  public:
   LBMBnd_wallNEEM(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) : LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>(surf) {
@@ -418,7 +419,7 @@ class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
 
-  using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
+  using VAR = LBMVariables<LBEquationType::Navier_Stokes, NDIM>;
 
  public:
   LBMBnd_wallNEBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
@@ -467,8 +468,8 @@ class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_
 
     GInt index = 0;
     for(const auto cellId : m_bnd->getCellList()) {
-      calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, true>(cellId, this->limitedDist()[index], this->limitedConst()[index],
-                                                                        nullptr, fold, vars);
+      calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, true>(cellId, this->limitedDist()[index], this->limitedConst()[index],
+                                                                            nullptr, fold, vars);
       ++index;
     }
 
@@ -510,8 +511,8 @@ class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_
                     const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& vars) {
     GInt index = 0;
     for(const auto cellId : m_bnd->getCellList()) {
-      calcDensity_limited<NDIM, NDIST, LBEquation::Navier_Stokes, false>(cellId, this->limitedDist()[index], this->limitedConst()[index],
-                                                                         &this->normal()[index][0], fold, vars);
+      calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, false>(
+          cellId, this->limitedDist()[index], this->limitedConst()[index], &this->normal()[index][0], fold, vars);
       ++index;
       for(GInt dir = 0; dir < NDIM; ++dir) {
         vars(cellId, VAR::velocity(dir)) = m_wallV[dir];

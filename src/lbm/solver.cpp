@@ -6,7 +6,7 @@
 
 using namespace std;
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::init(int argc, GChar** argv) {
   m_exe = argv[0]; // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
@@ -24,7 +24,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::init(int argc, GChar** argv) {
   initTimers();
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::init(int argc, GChar** argv, GString config_file) {
   setConfiguration(config_file);
   init(argc, argv);
@@ -35,7 +35,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::init(int argc, GChar** argv, GString co
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initBenchmark(int argc, GChar** argv) {
   m_benchmark = true;
   init(argc, argv);
@@ -45,7 +45,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initBenchmark(int argc, GChar** argv) {
   TERMM(-1, "Not implemented!");
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initTimers() {
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMSolverTotal], "Total run time of the LBM Solver.", TimeKeeper[Timers::timertotal]);
   RECORD_TIMER_START(TimeKeeper[Timers::LBMSolverTotal]);
@@ -67,7 +67,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initTimers() {
   NEW_SUB_TIMER_NOCREATE(TimeKeeper[Timers::LBMIo], "IO", TimeKeeper[Timers::LBMMainLoop]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   m_solverType = LBSolverType::BGK; // todo: load from file
 
@@ -92,7 +92,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
 
   const GDouble m_finestGridSpacing = 1.0 / (std::pow(size(), 1.0 / NDIM) - 1); // todo: replace with cellLength
 
-  if(EQ == LBEquation::Navier_Stokes || EQ == LBEquation::Navier_Stokes_Poisson) {
+  if(EQ == LBEquationType::Navier_Stokes || EQ == LBEquationType::Navier_Stokes_Poisson) {
     if(has_config_value("reynoldsnumber") && has_config_value("relaxation")) {
       TERMM(-1, "Only set either reynoldsnumber or relaxation");
     }
@@ -148,7 +148,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   cerr0 << "+++++++++++++++++++++++++" << std::endl;
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::allocateMemory() {
   // allocate memory
   m_f.resize(grid().totalSize() * NDIST);
@@ -158,7 +158,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::allocateMemory() {
   m_varsold.resize(grid().totalSize() * NVARS);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::run() -> GInt {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
   loadConfiguration();
@@ -200,7 +200,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::run() -> GInt {
   return 0;
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::convergenceCondition() -> GBool {
   if(m_timeStep > 0 && m_timeStep % m_outputInfoInterval == 0) {
     cerr0 << m_timeStep << ": ";
@@ -234,7 +234,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::convergenceCondition() -> GBool {
 }
 
 // todo: refactor
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
   // init to zero:
   for(GInt cellId = 0; cellId < allCells(); ++cellId) {
@@ -242,16 +242,16 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
       m_vars[cellId * NVARS + dir]    = 0;
       m_varsold[cellId * NVARS + dir] = 0;
     }
-    if(EQ == LBEquation::Navier_Stokes) {
+    if(EQ == LBEquationType::Navier_Stokes) {
       rho(cellId) = 1.0;
-    } else if(EQ == LBEquation::Poisson || EQ == LBEquation::Navier_Stokes_Poisson) {
+    } else if(EQ == LBEquationType::Poisson || EQ == LBEquationType::Navier_Stokes_Poisson) {
       electricPotential(cellId) = 0.0;
     }
   }
   initBndryValues();
 
   for(GInt cellId = 0; cellId < allCells(); ++cellId) {
-    if(EQ == LBEquation::Navier_Stokes) {
+    if(EQ == LBEquationType::Navier_Stokes) {
       // assuming initial zero velocity and density 1
       for(GInt dist = 0; dist < NDIST; ++dist) {
         feq(cellId, dist)  = METH::m_weights[dist];
@@ -259,7 +259,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
         fold(cellId, dist) = feq(cellId, dist);
       }
     }
-    if(EQ == LBEquation::Poisson) {
+    if(EQ == LBEquationType::Poisson) {
       for(GInt dist = 0; dist < NDIST - 1; ++dist) {
         feq(cellId, dist)  = METH::m_weights[dist] * electricPotential(cellId);
         f(cellId, dist)    = feq(cellId, dist);
@@ -274,7 +274,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
 }
 
 /// Set the initial values on the boundaries
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initBndryValues() {
   using namespace std::placeholders;
   std::function<GDouble&(GInt, GInt)> _v = std::bind(&LBMSolver::vars, this, _1, _2);
@@ -282,7 +282,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initBndryValues() {
   m_bndManager->initCndBnd(_v);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::timeStep() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMCalc]);
   executePostprocess(pp::HOOK::BEFORETIMESTEP);
@@ -298,7 +298,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::timeStep() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMCalc]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GString& postfix) {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMIo]);
 
@@ -320,7 +320,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
     // only output leaf cells (i.e. cells without children)
     std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return noChildren(cellId) == 0; };
 
-    if(EQ != LBEquation::Poisson) {
+    if(EQ != LBEquationType::Poisson) {
       std::array<std::vector<GDouble>, NDIM> tmpVel;
       std::vector<GDouble>                   tmpRho;
 
@@ -347,7 +347,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
       values.emplace_back(toStringVector(tmpRho, allCells()));
     }
 
-    if(EQ == LBEquation::Poisson || EQ == LBEquation::Navier_Stokes_Poisson) {
+    if(EQ == LBEquationType::Poisson || EQ == LBEquationType::Navier_Stokes_Poisson) {
       std::vector<GDouble> tmpV;
       tmpV.resize(size());
 
@@ -366,7 +366,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
 }
 
 // todo: move to a common place and also remove from lpt
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
   // todo: fix for 3D
   //  for an analytical testcase the value "analyticalSolution" needs to be defined
@@ -458,7 +458,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
   }
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::shiftCenter(const Point<NDIM>& centerPoint) const -> Point<NDIM> {
   const auto analyticalSolutionName = required_config_value<GString>("analyticalSolution");
 
@@ -478,7 +478,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::shiftCenter(const Point<NDIM>& centerPo
   return shiftedCenter;
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::currToOldVars() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMMacro]);
   std::copy(m_vars.begin(), m_vars.end(), m_varsold.begin());
@@ -486,7 +486,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::currToOldVars() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMMacro]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::updateMacroscopicValues() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMMacro]);
 
@@ -500,7 +500,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::updateMacroscopicValues() {
 #endif
     for(GInt cellId = 0; cellId < allCells(); ++cellId) {
       // todo:skip non-leaf cells!
-      if(EQ == LBEquation::Navier_Stokes || EQ == LBEquation::Navier_Stokes_Poisson) {
+      if(EQ == LBEquationType::Navier_Stokes || EQ == LBEquationType::Navier_Stokes_Poisson) {
         rho(cellId) = std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST), 0.0);
 
         for(GInt dir = 0; dir < NDIM; ++dir) {
@@ -514,7 +514,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::updateMacroscopicValues() {
         // todo: calculate f^neq_ = f_i -f^eq_i (if activated)
       }
 
-      if(EQ == LBEquation::Poisson || EQ == LBEquation::Navier_Stokes_Poisson) {
+      if(EQ == LBEquationType::Poisson || EQ == LBEquationType::Navier_Stokes_Poisson) {
         electricPotential(cellId) = 1.0 / (1.0 - METH::m_weights[NDIST - 1])
                                     * std::accumulate((m_fold.begin() + cellId * NDIST), (m_fold.begin() + (cellId + 1) * NDIST - 1), 0.0);
       }
@@ -529,7 +529,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::updateMacroscopicValues() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMMacro]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::calcEquilibriumMoments() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMEq]);
 
@@ -537,17 +537,17 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::calcEquilibriumMoments() {
 #pragma omp parallel for default(none)
 #endif
   for(GInt cellId = 0; cellId < allCells(); ++cellId) {
-    if(EQ != LBEquation::Poisson) {
+    if(EQ != LBEquationType::Poisson) {
       eq::defaultEq<LBTYPE>(feq(cellId), rho(cellId), velocity(cellId));
     }
-    if(EQ == LBEquation::Poisson) {
+    if(EQ == LBEquationType::Poisson) {
       eq::poisson<LBTYPE>(feq(cellId), electricPotential(cellId));
     }
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMEq]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMColl]);
 
@@ -566,11 +566,11 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
   for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST; ++dist) {
       f(cellId, dist) = (1 - m_omega) * fold(cellId, dist) + m_omega * feq(cellId, dist);
-      if constexpr(EQ == LBEquation::Poisson) {
+      if constexpr(EQ == LBEquationType::Poisson) {
         if(dist != NDIST - 1) {
           // todo: make settable
           static constexpr GDouble k           = 27.79;
-          static const GDouble     diffusivity = METH::m_poissonAlpha * gcem::pow(m_speedOfSound, 2) * (0.5 - m_relaxTime) * m_dt;
+          static const GDouble     diffusivity = METH::m_poissonAlpha * gcem::pow(m_latticeVelocity, 2) * (0.5 - m_relaxTime) * m_dt;
           f(cellId, dist) += m_dt * diffusivity * METH::m_poissonWeights[dist] * k * k * electricPotential(cellId);
         }
       }
@@ -587,7 +587,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
 }
 
 // todo:refactor
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::forcing() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMForce]);
 
@@ -659,7 +659,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::forcing() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMForce]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::prePropBoundaryCnd() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMBnd]);
 
@@ -675,7 +675,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::prePropBoundaryCnd() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMBnd]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::propagationStep() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMProp]);
 
@@ -703,14 +703,14 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::propagationStep() {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMProp]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::boundaryCnd() {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMBnd]);
 
   // todo: replace by lambda function
   using namespace std::placeholders;
-  std::function<GDouble&(GInt, GInt)> _fold = std::bind(&LBMSolver::fold, this, _1, _2);
   std::function<GDouble&(GInt, GInt)> _f    = std::bind(&LBMSolver::f, this, _1, _2);
+  std::function<GDouble&(GInt, GInt)> _fold = std::bind(&LBMSolver::fold, this, _1, _2);
   std::function<GDouble&(GInt, GInt)> _feq  = std::bind(static_cast<GDouble& (LBMSolver::*)(GInt, GInt)>(&LBMSolver::feq), this, _1, _2);
   std::function<GDouble&(GInt, GInt)> _v    = std::bind(&LBMSolver::vars, this, _1, _2);
 
@@ -719,7 +719,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::boundaryCnd() {
 }
 
 // todo: simplify (move somewhere else?!)
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::transferGrid(const GridInterface& grid) {
   RECORD_TIMER_START(TimeKeeper[Timers::LBMInit]);
   cerr0 << "Transferring " + std::to_string(NDIM) + "D Grid to LBM solver" << std::endl;
@@ -764,12 +764,12 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::transferGrid(const GridInterface& grid)
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 constexpr auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::isThermal() -> GBool {
   return false;
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::sumAbsDiff(const GInt var) const -> GDouble {
   GDouble conv = 0.0;
   for(GInt cellId = 0; cellId < noInternalCells(); ++cellId) {
@@ -778,7 +778,7 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::sumAbsDiff(const GInt var) const -> GDo
   return conv;
 }
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::checkDivergence() {
   for(const auto& value : m_vars) {
     if(std::isinf(value) || std::isnan(value)) {

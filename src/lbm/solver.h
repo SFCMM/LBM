@@ -9,7 +9,7 @@
 #include "postprocessing.h"
 #include "variables.h"
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquation EQ>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 class LBMSolver : public Runnable,
                   private Configuration,
                   private Postprocess<DEBUG_LEVEL, dim(LBTYPE), SolverType::LBM, LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>> {
@@ -197,8 +197,8 @@ class LBMSolver : public Runnable,
 
   GDouble m_nu           = 0;
   GDouble m_re           = 1;
-  GDouble m_ma           = defaultMachNumber;
-  GDouble m_speedOfSound = 1.0;
+  GDouble m_ma              = defaultMachNumber;
+  GDouble m_latticeVelocity = 1.0;
 
   GDouble m_relaxTime = defaultRelaxT;
   GDouble m_omega     = 1.0 / m_relaxTime;

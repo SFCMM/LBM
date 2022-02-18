@@ -10,7 +10,7 @@ class LBMBnd_InOutBB : public LBMBndInterface {
   using method               = LBMethod<LBTYPE>;
   static constexpr GInt NDIM = LBMethod<LBTYPE>::m_dim;
 
-  using VAR = LBMVariables<LBEquation::Navier_Stokes, NDIM>;
+  using VAR = LBMVariables<LBEquationType::Navier_Stokes, NDIM>;
 
  public:
   LBMBnd_InOutBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& /*properties*/) : m_normal(surf->normal(0)) {
