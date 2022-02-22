@@ -175,6 +175,44 @@ class LBMBnd_wallWetnode {
       m_limDist.back().emplace(NDIST - 1);
       m_limConst.back()[NDIST - 1] = 1;
     }
+
+    //    // determine limited dist set etc.
+    //    for(const GInt cellId : surf->getCellList()) {
+    //      m_limDist.emplace_back();
+    //      m_limConst.emplace_back();
+    //      m_limConst.back().fill(0);
+    //      m_normal.emplace_back(VectorD<NDIM>(surf->normal_p(cellId)));
+    //      for(GInt dir = 0; dir < NDIST - 1; ++dir) {
+    //        const GInt oppositeDist = LBMethod<LBTYPE>::oppositeDist(dir);
+    //
+    //        if(inDirection<dim(LBTYPE)>(m_normal.back(), LBMethod<LBTYPE>::m_dirs[dir])
+    //           && surf->neighbor(cellId, oppositeDist) != INVALID_CELLID) {
+    //          m_limDist.back().emplace(dir);
+    //
+    //          m_limConst.back()[dir] = 2;
+    //
+    //        } else if(orthogonal<dim(LBTYPE)>(m_normal.back(), LBMethod<LBTYPE>::m_dirs[dir])
+    //                  && surf->neighbor(cellId, oppositeDist) != INVALID_CELLID) {
+    //          m_limDist.back().emplace(dir);
+    //
+    //          // cell is a corner
+    //          if(surf->neighbor(cellId, dir) == INVALID_CELLID) {
+    //            // this is only correct for wall velocity = 0
+    //            m_limConst.back()[dir] = 2;
+    //          } else {
+    //            m_limConst.back()[dir] = 1;
+    //          }
+    //        }
+    //      }
+    //      const GInt sumC = std::accumulate(m_limConst.back().begin(), m_limConst.back().end(), 0);
+    //      if(sumC != NDIST - 1) {
+    //        // we clear to mark a corner
+    //        m_limDist.back().clear();
+    //      } else {
+    //        m_limDist.back().emplace(NDIST - 1);
+    //        m_limConst.back()[NDIST - 1] = 1;
+    //      }
+    //    }
   }
 
   [[nodiscard]] auto limitedDist() const -> const std::vector<std::set<GInt>>& { return m_limDist; }

@@ -83,7 +83,6 @@
 - simplify writing output
 
 - [LBM] add support for boundary ghost cells in periodic boundary
-- [LBM] use pressure boundary condition for poiseuille cases
 
 ### this month:
 
@@ -109,8 +108,8 @@
 
 - add INFO_OUTPUT with physical time update
 
-### next week:
 
+- [LBM] use pressure boundary condition for poiseuille cases
 - [LBM] inflow pressure bc
 - [LBM] outflow pressure bc
 
@@ -138,6 +137,8 @@
         - Wet node equilibrium method wall
         - Wet node non-equilibrium extrapolation method wall
         - Wet node non-equilibrium bounce-back method wall
+        - BB Dirichlet bnd
+        - AntiBB pressure bnd
 
 - Cartesian grid
     - allow generation of boundary ghost cells

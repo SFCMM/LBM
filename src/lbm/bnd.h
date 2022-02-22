@@ -83,14 +83,19 @@ class LBMBndManager : private Configuration {
           }
           continue;
         }
+        if(bndType == "pressure") {
+          logger << " open constant pressure anti bounce-back condition" << std::endl;
+          addBndry(BndryType::Open_AntiBounceBack_ConstPressure, surfBndConfig, bndrySrf);
+          continue;
+        }
         if(bndType == "outlet") {
-          logger << " outlet bounce-back with constant pressure" << std::endl;
-          addBndry(BndryType::Outlet_BounceBack_ConstPressure, surfBndConfig, bndrySrf);
+          logger << " outlet anti bounce-back with constant pressure" << std::endl;
+          addBndry(BndryType::Outlet_AntiBounceBack_ConstPressure, surfBndConfig, bndrySrf);
           continue;
         }
         if(bndType == "inlet") {
-          logger << " inlet bounce-back with constant pressure" << std::endl;
-          addBndry(BndryType::Inlet_BounceBack_ConstPressure, surfBndConfig, bndrySrf);
+          logger << " inlet anti bounce-back with constant pressure" << std::endl;
+          addBndry(BndryType::Inlet_AntiBounceBack_ConstPressure, surfBndConfig, bndrySrf);
           continue;
         }
         if(bndType == "dirichlet") {
@@ -154,12 +159,15 @@ class LBMBndManager : private Configuration {
         case BndryType::Wall_NEBB:
           m_bndrys.emplace_back(std::make_unique<LBMBnd_wallNEBB<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
           break;
-        case BndryType::Inlet_BounceBack_ConstPressure:
-          m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
+        case BndryType::Open_AntiBounceBack_ConstPressure:
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_Pressure<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
+          break;
+        case BndryType::Inlet_AntiBounceBack_ConstPressure:
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_Pressure<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
           TERMM(-1, "Broken");
           //          break;
-        case BndryType::Outlet_BounceBack_ConstPressure:
-          m_bndrys.emplace_back(std::make_unique<LBMBnd_InOutBB<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
+        case BndryType::Outlet_AntiBounceBack_ConstPressure:
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_Pressure<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
           TERMM(-1, "Broken");
           //          break;
         case BndryType::Periodic:

@@ -252,9 +252,10 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
 
   for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     if(EQ == LBEquationType::Navier_Stokes) {
-      // assuming initial zero velocity and density 1
+      // assuming initial set velocity (either 0 or bndry value) and density 1
       for(GInt dist = 0; dist < NDIST; ++dist) {
-        feq(cellId, dist)  = METH::m_weights[dist];
+        eq::defaultEq<LBTYPE>(feq(cellId), rho(cellId), velocity(cellId));
+        ;
         f(cellId, dist)    = feq(cellId, dist);
         fold(cellId, dist) = feq(cellId, dist);
       }

@@ -1,160 +1,133 @@
 #ifndef LBM_BND_IN_OUT_H
 #define LBM_BND_IN_OUT_H
 #include "bnd_interface.h"
+#include "common/surface.h"
 #include "constants.h"
+#include "equilibrium_func.h"
 #include "variables.h"
 
+// Antibounceback pressure boundary condition
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-class LBMBnd_InOutBB : public LBMBndInterface {
+class LBMBnd_Pressure : public LBMBndInterface {
  private:
-  using method               = LBMethod<LBTYPE>;
-  static constexpr GInt NDIM = LBMethod<LBTYPE>::m_dim;
+  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
+
+  static constexpr GInt NVAR = noVars<LBTYPE>(LBEquationType::Navier_Stokes);
 
   using VAR = LBMVariables<LBEquationType::Navier_Stokes, NDIM>;
 
  public:
-  LBMBnd_InOutBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& /*properties*/) : m_normal(surf->normal(0)) {
-    for(const GInt cellId : surf->getCellList()) {
-      m_bndCells.emplace_back(cellId);
-    }
-  }
-  ~LBMBnd_InOutBB() override = default;
+  LBMBnd_Pressure(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
+    : m_bnd(surf), m_pressure(config::required_config_value<GDouble>(properties, "pressure")) {}
+  ~LBMBnd_Pressure() override = default;
 
   // deleted constructors not needed
-  LBMBnd_InOutBB(const LBMBnd_InOutBB&) = delete;
-  LBMBnd_InOutBB(LBMBnd_InOutBB&&)      = delete;
-  auto operator=(const LBMBnd_InOutBB&) -> LBMBnd_InOutBB& = delete;
-  auto operator=(LBMBnd_InOutBB&&) -> LBMBnd_InOutBB& = delete;
+  LBMBnd_Pressure(const LBMBnd_Pressure&) = delete;
+  LBMBnd_Pressure(LBMBnd_Pressure&&)      = delete;
+  auto operator=(const LBMBnd_Pressure&) -> LBMBnd_Pressure& = delete;
+  auto operator=(LBMBnd_Pressure&&) -> LBMBnd_Pressure& = delete;
 
-  //  void init() override {}
-
-  void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
+  void initCnd(const std::function<GDouble&(GInt, GInt)>& vars) override {
+    for(const auto bndCellId : m_bnd->getCellList()) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        vars(bndCellId, VAR::rho()) = m_pressure;
+      }
+    }
+  }
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>&       fold,
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& vars) override {
-    //    const GDouble diffRho   = 0.15;
-    const GDouble targetRho = 1.008;
-    for(const auto cellId : m_bndCells) {
-      const GDouble rho = vars(cellId, VAR::rho());
-      for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
-        if(m_normal[0] < 0) {
-          if(cellId == 341 || cellId == 0) {
-            f(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * (targetRho - rho);
-            fold(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * (targetRho - rho);
-            continue;
-          }
-
-          // todo: replace with call to recalc equilibrium dist
-          //  inlet
-          f(cellId, dist) = method::m_weights[dist] * targetRho
-                            * (1 + 3 * (vars(cellId, VAR::velocity(0)) * method::m_dirs[dist][0] + 0 * method::m_dirs[dist][1]));
-          fold(cellId, dist) = method::m_weights[dist] * targetRho
-                               * (1 + 3 * (vars(cellId, VAR::velocity(0)) * method::m_dirs[dist][0] + 0 * method::m_dirs[dist][1]));
-
-
-          //          f(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * diffRho;
-        } else {
-          //          if(cellId == 682 || cellId == 1023) {
-          //            f(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * (0.9951 - rho);
-          //            fold(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * (0.9951 - rho);
-          //            continue;
-          //          }
-          //          f(cellId, dist)    = LBMethod<LBTYPE>::m_weights[dist] * (0.9951 + 3 * (vars(cellId, VARS::velocitiy(0)) * cx[dist] +
-          //          0
-          //          *
-          //                                                                                                                               cy[dist]));
-          //          fold(cellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * (0.9951 + 3 * (vars(cellId, VARS::velocitiy(0)) * cx[dist] +
-          //          0
-          //          *
-          //                                                                                                                                  cy[dist]));
-        }
-      }
+    // value is set first so that this value can be used in other boundary conditions
+    // todo: this is wrong if there are two pressure boundary conditions with different values
+    for(const auto bndCellId : m_bnd->getCellList()) {
+      vars(bndCellId, VAR::rho()) = m_pressure;
     }
   }
 
-  void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
-             const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {
-    //    const GDouble targetRho = 1.075;
-    // todo: both rho and velocity need to be recalculated move to a separate function
-    // todo: function to recalculate feq
-    for(const auto cellId : m_bndCells) {
-      GDouble u   = 0;
-      GDouble rho = 0;
-      for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
-        u += fold(cellId, dist) * method::m_dirs[dist][0];
-        rho += fold(cellId, dist);
-      }
-      if(m_normal[0] > 0) {
-        for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
-          // set zero y-velocity
-          fold(cellId, dist) = method::m_weights[dist] * (1.0 + 3 * (u * method::m_dirs[dist][0] + 0 * method::m_dirs[dist][1]));
+  void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>&    fold,
+             const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& vars) override {
+    auto extrapolationDir = [&](const GDouble* normal) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        if(normal[dir] < 0) {
+          return 2 * dir + 1;
         }
-      } else {
-        for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
-          // set zero y-velocity
-          fold(cellId, dist) = method::m_weights[dist] * rho * (1.0 + 3 * (u * method::m_dirs[dist][0] + 0 * method::m_dirs[dist][1]));
+        if(normal[dir] > 0) {
+          return 2 * dir;
+        }
+      }
+      return static_cast<GInt>(-1);
+    };
+
+    for(const auto bndCellId : m_bnd->getCellList()) {
+      const GDouble* normal          = m_bnd->normal_p(bndCellId);
+      const GInt     insideDir       = extrapolationDir(normal);
+      const GInt     insideNeighbor  = m_bnd->neighbor(bndCellId, insideDir);
+      const GInt     insideNeighbor2 = m_bnd->neighbor(insideNeighbor, insideDir);
+
+      //      cerr0 << "insideDir " << insideDir << " " << strStreamify<NDIM>(VectorD<NDIM>(normal)).str() << " pressure " << m_pressure
+      //            << std::endl;
+      const VectorD<NDIM> V1(&vars(insideNeighbor, VAR::velocity(0)));
+      const VectorD<NDIM> V2(&vars(insideNeighbor2, VAR::velocity(0)));
+      //      cerr0 << "V1 before " << strStreamify<NDIM>(V1).str() << std::endl;
+      //      cerr0 << "insideNGhbriD " << insideNeighbor << " of " << bndCellId << std::endl;
+      ASSERT(insideNeighbor != INVALID_CELLID, "Invalid cell accessed");
+      ASSERT(insideNeighbor2 != INVALID_CELLID, "Invalid cell accessed");
+
+      VectorD<NDIM> extrpV = 1.5 * V1 - 0.5 * V2;
+      //      VectorD<NDIM> extrpV = 0.5 * V1 + 0.5 * V2;
+      //      cerr0 << "wallv after " << strStreamify<NDIM>(extrpV).str() << std::endl;
+
+      //      for(GInt dir = 0; dir< NDIM; ++dir){
+      //        vars(bndCellId, VAR::velocity(dir)) = extrpV[dir];
+      //      }
+
+      for(GInt dist = 0; dist < NDIST; ++dist) {
+        // todo: actually depends on the type of bnd. this is only correct for walls!
+        //  on a corner
+        //        if(m_bnd->neighbor(bndCellId, 3) == INVALID_CELLID || m_bnd->neighbor(bndCellId, 2) == INVALID_CELLID) {
+        //          extrpV.fill(0);
+        //        }
+
+
+        //        // recalculate equilibrium distribution
+        //        cerr0 << "fold before " << fold(bndCellId, dist) << std::endl;
+        //        fold(bndCellId, dist) = eq::defaultEq<LBTYPE>(dist, m_pressure, extrpV.data());
+        //        //          fold(bndCellId, oppositeDist) -= 2 * eq::defaultEq<LBTYPE>(dist, m_pressure, extrpV.data());//totally wrong
+        //        cerr0 << "fold after " << fold(bndCellId, dist) << std::endl;
+        //
+        //        vars(bndCellId, VAR::rho()) = m_pressure;
+        //        vars(bndCellId, VAR::velocity(0)) = extrpV[0];
+        //        vars(bndCellId, VAR::velocity(1)) = extrpV[1];
+
+        // skip setting dists that are normal to the boundary
+        if(dist < NDIST - 1 && m_bnd->neighbor(bndCellId, dist) == INVALID_CELLID
+           && inDirection<NDIM>(VectorD<NDIM>(m_bnd->normal_p(bndCellId)), LBMethod<LBTYPE>::m_dirs[dist])) {
+          // dist in reflected/opposite direction i.e. to the inside of the bnd
+          GInt oppositeDist = LBMethod<LBTYPE>::oppositeDist(dist);
+          //          cerr0 << "setting " << oppositeDist << " with " << dist << std::endl;
+
+          // anti bounceback i.e. distribution that hits the wall is reflected to the opposite distribution direction with a negative sign
+          fold(bndCellId, oppositeDist) = -fpre(bndCellId, dist) + 2 * eq::symmEq<LBTYPE>(dist, m_pressure, extrpV.data());
+
+          //          cerr0 << "fold " << fold(bndCellId, oppositeDist) << " fpre " << fpre(bndCellId, dist) << std::endl;
+
+          const GDouble currentPressure = vars(bndCellId, VAR::rho());
+          const GDouble dP              = m_pressure - currentPressure;
+          //          if(std::abs(dP) > m_pressure) {
+          //            TERMM(-1, "testing");
+          //          }
+          //          cerr0 << "dp " << dP << " current " << currentPressure << std::endl;
         }
       }
     }
-    //      const GDouble rho = vars(cellId, VARS::rho<dim(LBTYPE)>());
-    //      for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
-    //        const GDouble oldV = fold(cellId, dist);
-    //        const GDouble rho  = 0.001;
-    //        fold(cellId, dist) = f(cellId, dist) + LBMethod<LBTYPE>::m_weights[dist] * (targetRho - rho); //slightly low
-    //        if(m_normal[0] > 0) {
-    //          // outlet
-    //          if(dist == 5 || dist == 1 || dist == 5){
-    //            fold(cellId, dist) = fold(cellId, LBMethod<LBTYPE>::oppositeDist(dist));
-    //          }
-    //          //          fold(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * (1.0 - rho);
-    //          //          if(dist == 4 || dist == 1 || dist == 5 || dist == 8) {
-    //          //            fold(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * (targetRho - rho);
-    //          //          } else
-    //          //              if(dist == 7 || dist == 0 || dist == 6) {
-    //          //            fold(cellId, dist) -= LBMethod<LBTYPE>::m_weights[dist] * (targetRho - rho);
-    //          //          }
-    //          //          if(dist == 8){
-    //          fold(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * (1.0 - rho);
-    //          }
-    //        } else {
-    //          if(cellId == 341 || cellId == 0){
-    //            fold(cellId, 8) += LBMethod<LBTYPE>::m_weights[dist] * (targetRho - rho);
-    //            continue;
-    //          }
-    //          // inlet
-    //          if(dist == 4 || dist == 1 || dist == 5 || dist == 8) {
-    //            //          if(dist == 8) {
-    ////            if((dist == 4) && cellId == 341){
-    ////              continue;
-    ////            }
-    //            fold(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * (targetRho - rho);
-    //            //            fold(cellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * (targetRho - rho);
-    //            //          }
-    //          } else if(dist == 0) {
-    //            // outside direction
-    //            //            fold(cellId, dist) += LBMethod<LBTYPE>::m_weights[dist] * (targetRho - rho);
-    //            fold(cellId, dist) =
-    //                -fold(cellId, LBMethod<LBTYPE>::oppositeDist(dist)) + LBMethod<LBTYPE>::m_weights[dist] * (targetRho - rho);
-    //          } else if(dist == 7 || dist == 6 || dist == 3 || dist == 2) {
-    ////            if((dist == 3 || dist==7) && cellId == 341){
-    ////              continue;
-    ////            }
-    //            fold(cellId, dist) = LBMethod<LBTYPE>::m_weights[dist] * (targetRho - rho);
-    //          }
-    // if(dist == 7 || dist == 0 || dist == 6){
-    //  fold(cellId, dist) = -fold(cellId, LBMethod<LBTYPE>::oppositeDist(dist)) + 0.001;
-    //}
-    //        }
-    //      }
-    //    }
-    //    TERMM(-1, "TEsts");
   }
 
 
  private:
-  GDouble              m_pressure = 1.0;
-  VectorD<dim(LBTYPE)> m_normal;
-  std::vector<GInt>    m_bndCells;
+  GDouble m_pressure = 1.0;
+
+  const SurfaceInterface* m_bnd = nullptr;
 };
 
 #endif // LBM_BND_IN_OUT_H

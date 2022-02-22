@@ -43,11 +43,11 @@ class Surface : public SurfaceInterface {
     }
 
     m_cellId.clear();
-    m_nghbrIds.clear();
+    //    m_nghbrIds.clear();
     std::copy(cellList.begin(), cellList.end(), std::back_inserter(m_cellId));
 
 
-    updateNeighbors();
+    //    updateNeighbors();
   }
 
   void addCell(const GInt cellId, const GInt dir) override {
@@ -60,15 +60,15 @@ class Surface : public SurfaceInterface {
     m_normal.erase(cellId);
   }
 
-  void updateNeighbors() {
-    for(const auto cellId : m_cellId) {
-      std::array<GInt, cartesian::maxNoNghbrsDiag<NDIM>()> tmpNghbr;
-      for(GInt nghbrId = 0; nghbrId < cartesian::maxNoNghbrsDiag<NDIM>(); ++nghbrId) {
-        tmpNghbr[nghbrId] = m_grid.neighbor(cellId, nghbrId);
-      }
-      m_nghbrIds.insert({cellId, tmpNghbr});
-    }
-  }
+  //  void updateNeighbors() {
+  //    for(const auto cellId : m_cellId) {
+  //      std::array<GInt, cartesian::maxNoNghbrsDiag<NDIM>()> tmpNghbr;
+  //      for(GInt nghbrId = 0; nghbrId < cartesian::maxNoNghbrsDiag<NDIM>(); ++nghbrId) {
+  //        tmpNghbr[nghbrId] = m_grid.neighbor(cellId, nghbrId);
+  //      }
+  //      m_nghbrIds.insert({cellId, tmpNghbr});
+  //    }
+  //  }
 
   auto normal(const GInt surfCellId) const -> const VectorD<NDIM>& { return m_normal.at(surfCellId); }
 
@@ -87,13 +87,24 @@ class Surface : public SurfaceInterface {
   auto grid() const -> CartesianGridData<NDIM> { return m_grid; }
 
   [[nodiscard]] auto neighbor(const GInt cellId, const GInt dir) const -> GInt override {
+    //    if(DEBUG_LEVEL >= Debug_Level::debug) {
+    //      if(m_nghbrIds.empty()) {
+    //        TERMM(-1, "Surface not initialized!");
+    //      }
+    //    }
+
     if(DEBUG_LEVEL >= Debug_Level::debug) {
-      if(m_nghbrIds.empty()) {
-        TERMM(-1, "Surface not initialized!");
+      //      if(m_nghbrIds.count(cellId) == 0){
+      //        cerr0<<"ERROR: Invalid cellId " << cellId << std::endl;
+      //        std::exit(-1);
+      //      }
+      if(dir >= cartesian::maxNoNghbrsDiag<NDIM>()) {
+        cerr0 << "ERROR: Invalid direction for " << cellId << " and " << dir << std::endl;
+        std::exit(-1);
       }
     }
-
-    return m_nghbrIds.at(cellId)[dir];
+    return m_grid.neighbor(cellId, dir);
+    //    return m_nghbrIds.at(cellId)[dir];
   }
 
   // todo: probably not needed
@@ -104,7 +115,7 @@ class Surface : public SurfaceInterface {
 
  private:
   std::vector<GInt>                                                              m_cellId;
-  std::unordered_map<GInt, std::array<GInt, cartesian::maxNoNghbrsDiag<NDIM>()>> m_nghbrIds;
+  //  std::unordered_map<GInt, std::array<GInt, cartesian::maxNoNghbrsDiag<NDIM>()>> m_nghbrIds;
 
   std::unordered_map<GInt, VectorD<NDIM>> m_normal;
   const CartesianGridData<NDIM>           m_grid = nullptr;

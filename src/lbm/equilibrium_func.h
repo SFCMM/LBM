@@ -72,6 +72,69 @@ static inline void defaultEq(GDouble* feq, const GDouble density, const GDouble*
   }
 }
 
+template <LBMethodType LBTYPE>
+static inline auto defaultEq(const GInt dist, const GDouble density, const GDouble* const velocity) -> GDouble {
+  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
+
+  GDouble vsq = 0;
+  for(GInt dir = 0; dir < NDIM; ++dir) {
+    vsq += velocity[dir] * velocity[dir];
+  }
+
+  GDouble cu = 0;
+  for(GInt dir = 0; dir < NDIM; ++dir) {
+    cu += velocity[dir] * LBMethod<LBTYPE>::m_dirs[dist][dir];
+  }
+  return eq::defaultEq(LBMethod<LBTYPE>::m_weights[dist], density, cu, vsq);
+}
+
+/// Symmetric LBM equilibrium distribution for Navier-Stokes (used in bnds)
+/// \param weight LBM lattice weight
+/// \param density density
+/// \param cu c_[i][dir] * u[dir]
+/// \param vsq velocity squared (u^2)
+/// \return value of the equilibrium distribution function for Navier-Stokes
+static inline auto symmEq(const GDouble weight, const GDouble density, const GDouble cu, const GDouble vsq) -> GDouble {
+  return weight * density * (1.0 + cu * cu / (2.0 * lbm_cssq * lbm_cssq) - vsq / (2.0 * lbm_cssq));
+}
+
+template <LBMethodType LBTYPE>
+static inline void symmEq(GDouble* feq, const GDouble density, const GDouble* const velocity) {
+  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
+
+  GDouble vsq = 0;
+  for(GInt dir = 0; dir < NDIM; ++dir) {
+    vsq += velocity[dir] * velocity[dir];
+  }
+
+  for(GInt dist = 0; dist < NDIST; ++dist) {
+    GDouble cu = 0;
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      cu += velocity[dir] * LBMethod<LBTYPE>::m_dirs[dist][dir];
+    }
+    feq[dist] = eq::symmEq(LBMethod<LBTYPE>::m_weights[dist], density, cu, vsq);
+  }
+}
+
+template <LBMethodType LBTYPE>
+static inline auto symmEq(const GInt dist, const GDouble density, const GDouble* const velocity) -> GDouble {
+  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
+
+  GDouble vsq = 0;
+  for(GInt dir = 0; dir < NDIM; ++dir) {
+    vsq += velocity[dir] * velocity[dir];
+  }
+
+  GDouble cu = 0;
+  for(GInt dir = 0; dir < NDIM; ++dir) {
+    cu += velocity[dir] * LBMethod<LBTYPE>::m_dirs[dist][dir];
+  }
+  return eq::symmEq(LBMethod<LBTYPE>::m_weights[dist], density, cu, vsq);
+}
+
 /// Equilibrium distribution for the poisson equation
 /// \param weight LBM Lattice weight
 /// \param potential Potential

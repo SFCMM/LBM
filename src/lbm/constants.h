@@ -78,17 +78,20 @@ inline auto orthogonal(const VectorD<NDIM>& normal, const std::array<GDouble, ND
 }
 
 enum class BndryType {
-  Wall_BounceBack,                    // BounceBack Wall Boundary condition 2nd order accurate but viscosity depends on relaxation
-  Wall_BounceBack_TangentialVelocity, // BounceBack Boundary condition 2nd order accurate with tangential velocity but viscosity depends
-                                      // on relaxation
-  Wall_Equilibrium,                   // Wet Node Equilibrium method 1st order accurate
-  Wall_NEEM,                          // Wet Node Non-equilibrium extrapolation method 2nd order accurate
-  Wall_NEBB,                          // Wet Node Non-equilibrium method bounceback method 3rd order accurate
-  Inlet_BounceBack_ConstPressure,     // BounceBack Boundary condition 1st order accurate with tangential velocity
-  Outlet_BounceBack_ConstPressure,    // BounceBack Boundary condition 1st order accurate with tangential velocity
-  Periodic,                           // Periodic boundary condition handled through boundary class
-  Dirichlet_NEEM,                     // Dirichlet boundary condition using Non-equilibrium extrapolation method
-  Dirichlet_BounceBack                // Dirichlet boundary condition using bounce-back
+  Wall_BounceBack,                     // BounceBack Wall Boundary condition 2nd order accurate but viscosity depends on relaxation
+  Wall_BounceBack_TangentialVelocity,  // BounceBack Boundary condition 2nd order accurate with tangential velocity but viscosity depends
+                                       // on relaxation
+  Wall_Equilibrium,                    // Wet Node Equilibrium method 1st order accurate
+  Wall_NEEM,                           // Wet Node Non-equilibrium extrapolation method 2nd order accurate
+  Wall_NEBB,                           // Wet Node Non-equilibrium method bounceback method 3rd order accurate
+  Open_AntiBounceBack_ConstPressure,   // Anti BounceBack Boundary condition with constant pressure
+  Inlet_AntiBounceBack_ConstPressure,  // Anti BounceBack Boundary condition with constant pressure only velocity into the
+                                       // computational domain
+  Outlet_AntiBounceBack_ConstPressure, // Anti BounceBack Boundary condition with constant pressure  only velocity out of the
+                                       // computational domain
+  Periodic,                            // Periodic boundary condition handled through boundary class
+  Dirichlet_NEEM,                      // Dirichlet boundary condition using Non-equilibrium extrapolation method
+  Dirichlet_BounceBack                 // Dirichlet boundary condition using bounce-back
 };
 
 enum class LBMethodType { D1Q3, D2Q5, D2Q9, D3Q19, D3Q27, D4Q40, INVALID };

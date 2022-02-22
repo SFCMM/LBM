@@ -18,6 +18,8 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
 
   static constexpr GInt NVAR = noVars<LBTYPE>(EQ);
 
+  using VAR = LBMVariables<EQ, NDIM>;
+
  public:
   LBMBnd_DirichletBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
     : m_bnd(surf), m_value(config::required_config_value<NVAR>(properties, "value")) {}
@@ -29,7 +31,13 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
   auto operator=(const LBMBnd_DirichletBB&) -> LBMBnd_DirichletBB& = delete;
   auto operator=(LBMBnd_DirichletBB&&) -> LBMBnd_DirichletBB& = delete;
 
-  void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
+  void initCnd(const std::function<GDouble&(GInt, GInt)>& vars) override {
+    for(const auto bndCellId : m_bnd->getCellList()) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        vars(bndCellId, VAR::velocity(dir)) = m_value[dir];
+      }
+    }
+  }
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
@@ -37,7 +45,7 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
   void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {
     for(const auto bndCellId : m_bnd->getCellList()) {
-      for(GInt dist = 0; dist < NDIST; ++dist) {
+      for(GInt dist = 0; dist < NDIST - 1; ++dist) {
         // skip setting dists that are orthogonal to the boundary
         if(m_bnd->neighbor(bndCellId, dist) == INVALID_CELLID
            && inDirection<NDIM>(VectorD<NDIM>(m_bnd->normal_p(bndCellId)), LBMethod<LBTYPE>::m_dirs[dist])) {
