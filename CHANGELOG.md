@@ -83,6 +83,7 @@
 - simplify writing output
 
 - [LBM] add support for boundary ghost cells in periodic boundary
+- add INFO_OUTPUT with physical time update
 
 ### this month:
 
@@ -107,7 +108,6 @@
 - [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution? (velocity
   profile close to the wall is not correct)
 
-- add INFO_OUTPUT with physical time update
 
 ## Done:
 
