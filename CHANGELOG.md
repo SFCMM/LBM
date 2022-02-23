@@ -104,14 +104,10 @@
 - [DOC] add documentation for the testcases
 
 - [BUG] NEEM with poiseuille diverges
-- [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution? (corners?)
+- [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution? (velocity
+  profile close to the wall is not correct)
 
 - add INFO_OUTPUT with physical time update
-
-
-- [LBM] use pressure boundary condition for poiseuille cases
-- [LBM] inflow pressure bc
-- [LBM] outflow pressure bc
 
 ## Done:
 

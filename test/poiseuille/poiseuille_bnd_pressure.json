@@ -32,10 +32,10 @@
   },
   "solver": {
     "type": "lbm",
-    "reynoldsnumber": 0.1,
+    "reynoldsnumber": 0.10,
     "ma": 0.0001,
     "analyticalSolution": "poiseuille2D_1",
-    "poiseuillePressureGradient": 0.0001,
+    "poiseuillePressureGradient": 0.0000008,
     "analyticalSolutionExcludeSurface": [
       "+x",
       "-x"
@@ -44,8 +44,7 @@
     "info_interval": 100,
     "solution_interval": 1000,
     "convergence": 2E-11,
-    "errorL2": 3.3E-5,
-    "errorMax": 1.3E-7,
+    "errorMax": 1E-5,
     "assumeAxisAligned": true,
     "boundary": {
       "cube": {
@@ -55,7 +54,7 @@
         },
         "-x": {
           "type": "pressure",
-          "pressure": 1.00001
+          "pressure": 1.0000008
         },
         "-y": {
           "type": "wall",

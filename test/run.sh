@@ -89,6 +89,9 @@ cd ..
 cd poiseuille || exit
 time_test poiseuille.json
 time_test poiseuille_bnd.json
+time_test poiseuille_bnd_eq.json
+time_test poiseuille_bnd_NEBB.json
+time_test poiseuille_bnd_pressure.json
 cd ..
 
 cd poisson || exit

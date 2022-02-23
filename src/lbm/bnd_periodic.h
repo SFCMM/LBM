@@ -128,22 +128,10 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
                 const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
     if(!std::isnan(m_pressure)) {
       // need to calculate a pressure drop across the periodic boundary
-      GDouble vsq = 0;
-      for(GInt dir = 0; dir < NDIM; ++dir) {
-        vsq += vars(mapped(), VAR::velocity(dir)) * vars(mapped(), VAR::velocity(dir));
-      }
-
-      for(GInt id = 0; id < m_noSetDists; ++id) {
-        const GInt dist = m_bndIndex[id];
-        GDouble    cu   = vars(mapped(), VAR::velocity(0)) * LBMethod<LBTYPE>::m_dirs[dist][0];
-
-        //        GDouble cu = 0;
-        //        for(GInt dir = 0; dir < NDIM; ++dir) {
-        //          cu += vars(mapped(), VAR::velocity(dir))  * LBMethod<LBTYPE>::m_dirs[dist][dir];
-        //        }
-        // for incompressible NSE rho = pressure
-        fold(m_linkedCell[id], dist) =
-            eq::defaultEq(LBMethod<LBTYPE>::m_weights[dist], m_pressure, cu, vsq) + f(mapped(), dist) - feq(mapped(), dist);
+      for(GInt dist = 0; dist < NDIST; ++dist) {
+        fold(m_linkedCell[0], dist) =
+            eq::defaultEq<LBTYPE>(dist, m_pressure, &vars(mapped(), VAR::velocity(0))) + f(mapped(), dist) - feq(mapped(), dist);
+        vars(m_linkedCell[0], VAR::rho()) = m_pressure;
       }
 
     } else {
