@@ -40,7 +40,7 @@
     "convergence": 5E-13,
     "analyticalSolution": "couette2D_1_5",
     "errorL2": 1E-13,
-    "errorMax": 6.31E-13,
+    "errorMax": 6.32E-13,
     "assumeAxisAligned": true,
     "boundary": {
       "cube": {
