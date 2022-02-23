@@ -32,10 +32,10 @@
   },
   "solver": {
     "type": "lbm",
-    "relaxation": 1,
+    "reynoldsnumber": 0.10,
     "ma": 0.0001,
     "analyticalSolution": "poiseuille2D_1",
-    "poiseuillePressureGradient": "1.000133328",
+    "poiseuillePressureGradient": 0.0000008,
     "analyticalSolutionExcludeSurface": [
       "+x",
       "-x"
@@ -53,7 +53,7 @@
           "type": "periodic",
           "generateBndry": true,
           "connection": "-x",
-          "pressure": 1.000133328
+          "pressure": 1.0000008
         },
         "-x": {
           "type": "periodic",
