@@ -131,15 +131,15 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
       for(GInt dist = 0; dist < NDIST; ++dist) {
         fold(m_linkedCell[0], dist) =
             eq::defaultEq<LBTYPE>(dist, m_pressure, &vars(mapped(), VAR::velocity(0))) + f(mapped(), dist) - feq(mapped(), dist);
-        vars(m_linkedCell[0], VAR::rho()) = m_pressure;
       }
-
+      vars(m_linkedCell[0], VAR::rho()) = m_pressure;
     } else {
       //    do the same as in the propagation step
       for(GInt id = 0; id < m_noSetDists; ++id) {
         const GInt dist              = m_bndIndex[id];
         fold(m_linkedCell[id], dist) = f(mapped(), dist);
       }
+      vars(m_linkedCell[0], VAR::rho()) = 1.0;
     }
   }
 

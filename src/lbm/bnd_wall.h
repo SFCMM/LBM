@@ -167,18 +167,19 @@ class LBMBnd_wallWetnode {
         const GInt oppositeDist = LBMethod<LBTYPE>::oppositeDist(dir);
 
         if(inDirection<dim(LBTYPE)>(m_normal.back(), LBMethod<LBTYPE>::m_dirs[dir])
-           && surf->neighbor(cellId, oppositeDist) != INVALID_CELLID) {
+           && (surf->property(cellId, CellProperties::periodic) || surf->neighbor(cellId, oppositeDist) != INVALID_CELLID)) {
           m_limDist.back().emplace(dir);
 
           m_limConst.back()[dir] = 2;
 
         } else if(orthogonal<dim(LBTYPE)>(m_normal.back(), LBMethod<LBTYPE>::m_dirs[dir])
-                  && surf->neighbor(cellId, oppositeDist) != INVALID_CELLID) {
+                  && (surf->property(cellId, CellProperties::periodic) || surf->neighbor(cellId, oppositeDist) != INVALID_CELLID)) {
           m_limDist.back().emplace(dir);
 
           // cell is a corner
-          if(surf->neighbor(cellId, dir) == INVALID_CELLID) {
+          if(surf->neighbor(cellId, dir) == INVALID_CELLID && !surf->property(cellId, CellProperties::periodic)) {
             // this is only correct for wall velocity = 0
+            // and if it is not a periodic cell will otherwise lead to reflections
             m_limConst.back()[dir] = 2;
           } else {
             m_limConst.back()[dir] = 1;
@@ -282,8 +283,8 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
                             const std::function<GDouble&(GInt, GInt)>& vars) {
     GInt index = 0;
     for(const auto cellId : m_bnd->getCellList()) {
-      calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, false>(
-          cellId, this->limitedDist()[index], this->limitedConst()[index], &this->normal()[index][0], fold, vars);
+      calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, true>(cellId, this->limitedDist()[index], this->limitedConst()[index],
+                                                                            &this->normal()[index][0], fold, vars);
       ++index;
       for(GInt dir = 0; dir < NDIM; ++dir) {
         vars(cellId, VAR::velocity(dir)) = m_wallV[dir];
@@ -343,34 +344,38 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
   auto operator=(LBMBnd_wallNEEM&&) -> LBMBnd_wallNEEM& = delete;
 
   void init() {
-    for(const auto bndCellId : this->bnd()->getCellList()) {
-      GInt extrapolationDir = -1;
-      for(GInt dist = 0; dist < cartesian::maxNoNghbrs<NDIM>(); ++dist) {
-        if(this->bnd()->neighbor(bndCellId, dist) == INVALID_CELLID) {
-          if(extrapolationDir < 0) {
-            extrapolationDir = dist;
-          } else {
-            // todo: move to function
-            //  we are at a corner so we have to use a diagonal neighbor
-            if(extrapolationDir == 0 && dist == 2) {
-              extrapolationDir = 6;
-            }
-            if(extrapolationDir == 0 && dist == 3) {
-              extrapolationDir = 7;
-            }
-            if(extrapolationDir == 1 && dist == 3) {
-              extrapolationDir = 4;
-            }
-            if(extrapolationDir == 1 && dist == 2) {
-              extrapolationDir = 5;
-            }
-          }
+    auto extrapolationDir = [&](const GDouble* normal) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        if(normal[dir] < 0) {
+          return 2 * dir + 1;
+        }
+        if(normal[dir] > 0) {
+          return 2 * dir;
         }
       }
-      const GInt extrapolationCellId = this->bnd()->neighbor(bndCellId, cartesian::oppositeDir<NDIM>(extrapolationDir));
-      m_extrapolationCellId.emplace_back(extrapolationCellId);
-      if(extrapolationCellId == INVALID_CELLID) {
-        cerr0 << "bndCellId " << bndCellId << " extrapolationDir " << extrapolationDir << std::endl;
+      return static_cast<GInt>(-1);
+    };
+
+    for(const auto bndCellId : this->bnd()->getCellList()) {
+      const GDouble* normal    = this->bnd()->normal_p(bndCellId);
+      const GInt     extDir    = extrapolationDir(normal);
+      const GInt     extCellId = this->bnd()->neighbor(bndCellId, extDir);
+
+      // handle corner
+      //      if(NDIM == 2) {
+      //        if((this->bnd()->neighbor(bndCellId, 0) == INVALID_CELLID || this->bnd()->neighbor(bndCellId, 1) == INVALID_CELLID)
+      //           && (this->bnd()->neighbor(bndCellId, 2) == INVALID_CELLID || this->bnd()->neighbor(bndCellId, 3) == INVALID_CELLID)) {
+      //          // place an invalid cellId to mark corner
+      //          m_extrapolationCellId.emplace_back(INVALID_CELLID);
+      //          continue;
+      //        }
+      //      }
+      cerr0 << "bndCellId " << bndCellId << " extrapolationDir " << extDir << " extracellId " << extCellId << std::endl;
+
+
+      m_extrapolationCellId.emplace_back(extCellId);
+      if(extCellId == INVALID_CELLID) {
+        cerr0 << "bndCellId " << bndCellId << " extrapolationDir " << extDir << std::endl;
         TERMM(-1, "No valid extrapolation cellId");
       }
     }
@@ -391,28 +396,27 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
                    const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
     LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>::apply_0(fpre, fold, vars);
 
-    // for wall with 0 velocity
-    GInt index = 0;
-    for(const auto cellId : this->bnd()->getCellList()) {
-      const GInt extraPolationCellId = m_extrapolationCellId[index];
-      for(GInt dist = 0; dist < NDIST; ++dist) {
-        // todo: make settable
-        fold(cellId, dist) += fold(extraPolationCellId, dist) - feq(extraPolationCellId, dist);
-      }
-      ++index;
-    }
+    apply_general(fpre, fold, feq, vars);
   }
 
   void apply_constVNEEM(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
                         const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
     LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>::apply_constV(fpre, fold, vars);
 
-    // for wall with constant velocity
+    apply_general(fpre, fold, feq, vars);
+  }
+
+  void apply_general(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
+                     const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
+    // add the non-equilibrium part from the extrapolation cell
     GInt index = 0;
     for(const auto cellId : this->bnd()->getCellList()) {
-      const GInt extraPolationCellId = m_extrapolationCellId[index];
-      for(GInt dist = 0; dist < NDIST; ++dist) {
-        fold(cellId, dist) += fold(extraPolationCellId, dist) - feq(extraPolationCellId, dist);
+      const GInt extCellId = m_extrapolationCellId[index];
+      // just set equilibrium dist if there is no valid extrapolation cell
+      if(extCellId != INVALID_CELLID) {
+        for(GInt dist = 0; dist < NDIST; ++dist) {
+          fold(cellId, dist) += fold(extCellId, dist) - feq(extCellId, dist);
+        }
       }
       ++index;
     }

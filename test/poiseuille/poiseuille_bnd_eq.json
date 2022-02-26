@@ -44,7 +44,7 @@
     "info_interval": 100,
     "solution_interval": 10000,
     "convergence": 3E-13,
-    "errorMax": 7.8E-6,
+    "errorMax": 7.96E-6,
     "assumeAxisAligned": true,
     "boundary": {
       "cube": {

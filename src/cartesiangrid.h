@@ -496,7 +496,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     }
   }
 
-  auto getCartesianGridData() const -> CartesianGridData<NDIM> { return CartesianGridData<NDIM>(*this); }
+  auto getCartesianGridData() -> CartesianGridData<NDIM> { return CartesianGridData<NDIM>(*this); }
 
   auto totalSize() const -> GInt { return size() + m_noGhostsCells; }
 
@@ -548,7 +548,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     //    GBool defaultBndryGhost = false;
     if(m_axisAlignedBnd) {
       for(GInt surfId = 0; surfId < cartesian::maxNoNghbrs<NDIM>(); ++surfId) {
-        m_bndrySurfaces.insert({static_cast<GString>(DirIdString[surfId]), Surface<DEBUG_LEVEL, NDIM>(this->getCartesianGridData())});
+        m_bndrySurfaces.insert(std::make_pair(static_cast<GString>(DirIdString[surfId]),
+                                              Surface<DEBUG_LEVEL, NDIM>(this->getCartesianGridData(), &property(0))));
         auto modelName = config::opt_config_value<GString>(bndryConfig["cube"][static_cast<GString>(DirIdString[surfId])], "model", "none");
         if(modelName == "equilibrium") {
           // todo: probably not needed

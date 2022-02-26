@@ -45,7 +45,7 @@ inline void calcDensity_limited(const GInt cellId, const std::set<GInt>& limited
                                 const GDouble* normal, const std::function<GDouble&(GInt, GInt)>& fold,
                                 const std::function<GDouble&(GInt, GInt)>& vars) {
   if(limitedDists.empty()) {
-    // cerr0 << "skipped corner" <<std::endl;
+    // skipping empty distributions which for example occur in corners of non-periodic bnd cells
     return;
   }
 
@@ -56,17 +56,7 @@ inline void calcDensity_limited(const GInt cellId, const std::set<GInt>& limited
     vars(cellId, LBMVariables<LBEquationType::Navier_Stokes, NDIM>::rho()) = 0;
     for(const GInt dist : limitedDists) {
       vars(cellId, LBMVariables<LBEquationType::Navier_Stokes, NDIM>::rho()) += constants[dist] * fold(cellId, dist);
-      //      cerr0 << "dist " << dist << " constants " << constants[dist] << std::endl;
     }
-
-    //    // we are in a corner
-    //        if(sumC < NDIST){
-    //          // assume rho_infty = 1.0
-    //          //todo: this is not necessarily correct probably use a different function for corners
-    //          vars(cellId, LBMVariables<LBEquationType::Navier_Stokes, NDIM>::rho()) += (NDIST-sumC)/static_cast<GDouble>(NDIST) * tmpRho;
-    //          cerr0 << "setting corner fix" << std::endl;
-    //        }
-    //    cerr0 << "rho=" << vars(cellId, LBMVariables<LBEquationType::Navier_Stokes, NDIM>::rho()) << std::endl;
 
     // for no slip walls the velocity in the cell is 0!
     if(!NOSLIP) {

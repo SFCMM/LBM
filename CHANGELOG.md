@@ -104,7 +104,6 @@
 
 - [DOC] add documentation for the testcases
 
-- [BUG] NEEM with poiseuille diverges
 - [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution? (velocity
   profile close to the wall is not correct)
 

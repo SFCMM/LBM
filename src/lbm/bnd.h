@@ -36,7 +36,7 @@ class LBMBndManager : private Configuration {
   /// Setup the boundary conditions.
   /// \param bndConfig Configuration of the boundaries
   /// \param bndrySurface List of the boundaries
-  void setupBndryCnds(const json& bndConfig, std::function<const Surface<DEBUG_LEVEL, dim(LBTYPE)>&(GString)>& bndrySurface) {
+  void setupBndryCnds(const json& bndConfig, std::function<Surface<DEBUG_LEVEL, dim(LBTYPE)>&(GString)>& bndrySurface) {
     for(const auto& [geometry, geomBndConfig] : bndConfig.items()) {
       // todo: cleanup
       // todo: check that geometry exists
@@ -45,13 +45,13 @@ class LBMBndManager : private Configuration {
         const auto bndType = config::required_config_value<GString>(surfBndConfig, "type");
         logger << "Adding bndCnd to surfaceId " << surfId;
 
-        const Surface<DEBUG_LEVEL, dim(LBTYPE)>&              srf = bndrySurface(surfId);
-        std::vector<const Surface<DEBUG_LEVEL, dim(LBTYPE)>*> bndrySrf;
+        Surface<DEBUG_LEVEL, dim(LBTYPE)>&              srf = bndrySurface(surfId);
+        std::vector<Surface<DEBUG_LEVEL, dim(LBTYPE)>*> bndrySrf;
         bndrySrf.emplace_back(&srf);
 
         // todo: convert to switch
         if(bndType == "periodic") {
-          const auto surfConnected = bndrySurface(config::required_config_value<GString>(surfBndConfig, "connection"));
+          auto surfConnected = bndrySurface(config::required_config_value<GString>(surfBndConfig, "connection"));
           ASSERT(surfConnected.size() > 0, "Invalid surface");
           bndrySrf.emplace_back(&surfConnected);
           logger << " with periodic conditions" << std::endl;
@@ -136,7 +136,7 @@ class LBMBndManager : private Configuration {
 
  private:
   // todo: merge with the function above
-  void addBndry(const BndryType bnd, const json& properties, const std::vector<const Surface<DEBUG_LEVEL, dim(LBTYPE)>*>& surf) {
+  void addBndry(const BndryType bnd, const json& properties, const std::vector<Surface<DEBUG_LEVEL, dim(LBTYPE)>*>& surf) {
     ASSERT(surf[0]->size() > 0, "Invalid surface");
 
     // actually generate a boundary or just create a dummy e.g. the boundary is handled in a non standard way!
@@ -172,6 +172,8 @@ class LBMBndManager : private Configuration {
           //          break;
         case BndryType::Periodic:
           ASSERT(surf[1]->size() > 0, "Invalid connected surface");
+          surf[0]->setProperty(CellProperties::periodic, true);
+          surf[1]->setProperty(CellProperties::periodic, true);
           m_bndrys.emplace_back(std::make_unique<LBMBnd_Periodic<DEBUG_LEVEL, LBTYPE>>(surf[0], surf[1], properties));
           break;
         case BndryType::Dirichlet_NEEM:

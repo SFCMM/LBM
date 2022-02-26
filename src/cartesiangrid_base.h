@@ -72,7 +72,11 @@ class CartesianGridData {
 
   [[nodiscard]] inline auto boundingBox() const -> const BoundingBoxInterface& { return m_boundingBox; }
 
-  inline auto neighbor(const GInt id, const GInt dir) const -> GInt { return m_nghbrIds[id * cartesian::maxNoNghbrsDiag<NDIM>() + dir]; }
+  [[nodiscard]] inline auto neighbor(const GInt id, const GInt dir) const -> GInt {
+    return m_nghbrIds[id * cartesian::maxNoNghbrsDiag<NDIM>() + dir];
+  }
+
+  [[nodiscard]] inline auto property(const GInt id, CellProperties p) const -> GBool { return m_properties[id][static_cast<GInt>(p)]; }
 
 
  private:
@@ -173,6 +177,7 @@ class BaseCartesianGrid : public GridInterface {
     }
     return m_properties[id][static_cast<GInt>(p)];
   }
+
   [[nodiscard]] inline auto property(const GInt id, CellProperties p) const -> GBool override {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
@@ -180,6 +185,14 @@ class BaseCartesianGrid : public GridInterface {
       return m_properties.at(id)[grid::cell::p(p)];
     }
     return m_properties[id][static_cast<GInt>(p)];
+  }
+
+  inline auto property(const GInt id) -> PropertyBitsetType& {
+    if(DEBUG_LEVEL >= Debug_Level::debug) {
+      checkBounds(id);
+      return m_properties.at(id);
+    }
+    return m_properties[id];
   }
 
   [[nodiscard]] inline auto center(const GInt id, const GInt dir) const -> GDouble {
@@ -242,14 +255,6 @@ class BaseCartesianGrid : public GridInterface {
     return m_properties[id].to_string();
   }
 
-  inline auto property(const GInt id) -> PropertyBitsetType& {
-    if(DEBUG_LEVEL >= Debug_Level::debug) {
-      //      checkBounds(id);
-      return m_properties.at(id);
-    }
-    return m_properties[id];
-  }
-
   void resetProperties(const GInt id) {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       checkBounds(id);
@@ -295,9 +300,6 @@ class BaseCartesianGrid : public GridInterface {
   }
 
   [[nodiscard]] inline auto props() const -> const std::vector<PropertyBitsetType>& { return m_properties; }
-
-
-  //  virtual auto getCartesianGridData() const -> CartesianGridData<NDIM> { return CartesianGridData<NDIM>(*this); }
 
  protected:
   inline auto currentHighestLvl() -> GInt& { return m_currentHighestLvl; }
