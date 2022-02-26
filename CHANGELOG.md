@@ -102,8 +102,6 @@
 - [LIB] move kdtree to common lib project.
 - [LIB] move line to common lib project.
 
-- [DOC] add documentation for the testcases
-
 - [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution? (velocity
   profile close to the wall is not correct)
 
@@ -157,11 +155,11 @@
 ### Performance
 
 ### Bugs
-
 - segmentation fault after divergence
 - write out full double precision
 
 ### Documentation
+- improve documentation of testcases
 
 ### Refactoring
 
