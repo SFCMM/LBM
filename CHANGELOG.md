@@ -41,15 +41,22 @@
 - [LBM] calculate total energy/internal energy for output purposes (also output pressure and temperature)
 - compare timings between runs of the testing tool
 - port testing tool over to python
+- [LIB] move more stuff to common lib project
+- [LIB] refactor kdtree and add more complete test
 
-# V0.0.2
-
-## Planned
+## moved
 
 - load grid from disk
 - Couette in 3D
 - Poiseuille flow in 3D
 - contact angle
+- [LPT] add tutorial
+- [LPT] compare solution at multiple time points
+
+# V0.0.2
+
+## Planned
+
 - output analytical solution if wanted
 - check in periodic boundaries if all cells have been linked
 - get boundary const access to grid information
@@ -96,11 +103,7 @@
 - [LPT] finish for release
 - [LPT] also compare the position of particles
 - [LPT] switch to relative max error
-- [LPT] compare solution at multiple time points
-- [LPT] add tutorial
 
-- [LIB] move kdtree to common lib project.
-- [LIB] move line to common lib project.
 
 - [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution? (velocity
   profile close to the wall is not correct)

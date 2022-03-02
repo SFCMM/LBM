@@ -17,7 +17,10 @@ static constexpr int MAX_DIM = 4;
 #include "common/sfcmm_types.h"
 #include "common/timer.h"
 
+#include "common/algorithm/kdtree.h"
+
 #include "common/geometry/circle.h"
+#include "common/geometry/triangle.h"
 
 #include "common/util/backtrace.h"
 #include "common/util/base64.h"

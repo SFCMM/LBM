@@ -1,5 +1,9 @@
+// SPDX-License-Identifier: BSD-3-Clause
+
 #ifndef GRIDGENERATOR_TRIANGLE_H
 #define GRIDGENERATOR_TRIANGLE_H
+
+#include "../util/string_helper.h"
 
 // namespace to hide local point definition
 namespace triangle_ {

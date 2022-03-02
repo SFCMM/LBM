@@ -1,8 +1,10 @@
+// SPDX-License-Identifier: BSD-3-Clause
+
 #ifndef GRIDGENERATOR_KDTREE_H
 #define GRIDGENERATOR_KDTREE_H
 #include <stack>
-#include "config.h"
-#include "triangle.h"
+#include <numeric>
+#include "../geometry/triangle.h"
 
 struct KDNode {
   GInt m_parent;
@@ -17,6 +19,11 @@ struct KDNode {
 
   /// Holds the id of the connected element
   GInt m_element;
+};
+
+struct OffsetType {
+  GInt from;
+  GInt to;
 };
 
 
@@ -42,6 +49,7 @@ class KDTree {
  public:
   KDTree()              = default;
   ~KDTree()             = default;
+
   KDTree(const KDTree&) = delete;
   KDTree(KDTree&&)      = delete;
   auto operator=(const KDTree&) -> KDTree& = delete;
@@ -56,37 +64,24 @@ class KDTree {
     // analytical geometries have 1
     // STLs 1 for each triangle
     const GInt noNodes = geometryM.noElements();
+    m_boundingBox      = BoundingBoxCT<NDIM>(geometryM.getBoundingBox());
 
     // allocate memory
-    m_nodes.resize(noNodes);
+    allocateMem(noNodes);
     logger << "Building KDTree tree with " << noNodes << " nodes " << std::endl;
-
-    struct OffsetType {
-      GInt from;
-      GInt to;
-    };
-
-    std::vector<OffsetType> offset;
-    offset.resize(noNodes);
-
-    m_boundingBox = BoundingBoxCT<NDIM>(geometryM.getBoundingBox());
 
     // set root node
     m_root                   = 0;
-    offset[m_root].from      = 0;
-    offset[m_root].to        = noNodes - 1;
     m_nodes[m_root].m_parent = 0; // no parent
     m_nodes[m_root].m_depth  = 0;
 
-    if(noNodes == 1) {
-      // with one node we don't need to search so we just return the root element anyway
-      m_nodes[m_root].m_leftSubtree  = 0;
-      m_nodes[m_root].m_rightSubtree = 0;
-      m_nodes[m_root].m_element      = 0;
+    std::vector<OffsetType> offset;
+    offset.resize(noNodes);
+    offset[m_root].from = 0;
+    offset[m_root].to   = noNodes - 1;
 
-      // set some reasonable values
-      m_nodes[m_root].m_max = m_boundingBox.max(0);
-      m_nodes[m_root].m_min = m_boundingBox.min(0);
+    if(noNodes == 1) {
+      singleNodeTree();
       return;
     }
 
@@ -174,45 +169,33 @@ class KDTree {
   };
 
   /// Build a min/max kd tree using the provided triangles.
-  /// \param gm Geometry Manager for which to build the kd tree
+  /// \param triangles Triangles with in the kdtree
+  /// \param bbox Boundingbox of the overall kdtree
   void buildTree(std::vector<triangle<NDIM>>& triangles, const BoundingBoxInterface& bbox) {
     // todo: this is mostly the same as above find a way to unify
 
     // count number of total geometry elements
     // analytical geometries have 1
-    // STLs 1 for each triangle
+    // STLs one for each triangle
     const GInt noNodes = triangles.size();
+    m_boundingBox      = BoundingBoxCT<NDIM>(bbox);
 
     // allocate memory
-    m_nodes.resize(noNodes);
+    allocateMem(noNodes);
     logger << "Building KDTree tree with " << noNodes << " nodes " << std::endl;
-
-    struct OffsetType {
-      GInt from;
-      GInt to;
-    };
-
-    std::vector<OffsetType> offset;
-    offset.resize(noNodes);
 
     // set root node
     m_root                   = 0;
-    offset.at(m_root).from   = 0;
-    offset.at(m_root).to     = noNodes - 1;
     m_nodes[m_root].m_parent = 0; // no parent
     m_nodes[m_root].m_depth  = 0;
 
-    m_boundingBox = BoundingBoxCT<NDIM>(bbox);
+    std::vector<OffsetType> offset;
+    offset.resize(noNodes);
+    offset.at(m_root).from = 0;
+    offset.at(m_root).to   = noNodes - 1;
 
     if(noNodes == 1) {
-      // with one node we don't need to search so we just return the root element anyway
-      m_nodes[m_root].m_leftSubtree  = 0;
-      m_nodes[m_root].m_rightSubtree = 0;
-      m_nodes[m_root].m_element      = 0;
-
-      // set some reasonable values
-      m_nodes[m_root].m_max = m_boundingBox.max(0);
-      m_nodes[m_root].m_min = m_boundingBox.min(0);
+      singleNodeTree();
       return;
     }
 
@@ -236,8 +219,8 @@ class KDTree {
       auto&      currentOffset = offset[currentNode];
       const GInt offsetWidth   = currentOffset.to - currentOffset.from;
       if(offsetWidth < 0) {
-        cerr0 << "currentOffset.to " << currentOffset.to << std::endl;
-        cerr0 << "currentOffset.from " << currentOffset.from << std::endl;
+        std::cerr << "currentOffset.to " << currentOffset.to << std::endl;
+        std::cerr << "currentOffset.from " << currentOffset.from << std::endl;
       }
 
       if(offsetWidth > 0) {
@@ -385,7 +368,7 @@ class KDTree {
     }
 
     // Init empty stack and start at first node
-    GInt             root     = 0;
+    GInt             root     = m_root;
     GBool            finished = false;
     std::stack<GInt> subtreeStack;
     subtreeStack.push(root);
@@ -403,24 +386,23 @@ class KDTree {
 
       // if right subtree can have point with in its range -> push on stack
       const GInt right = m_nodes[root].m_rightSubtree;
-      if(right > 0 && m_nodes[root].m_max >= x[currentDir] && m_nodes[root].m_pivot <= x[currentDir]) {
+      if(right > m_root && m_nodes[root].m_max >= x[currentDir] && m_nodes[root].m_pivot <= x[currentDir]) {
         subtreeStack.push(right);
       }
 
-      // todo: this can be rolled into a function
       //  if left subtree is inside target domain set it as root
       const GInt left = m_nodes[root].m_leftSubtree;
-      if(left > 0 && m_nodes[root].m_pivot >= x[currentDir] && m_nodes[root].m_min <= x[currentDir]) {
+      if(left > m_root && m_nodes[root].m_pivot >= x[currentDir] && m_nodes[root].m_min <= x[currentDir]) {
         root = left;
         continue;
       }
 
+      root = subtreeStack.top();
+      subtreeStack.pop();
       if(subtreeStack.empty()) {
         finished = true;
         continue;
       }
-      root = subtreeStack.top();
-      subtreeStack.pop();
     }
   };
 
@@ -460,6 +442,24 @@ class KDTree {
     m_root = -1;
     m_nodes.clear();
     m_nodeList.clear();
+  }
+
+  void allocateMem(const GInt noNodes) { m_nodes.resize(noNodes); }
+
+  void singleNodeTree() {
+    if(m_nodes.size() == 1) {
+      // with one node we don't need to search so we just return the root element anyway
+      m_nodes[0].m_leftSubtree  = 0;
+      m_nodes[0].m_rightSubtree = 0;
+      m_nodes[0].m_element      = 0;
+
+      // set some reasonable values
+      m_nodes[0].m_max = m_boundingBox.max(0);
+      m_nodes[0].m_min = m_boundingBox.min(0);
+      return;
+    }
+    std::cerr << "ERROR: Invalid call to singleNodeTree()" << std::endl;
+    std::exit(-1);
   }
 
 

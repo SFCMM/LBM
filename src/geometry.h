@@ -7,8 +7,8 @@
 #include <utility>
 #include <vector>
 #include <sfcmm_common.h>
-#include "common/kdtree.h"
-#include "common/triangle.h"
+//#include "common/kdtree.h"
+//#include "common/triangle.h"
 #include "common/configuration.h"
 #include "functions.h"
 

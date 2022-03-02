@@ -3,8 +3,8 @@
 #ifndef COMMON_CIRCLE_H
 #define COMMON_CIRCLE_H
 #include <Eigen/Geometry>
-#include "../sfcmm_types.h"
 #include "gcem.hpp"
+#include "../sfcmm_types.h"
 
 /// Obtain a point on a circular shell with the given plane around the center (0.0, 0.0, 0.0) given a diameter and angle.
 /// Note: Rotation is anticlockwise but axes order is not guaranteed
