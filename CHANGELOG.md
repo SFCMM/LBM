@@ -102,8 +102,6 @@
 
 - [LPT] finish for release
 - [LPT] also compare the position of particles
-- [LPT] switch to relative max error
-
 
 - [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution? (velocity
   profile close to the wall is not correct)

@@ -665,6 +665,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
   ambient.m_v_infty = m_velo_a_infty;
 
   GDouble maxError      = 0;
+  GDouble maxRelError   = 0;
   GDouble sumError      = 0;
   GDouble sumErrorSq    = 0;
   GDouble sumSolution   = 0;
@@ -677,6 +678,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
     VectorD<NDIM> ana_sol = solution_function(part(partId), ambient, m_currentTime);
     const GDouble error   = (ana_sol - velocity(partId)).norm();
     maxError              = std::max(error, maxError);
+    maxRelError           = std::max(error / ana_sol.norm(), maxRelError);
     sumError += error;
     sumErrorSq += gcem::pow(error, 2);
     sumSolution += ana_sol.norm();
@@ -690,6 +692,8 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
   //  logger << "Comparing to analytical result " << analyticalSolutionName << std::endl;
   cerr0 << "max. Error: " << maxError << std::endl;
   logger << "max. Error: " << maxError << std::endl;
+  cerr0 << "max. Rel. Error: " << maxRelError << std::endl;
+  logger << "max. Rel. Error: " << maxRelError << std::endl;
   cerr0 << "avg. L2: " << L2error << std::endl;
   logger << "avg. L2: " << L2error << std::endl;
   cerr0 << "global relative error: " << gre << std::endl;
@@ -697,6 +701,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
 
   // compare with the maximum expected error to give a pass/no-pass result
   const GDouble maximumExpectedError    = opt_config_value("errorMax", 1.0);
+  const GDouble maximumExpectedRelError = opt_config_value("errorRelMax", 1.0);
   const GDouble maximumExpectedErrorL2  = opt_config_value("errorL2", 1.0);
   const GDouble maximumExpectedErrorGRE = opt_config_value("errorGRE", 1.0);
 
@@ -705,6 +710,11 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
     failedErrorCheck = true;
     cerr0 << "Error bounds for the maximum error have failed!!! ( < " << maximumExpectedError << ")" << std::endl;
     logger << "Error bounds for the maximum error have failed!!! ( < " << maximumExpectedError << ")" << std::endl;
+  }
+  if(maximumExpectedRelError < maxRelError) {
+    failedErrorCheck = true;
+    cerr0 << "Error bounds for the maximum relative error have failed!!! ( < " << maximumExpectedRelError << ")" << std::endl;
+    logger << "Error bounds for the maximum relative error have failed!!! ( < " << maximumExpectedRelError << ")" << std::endl;
   }
   if(maximumExpectedErrorL2 < L2error || isnan(L2error)) {
     failedErrorCheck = true;
