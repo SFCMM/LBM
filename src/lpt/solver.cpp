@@ -361,6 +361,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::calcA() {
   VectorD<NDIM> velo_p;
   velo_p.fill(NAN);
 
+  // todo:simplify
   for(GInt partId = 0; partId < m_noParticles; ++partId) {
     using namespace force;
 
@@ -676,6 +677,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
     VectorD<NDIM> ana_sol = solution_function(part(partId), ambient, m_currentTime);
     const GDouble error   = (ana_sol - velocity(partId)).norm();
     maxError              = std::max(error, maxError);
+    sumError += error;
     sumErrorSq += gcem::pow(error, 2);
     sumSolution += ana_sol.norm();
     sumSolutionSq += ana_sol.squaredNorm();

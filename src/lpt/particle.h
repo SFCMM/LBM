@@ -81,6 +81,9 @@ class ParticleData : Particle<NDIM, P> {
   ParticleData(const GDouble* particleRef, const VectorD<NDIM>& init_v) : m_particleRef(particleRef), m_init_v(init_v) {}
   [[nodiscard]] inline constexpr auto center(const GInt dir) const -> GDouble { return m_particleRef[Particle<NDIM, P>::center(dir)]; }
 
+  [[nodiscard]] inline constexpr auto velocity() const -> VectorD<NDIM> {
+    return VectorD<NDIM>(&m_particleRef[Particle<NDIM, P>::velocity(0)]);
+  }
   [[nodiscard]] inline constexpr auto velocity(const GInt dir) const -> GDouble { return m_particleRef[Particle<NDIM, P>::velocity(dir)]; }
 
   [[nodiscard]] inline constexpr auto a(const GInt dir) const -> GDouble { return m_particleRef[Particle<NDIM, P>::a(dir)]; }

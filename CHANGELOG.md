@@ -43,6 +43,7 @@
 - port testing tool over to python
 - [LIB] move more stuff to common lib project
 - [LIB] refactor kdtree and add more complete test
+- [LPT] calculate timestep by characteristic time
 
 ## moved
 
@@ -99,7 +100,6 @@
 - run basic 2D NS sphere case
 - run basic 2D NS obstruction case
 
-- [LPT] terminal velocity test
 - [LPT] finish for release
 - [LPT] also compare the position of particles
 - [LPT] switch to relative max error
@@ -125,6 +125,7 @@
     - analytical tests:
         - free fall
         - stokes drag
+        - terminal velocity
     - simple injection model
 
 - Lattice Boltzmann Code

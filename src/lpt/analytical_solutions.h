@@ -56,6 +56,32 @@ static constexpr auto freefall_stokes_pos(const Point<NDIM>& start, const Partic
   return (gcem::exp(-c2 * t)(-c1 * gravity + c2 * v_a - c2 * init_v + gravity)) / (c2 * c2)
          + (t * (-c1 * gravity + c2 * v_a + gravity)) / c2 + start;
 }
+
+template <GInt NDIM, LPTType P>
+static constexpr auto terminal_velocity_stokes(const ParticleData<NDIM, P>& part, const lpt::AmbientProperties<NDIM>& amb,
+                                               const GDouble /*t*/) -> VectorD<NDIM> {
+  return amb.m_gravity * gcem::pow(2.0 * part.radius(), 2.0) / (18.0 * amb.m_nu) * part.density();
+}
+
+template <GInt NDIM, LPTType P>
+static constexpr auto terminal_velocity_buo_stokes(const ParticleData<NDIM, P>& part, const lpt::AmbientProperties<NDIM>& amb,
+                                                   const GDouble /*t*/) -> VectorD<NDIM> {
+  return amb.m_gravity * gcem::pow(2.0 * part.radius(), 2.0) / (18.0 * amb.m_nu) * (part.density() - amb.m_rho);
+}
+
+// template <GInt NDIM, LPTType P>
+// static constexpr auto terminal_velocity_buo_stokes(const ParticleData<NDIM, P>& part, const lpt::AmbientProperties<NDIM>& amb,
+//                                                    const GDouble /*t*/) -> VectorD<NDIM> {
+//   const GDouble Re = amb.m_rho * 2 * part.radius() * part.velocity().norm() / amb.m_nu;
+//   // stokes drag
+//   const GDouble CD = drag();
+//   if(amb.m_rho < part.density()) {
+//     return gcem::sqrt(4 * amb.m_gravity / (3 * CD) * (part.density() - amb.m_rho) / amb.m_rho);
+//   }
+//   // particle has a lower density than the surrounding medium so it moves upwards (v<0)
+//   return -gcem::sqrt(4 * amb.m_gravity / (3 * -CD) * (part.density() - amb.m_rho) / amb.m_rho);
+// }
+
 } // namespace lpt
 
 template <GInt NDIM, LPTType P>
@@ -76,9 +102,15 @@ auto getAnalyticalSolution(const GString& name)
   //  if(name == "freefall_nodrag_pos") {
   //    return &lpt::freefall_noDrag_pos;
   //  }
+  if(name == "terminal_stokes_vel") {
+    return &lpt::terminal_velocity_stokes<NDIM, P>;
+  }
+  if(name == "terminal_stokes_buo_vel") {
+    return &lpt::terminal_velocity_buo_stokes<NDIM, P>;
+  }
 
 
-  TERMM(-1, "Invalid analyticalSolution selected!");
+  TERMM(-1, "Invalid analyticalSolution selected! Selected type: " + name);
 }
 
 } // namespace analytical
