@@ -1,9 +1,9 @@
 {
   "dry-run": true,
   "dim": 2,
-  "partitionLevel": 6,
-  "uniformLevel": 6,
-  "maxRfnmtLvl": 6,
+  "partitionLevel": 7,
+  "uniformLevel": 7,
+  "maxRfnmtLvl": 7,
   "maxNoCells": 1000000,
   "outputDir": "out",
   "gridFileName": "gridD",
@@ -34,10 +34,10 @@
     "equation": "poisson",
     "model": "D2Q9",
     "relaxation": 1.0,
-    "maxSteps": 1000,
+    "maxSteps": 10000,
     "info_interval": 1,
     "solution_interval": 10,
-    "convergence": 1E-14,
+    "convergence": 2E-14,
     "errorL2": 5E-3,
     "errorMax": 1.1E-3,
     "assumeAxisAligned": true,
@@ -63,6 +63,20 @@
           "model": "neem",
           "value": 1
         }
+      }
+    },
+    "postprocessing": {
+      "line1": {
+        "type": "line",
+        "execute": "atEnd",
+        "A": [
+          0.501,
+          0.0
+        ],
+        "B": [
+          0.501,
+          2.0
+        ]
       }
     }
   }

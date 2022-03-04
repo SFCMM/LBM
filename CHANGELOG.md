@@ -44,6 +44,7 @@
 - [LIB] move more stuff to common lib project
 - [LIB] refactor kdtree and add more complete test
 - [LPT] calculate timestep by characteristic time
+- [LBM][POISSON][BUG] the precision of D2Q5 is not correct for Poisson
 
 ## moved
 
@@ -53,6 +54,7 @@
 - contact angle
 - [LPT] add tutorial
 - [LPT] compare solution at multiple time points
+- determine analytical solutions for 2D poisson cases
 
 # V0.0.2
 
@@ -94,9 +96,6 @@
 - add INFO_OUTPUT with physical time update
 
 ### this month:
-
-- determine analytical solutions for 2D poisson cases
-- adjust settings for poisson D2Q9
 - run basic 2D NS sphere case
 - run basic 2D NS obstruction case
 
@@ -159,6 +158,7 @@
 ### Bugs
 - segmentation fault after divergence
 - write out full double precision
+- [LBM][POISSON] fix D2Q9 for Poisson
 
 ### Documentation
 - improve documentation of testcases

@@ -1,9 +1,9 @@
 {
   "dry-run": true,
   "dim": 1,
-  "partitionLevel": 7,
-  "uniformLevel": 7,
-  "maxRfnmtLvl": 7,
+  "partitionLevel": 12,
+  "uniformLevel": 12,
+  "maxRfnmtLvl": 12,
   "maxNoCells": 1000000,
   "outputDir": "out",
   "gridFileName": "gridD",
@@ -34,10 +34,10 @@
     "analyticalSolution": "poissonCHAI08_1",
     "relaxation": 1,
     "maxSteps": 1000000,
-    "info_interval": 100,
-    "solution_interval": 1000,
+    "info_interval": 1000,
+    "solution_interval": 100000,
     "convergence": 1E-12,
-    "errorGRE": 9E-3,
+    "errorGRE": 9.6E-6,
     "assumeAxisAligned": true,
     "boundary": {
       "line": {
