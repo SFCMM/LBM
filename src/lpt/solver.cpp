@@ -289,6 +289,11 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::initialCondition() {
     default:
       TERMM(-1, "Invalid initial condition");
   }
+
+  // set initial location
+  for(GInt partId = 0; partId < m_noParticles; ++partId) {
+    m_start_location.emplace_back(center(partId));
+  }
 }
 
 /// Init particles at random position with a given volume
@@ -664,40 +669,74 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
   ambient.m_gravity = m_gravity;
   ambient.m_v_infty = m_velo_a_infty;
 
-  GDouble maxError      = 0;
-  GDouble maxRelError   = 0;
-  GDouble sumError      = 0;
-  GDouble sumErrorSq    = 0;
-  GDouble sumSolution   = 0;
-  GDouble sumSolutionSq = 0;
+  GDouble maxError_vel      = 0;
+  GDouble maxRelError_vel   = 0;
+  GDouble sumError_vel      = 0;
+  GDouble sumErrorSq_vel    = 0;
+  GDouble sumSolution_vel   = 0;
+  GDouble sumSolutionSq_vel = 0;
 
-  auto solution_function = analytical::getAnalyticalSolution<NDIM, P>(analyticalSolutionName + "_vel");
+  GDouble maxError_pos      = 0;
+  GDouble maxRelError_pos   = 0;
+  GDouble sumError_pos      = 0;
+  GDouble sumErrorSq_pos    = 0;
+  GDouble sumSolution_pos   = 0;
+  GDouble sumSolutionSq_pos = 0;
+
+  // todo: roll into function for pos and vel
+  GBool compare_pos           = false;
+  auto  solution_function_vel = analytical::getAnalyticalSolution<NDIM, P>(analyticalSolutionName + "_vel");
+  auto  solution_function_pos = compare_pos ? analytical::getAnalyticalSolution<NDIM, P>(analyticalSolutionName + "_pos") : nullptr;
 
   for(GInt partId = 0; partId < m_noParticles; ++partId) {
-    //    VectorD<NDIM> ana_sol = analytical::lpt::freefall_stokes_vel<NDIM, P>(part(partId), ambient, m_currentTime);
-    VectorD<NDIM> ana_sol = solution_function(part(partId), ambient, m_currentTime);
+    VectorD<NDIM> ana_sol = solution_function_vel(part(partId), ambient, m_currentTime);
     const GDouble error   = (ana_sol - velocity(partId)).norm();
-    maxError              = std::max(error, maxError);
-    maxRelError           = std::max(error / ana_sol.norm(), maxRelError);
-    sumError += error;
-    sumErrorSq += gcem::pow(error, 2);
-    sumSolution += ana_sol.norm();
-    sumSolutionSq += ana_sol.squaredNorm();
+    maxError_vel          = std::max(error, maxError_vel);
+    maxRelError_vel       = std::max(error / ana_sol.norm(), maxRelError_vel);
+    sumError_vel += error;
+    sumErrorSq_vel += gcem::pow(error, 2);
+    sumSolution_vel += ana_sol.norm();
+    sumSolutionSq_vel += ana_sol.squaredNorm();
+    if(compare_pos) {
+      VectorD<NDIM> ana_sol_pos = solution_function_pos(part(partId), ambient, m_currentTime);
+      const GDouble error_pos   = (ana_sol_pos - center(partId)).norm();
+      maxError_pos              = std::max(error_pos, maxError_vel);
+      maxRelError_pos           = std::max(error_pos / ana_sol_pos.norm(), maxRelError_pos);
+      sumError_pos += error_pos;
+      sumErrorSq_pos += gcem::pow(error_pos, 2);
+      sumSolution_pos += ana_sol_pos.norm();
+      sumSolutionSq_pos += ana_sol_pos.squaredNorm();
+    }
   }
 
-  const GDouble L2error = (gcem::sqrt(sumErrorSq) / gcem::sqrt(sumSolutionSq)) / gcem::pow(m_noParticles, 1.0 / NDIM);
-  const GDouble gre     = sumError / sumSolution;
+  const GDouble L2error = (gcem::sqrt(sumErrorSq_vel) / gcem::sqrt(sumSolutionSq_vel)) / gcem::pow(m_noParticles, 1.0 / NDIM);
+  const GDouble gre     = sumError_vel / sumSolution_vel;
 
-  //  cerr0 << "Comparing to analytical result " << analyticalSolutionName << std::endl;
-  //  logger << "Comparing to analytical result " << analyticalSolutionName << std::endl;
-  cerr0 << "max. Error: " << maxError << std::endl;
-  logger << "max. Error: " << maxError << std::endl;
-  cerr0 << "max. Rel. Error: " << maxRelError << std::endl;
-  logger << "max. Rel. Error: " << maxRelError << std::endl;
+  const GDouble L2error_pos = (gcem::sqrt(sumErrorSq_pos) / gcem::sqrt(sumSolutionSq_pos)) / gcem::pow(m_noParticles, 1.0 / NDIM);
+  const GDouble gre_pos     = sumError_pos / sumSolution_pos;
+
+  cerr0 << "Comparing to analytical result " << analyticalSolutionName << std::endl;
+  logger << "Comparing to analytical result " << analyticalSolutionName << std::endl;
+  cerr0 << "max. Error: " << maxError_vel << std::endl;
+  logger << "max. Error: " << maxError_vel << std::endl;
+  cerr0 << "max. Rel. Error: " << maxRelError_vel << std::endl;
+  logger << "max. Rel. Error: " << maxRelError_vel << std::endl;
   cerr0 << "avg. L2: " << L2error << std::endl;
   logger << "avg. L2: " << L2error << std::endl;
   cerr0 << "global relative error: " << gre << std::endl;
   logger << "global relative error: " << L2error << std::endl;
+
+  if(compare_pos) {
+    cerr0 << "------------------------------------------------" << std::endl;
+    cerr0 << "max. Error (pos.): " << maxError_pos << std::endl;
+    logger << "max. Error (pos.): " << maxError_pos << std::endl;
+    cerr0 << "max. Rel. Error (pos.): " << maxRelError_pos << std::endl;
+    logger << "max. Rel. Error (pos.): " << maxRelError_pos << std::endl;
+    cerr0 << "avg. L2 (pos.): " << L2error_pos << std::endl;
+    logger << "avg. L2 (pos.): " << L2error_pos << std::endl;
+    cerr0 << "global relative error (pos.): " << gre_pos << std::endl;
+    logger << "global relative error (pos.): " << L2error_pos << std::endl;
+  }
 
   // compare with the maximum expected error to give a pass/no-pass result
   const GDouble maximumExpectedError    = opt_config_value("errorMax", 1.0);
@@ -706,12 +745,12 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
   const GDouble maximumExpectedErrorGRE = opt_config_value("errorGRE", 1.0);
 
   GBool failedErrorCheck = false;
-  if(maximumExpectedError < maxError) {
+  if(maximumExpectedError < maxError_vel) {
     failedErrorCheck = true;
     cerr0 << "Error bounds for the maximum error have failed!!! ( < " << maximumExpectedError << ")" << std::endl;
     logger << "Error bounds for the maximum error have failed!!! ( < " << maximumExpectedError << ")" << std::endl;
   }
-  if(maximumExpectedRelError < maxRelError) {
+  if(maximumExpectedRelError < maxRelError_vel) {
     failedErrorCheck = true;
     cerr0 << "Error bounds for the maximum relative error have failed!!! ( < " << maximumExpectedRelError << ")" << std::endl;
     logger << "Error bounds for the maximum relative error have failed!!! ( < " << maximumExpectedRelError << ")" << std::endl;

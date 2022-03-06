@@ -78,7 +78,8 @@ class Particle<NDIM, LPTType::High> {
 template <GInt NDIM, LPTType P>
 class ParticleData : Particle<NDIM, P> {
  public:
-  ParticleData(const GDouble* particleRef, const VectorD<NDIM>& init_v) : m_particleRef(particleRef), m_init_v(init_v) {}
+  ParticleData(const GDouble* particleRef, const VectorD<NDIM>& init_v, const VectorD<NDIM>& start)
+    : m_particleRef(particleRef), m_init_v(init_v), m_start(start) {}
   [[nodiscard]] inline constexpr auto center(const GInt dir) const -> GDouble { return m_particleRef[Particle<NDIM, P>::center(dir)]; }
 
   [[nodiscard]] inline constexpr auto velocity() const -> VectorD<NDIM> {
@@ -99,11 +100,13 @@ class ParticleData : Particle<NDIM, P> {
   [[nodiscard]] inline constexpr auto DC() const -> GDouble { return m_particleRef[Particle<NDIM, P>::DC()]; }
 
   [[nodiscard]] inline constexpr auto initV() const -> VectorD<NDIM> { return m_init_v; }
+  [[nodiscard]] inline constexpr auto start() const -> VectorD<NDIM> { return m_start; }
 
  private:
   const GDouble* m_particleRef;
 
   VectorD<NDIM> m_init_v;
+  VectorD<NDIM> m_start;
 };
 
 #endif // LPT_PARTICLE_H

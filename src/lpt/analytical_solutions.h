@@ -18,12 +18,14 @@ struct AmbientProperties {
 };
 
 
-// template <GInt NDIM, LPTType P>
-// static constexpr auto freefall_noDrag_vel(const ParticleData<NDIM, P>& part, const VectorD<NDIM>& init_v, const GDouble t,
-//                                           const Point<NDIM>& gravity, const GDouble rho_a = 0) -> Point<NDIM> {
-//   return gravity * (1 - rho_a / part.density()) * t + init_v;
-// }
-
+/// Solution to a free falling spherical particle without drag. In this case the solution is linear!
+/// Note: In quiescent flow or no coupling i.e. u_a = 0 (=> No drag)
+/// \tparam NDIM Dimensionality
+/// \tparam P Particletype
+/// \param part Data of a single particle
+/// \param amb Ambient condition properties
+/// \param t time
+/// \return Velocity at the given time t
 template <GInt NDIM, LPTType P>
 static constexpr auto freefall_noDrag_vel(const ParticleData<NDIM, P>& part, const lpt::AmbientProperties<NDIM>& amb, const GDouble t)
     -> Point<NDIM> {
@@ -31,9 +33,9 @@ static constexpr auto freefall_noDrag_vel(const ParticleData<NDIM, P>& part, con
 }
 
 template <GInt NDIM, LPTType P>
-static constexpr auto freefall_noDrag_pos(const Point<NDIM>& start, const ParticleData<NDIM, P>& part, const VectorD<NDIM>& init_v,
-                                          const GDouble t, const Point<NDIM>& gravity, const GDouble rho_a = 0) -> VectorD<NDIM> {
-  return 0.5 * gravity * (1 - rho_a / part.density()) * gcem::pow(t, 2) + t * init_v + start;
+static constexpr auto freefall_noDrag_pos(const ParticleData<NDIM, P>& part, const lpt::AmbientProperties<NDIM>& amb, const GDouble t)
+    -> VectorD<NDIM> {
+  return 0.5 * amb.m_gravity * (1 - amb.m_rho / part.density()) * gcem::pow(t, 2) + t * part.initV() + part.start();
 }
 
 template <GInt NDIM, LPTType P>
@@ -48,13 +50,13 @@ static constexpr auto freefall_stokes_vel(const ParticleData<NDIM, P>& part, con
 }
 
 template <GInt NDIM, LPTType P>
-static constexpr auto freefall_stokes_pos(const Point<NDIM>& start, const ParticleData<NDIM, P>& part, const VectorD<NDIM>& init_v,
-                                          const GDouble nu_a, const GDouble rho_a, const VectorD<NDIM>& v_a, const GDouble t,
-                                          const VectorD<NDIM>& gravity) -> VectorD<NDIM> {
-  const GDouble c1 = rho_a / part.density();
-  const GDouble c2 = 18.0 * nu_a / (4.0 * part.radius() * part.radius() * part.density()); // Pas /(m^2 * kg/m^3) -> kg/ms / (kg/m) = 1/s
-  return (gcem::exp(-c2 * t)(-c1 * gravity + c2 * v_a - c2 * init_v + gravity)) / (c2 * c2)
-         + (t * (-c1 * gravity + c2 * v_a + gravity)) / c2 + start;
+static constexpr auto freefall_stokes_pos(const ParticleData<NDIM, P>& part, const lpt::AmbientProperties<NDIM>& amb, const GDouble t)
+    -> VectorD<NDIM> {
+  const GDouble c1 = amb.m_rho / part.density();
+  const GDouble c2 =
+      18.0 * amb.m_nu / (4.0 * part.radius() * part.radius() * part.density()); // Pas /(m^2 * kg/m^3) -> kg/ms / (kg/m) = 1/s
+  return (gcem::exp(-c2 * t) * (-c1 * amb.m_gravity + c2 * amb.m_v_infty - c2 * part.initV() + amb.m_gravity)) / (c2 * c2)
+         + (t * (-c1 * amb.m_gravity + c2 * amb.m_v_infty + amb.m_gravity)) / c2 + part.start();
 }
 
 template <GInt NDIM, LPTType P>
@@ -90,18 +92,17 @@ auto getAnalyticalSolution(const GString& name)
   if(name == "freefall_stokes_vel") {
     return &lpt::freefall_stokes_vel<NDIM, P>;
   }
+  if(name == "freefall_stokes_pos") {
+    return &lpt::freefall_stokes_pos<NDIM, P>;
+  }
 
-  //  if(name == "freefall_stokes_pos") {
-  //    return &lpt::freefall_stokes_pos;
-  //  }
-  //
   if(name == "freefall_nodrag_vel") {
     return &lpt::freefall_noDrag_vel<NDIM, P>;
   }
-  //
-  //  if(name == "freefall_nodrag_pos") {
-  //    return &lpt::freefall_noDrag_pos;
-  //  }
+  if(name == "freefall_nodrag_pos") {
+    return &lpt::freefall_noDrag_pos<NDIM, P>;
+  }
+
   if(name == "terminal_stokes_vel") {
     return &lpt::terminal_velocity_stokes<NDIM, P>;
   }

@@ -76,7 +76,9 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   void output(const GBool forced, const GString& postfix = "");
 
   // Variable accessor functions
-  inline auto part(const GInt pid) -> ParticleData<NDIM, P> { return ParticleData<NDIM, P>(&m_vars[pid * NVARS], m_init_v); }
+  inline auto part(const GInt pid) -> ParticleData<NDIM, P> {
+    return ParticleData<NDIM, P>(&m_vars[pid * NVARS], m_init_v, m_start_location[pid]);
+  }
 
   /// Set/Get velocity of a particle
   /// \param pid Particle Id
@@ -216,7 +218,8 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
 
   /// Initial velocity
   // todo: remove
-  VectorD<NDIM> m_init_v;
+  VectorD<NDIM>              m_init_v;
+  std::vector<VectorD<NDIM>> m_start_location;
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   // ambient condition
