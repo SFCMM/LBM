@@ -52,11 +52,38 @@ static constexpr auto freefall_stokes_vel(const ParticleData<NDIM, P>& part, con
 template <GInt NDIM, LPTType P>
 static constexpr auto freefall_stokes_pos(const ParticleData<NDIM, P>& part, const lpt::AmbientProperties<NDIM>& amb, const GDouble t)
     -> VectorD<NDIM> {
-  const GDouble c1 = amb.m_rho / part.density();
-  const GDouble c2 =
-      18.0 * amb.m_nu / (4.0 * part.radius() * part.radius() * part.density()); // Pas /(m^2 * kg/m^3) -> kg/ms / (kg/m) = 1/s
-  return (gcem::exp(-c2 * t) * (-c1 * amb.m_gravity + c2 * amb.m_v_infty - c2 * part.initV() + amb.m_gravity)) / (c2 * c2)
-         + (t * (-c1 * amb.m_gravity + c2 * amb.m_v_infty + amb.m_gravity)) / c2 + part.start();
+  // todo: simplify integration call
+  //  auto f_0 = [&](const GDouble _t){
+  //    return freefall_stokes_vel(part, amb, _t)[0];
+  //  };
+  //  auto f_1 = [&](const GDouble _t){
+  //    return freefall_stokes_vel(part, amb, _t)[1];
+  //  };
+  //  auto f_2 = [&](const GDouble _t){
+  //    return freefall_stokes_vel(part, amb, _t)[2];
+  //  };
+  //
+  //  // numerical integration
+  //  using namespace integration;
+  //  multi_simpson(range({0, t}), f_0);
+  //  multi_simpson(range({0, t}), f_1);
+  //  multi_simpson(range({0, t}), f_2);
+
+  const GInt    num_splits = 100;
+  const GDouble h          = 0.5 * (t - 0) / static_cast<GDouble>(num_splits);
+  VectorD<NDIM> result;
+  result.fill(0);
+
+  VectorD<NDIM> f1;
+  VectorD<NDIM> f2;
+  VectorD<NDIM> f3 = freefall_stokes_vel<NDIM, P>(part, amb, 0);
+  for(GInt i = 0; i < num_splits; ++i) {
+    f1 = f3;
+    f2 = freefall_stokes_vel<NDIM, P>(part, amb, (2 * i + 1) * h);
+    f3 = freefall_stokes_vel<NDIM, P>(part, amb, (2 * i + 2) * h);
+    result += 1.0 / 3.0 * h * (f1 + 4 * f2 + f3);
+  }
+  return part.start() + result;
 }
 
 template <GInt NDIM, LPTType P>

@@ -10,13 +10,14 @@
   "solver": {
     "type": "lpt",
     "capacity": 100,
-    "maxSteps": 100000,
-    "solution_interval": 50000,
+    "maxSteps": 10000000,
+    "solution_interval": 500000,
     "dt": 0.00000001,
     "integrationMethod": "ImplicitEuler",
     "analyticalSolution": "freefall_stokes",
+    "analyticalSolutionPos": true,
     "errorL2": 1E-13,
-    "errorMax": 9E-11,
+    "errorMax": 4.4E-10,
     "initialcondition": "randomvol_pos",
     "gravity": [
       0,

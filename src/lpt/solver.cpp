@@ -684,8 +684,9 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
   GDouble sumSolutionSq_pos = 0;
 
   // todo: roll into function for pos and vel
-  GBool compare_pos           = false;
-  auto  solution_function_vel = analytical::getAnalyticalSolution<NDIM, P>(analyticalSolutionName + "_vel");
+  auto solution_function_vel = analytical::getAnalyticalSolution<NDIM, P>(analyticalSolutionName + "_vel");
+
+  GBool compare_pos           = opt_config_value<GBool>("analyticalSolutionPos", false);
   auto  solution_function_pos = compare_pos ? analytical::getAnalyticalSolution<NDIM, P>(analyticalSolutionName + "_pos") : nullptr;
 
   for(GInt partId = 0; partId < m_noParticles; ++partId) {
@@ -717,6 +718,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::compareToAnalyticalResult() {
 
   cerr0 << "Comparing to analytical result " << analyticalSolutionName << std::endl;
   logger << "Comparing to analytical result " << analyticalSolutionName << std::endl;
+  cerr0 << "------------------------------------------------" << std::endl;
   cerr0 << "max. Error: " << maxError_vel << std::endl;
   logger << "max. Error: " << maxError_vel << std::endl;
   cerr0 << "max. Rel. Error: " << maxRelError_vel << std::endl;

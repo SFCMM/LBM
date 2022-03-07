@@ -100,7 +100,6 @@
 - run basic 2D NS obstruction case
 
 - [LPT] finish for release
-- [LPT] activate testcase to compare position
 
 - [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution? (velocity
   profile close to the wall is not correct)
