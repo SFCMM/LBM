@@ -412,7 +412,8 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
     GInt index = 0;
     for(const auto cellId : this->bnd()->getCellList()) {
       const GInt extCellId = m_extrapolationCellId[index];
-      // just set equilibrium dist if there is no valid extrapolation cell
+      // todo: update macroscopic value for extrapolation cell??? (try!)
+      //  just set equilibrium dist if there is no valid extrapolation cell
       if(extCellId != INVALID_CELLID) {
         for(GInt dist = 0; dist < NDIST; ++dist) {
           fold(cellId, dist) += fold(extCellId, dist) - feq(extCellId, dist);

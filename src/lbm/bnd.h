@@ -3,6 +3,7 @@
 
 #include <sfcmm_common.h>
 #include "bnd_dirichlet.h"
+#include "bnd_neumann.h"
 #include "bnd_in_out.h"
 #include "bnd_interface.h"
 #include "bnd_periodic.h"
@@ -109,6 +110,18 @@ class LBMBndManager : private Configuration {
           }
           continue;
         }
+        if(bndType == "neumann") {
+          const auto model = config::required_config_value<GString>(surfBndConfig, "model");
+          //          if(model == "bounceback") {
+          //            logger << " neumann boundary condition using bb" << std::endl;
+          //            addBndry(BndryType::Neumann_BounceBack, surfBndConfig, bndrySrf);
+          //          } else
+          if(model == "neem") {
+            logger << " neumann boundary condition using neem" << std::endl;
+            addBndry(BndryType::Neumann_NEEM, surfBndConfig, bndrySrf);
+          }
+          continue;
+        }
         TERMM(-1, "Invalid bndCndType: " + bndType);
       }
     }
@@ -182,6 +195,13 @@ class LBMBndManager : private Configuration {
         case BndryType::Dirichlet_BounceBack:
           m_bndrys.emplace_back(std::make_unique<LBMBnd_DirichletBB<DEBUG_LEVEL, LBTYPE, EQ>>(surf[0], properties));
           break;
+        case BndryType::Neumann_NEEM:
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_NeumannNEEM<DEBUG_LEVEL, LBTYPE, EQ>>(surf[0], properties));
+          break;
+          // todo:implement
+          //        case BndryType::Dirichlet_BounceBack:
+          //          m_bndrys.emplace_back(std::make_unique<LBMBnd_DirichletBB<DEBUG_LEVEL, LBTYPE, EQ>>(surf[0], properties));
+          //          break;
         default:
           TERMM(-1, "Invalid bndry Type!");
       }

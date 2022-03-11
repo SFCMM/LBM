@@ -132,9 +132,13 @@
         - Wet node non-equilibrium bounce-back method wall
         - BB Dirichlet bnd
         - AntiBB pressure bnd
+        - Neumann NEEM bnd
 
 - Cartesian grid
     - allow generation of boundary ghost cells
+
+- Poisson
+    - 1D Reaction example added for 1D catalyst slab
 
 ### Buildsystem
 

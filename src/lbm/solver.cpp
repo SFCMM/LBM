@@ -311,10 +311,10 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
     output(true, "bdiv");
     return;
   }
-  if(!m_diverged) {
-    updateMacroscopicValues();
-  }
+
   if((m_timeStep > 0 && m_timeStep % m_outputSolutionInterval == 0) || forced) {
+    updateMacroscopicValues();
+
     std::vector<IOIndex>              index;
     std::vector<std::vector<GString>> values;
 
@@ -564,15 +564,25 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
     }
   }
 
+  GDouble poisson_D = 0;
+  if constexpr(EQ == LBEquationType::Poisson) {
+    PoissonAppType m_PoissonEqAPP = getPoissonAppType(opt_config_value<GString>("equation_application", "debye_huckel"));
+    if(m_PoissonEqAPP == PoissonAppType::simple_diff_reaction) {
+      poisson_D = required_config_value<GDouble>("equation_th");
+    } else {
+      // todo: make settable
+      static constexpr GDouble k = 27.79;
+      poisson_D                  = k;
+    }
+  }
+
   for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     for(GInt dist = 0; dist < NDIST; ++dist) {
       f(cellId, dist) = (1 - m_omega) * fold(cellId, dist) + m_omega * feq(cellId, dist);
       if constexpr(EQ == LBEquationType::Poisson) {
         if(dist != NDIST - 1) {
-          // todo: make settable
-          static constexpr GDouble k           = 27.79;
-          static const GDouble     diffusivity = METH::m_poissonAlpha * gcem::pow(m_latticeVelocity, 2) * (0.5 - m_relaxTime) * m_dt;
-          f(cellId, dist) += m_dt * diffusivity * METH::m_poissonWeights[dist] * k * k * electricPotential(cellId);
+          static const GDouble diffusivity = METH::m_poissonAlpha * gcem::pow(m_latticeVelocity, 2) * (0.5 - m_relaxTime) * m_dt;
+          f(cellId, dist) += m_dt * diffusivity * METH::m_poissonWeights[dist] * poisson_D * poisson_D * electricPotential(cellId);
         }
       }
     }

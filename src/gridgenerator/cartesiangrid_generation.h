@@ -204,6 +204,10 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   void save(const GString& fileName, const json& gridOutConfig) const override {
+    if(size() == 0) {
+      TERMM(-1, "Nothing to save 0 cells in grid!");
+    }
+
     // Grid output configuration
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     GString              filter    = config::opt_config_value(gridOutConfig, "cellFilter", GString("leafCells"));
@@ -279,7 +283,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   }
 
   /// Move the leaf nodes to the surface of the geometry.
-  void transformMaxRfnmtLvlToExtent() {
+  void transformMaxRfnmtLvlToExtent(const GInt alignDir = 1) {
     BoundingBoxCT<NDIM> actualExtent;
     for(GInt dir = 0; dir < NDIM; ++dir) {
       actualExtent.min(dir) = std::numeric_limits<GDouble>::max();
@@ -298,7 +302,6 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     }
 
     cerr0 << "actual nodal extent: " << actualExtent.str() << std::endl;
-    GInt    alignDir            = 1;
     GDouble transformationValue = boundingBox().max(alignDir) / (actualExtent.max(alignDir) - actualExtent.min(alignDir));
 
 

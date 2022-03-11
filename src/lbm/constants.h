@@ -91,7 +91,9 @@ enum class BndryType {
                                        // computational domain
   Periodic,                            // Periodic boundary condition handled through boundary class
   Dirichlet_NEEM,                      // Dirichlet boundary condition using Non-equilibrium extrapolation method
-  Dirichlet_BounceBack                 // Dirichlet boundary condition using bounce-back
+  Dirichlet_BounceBack,                // Dirichlet boundary condition using bounce-back
+  Neumann_NEEM,                        // Neumann boundary condition using Non-equilibrium extrapolation method
+  Neumann_BounceBack                   // Neumann boundary condition using bounce-back
 };
 
 enum class LBMethodType { D1Q3, D2Q5, D2Q9, D3Q19, D3Q27, D4Q40, INVALID };
@@ -423,5 +425,17 @@ static constexpr auto noVars(const LBEquationType equation) -> GInt {
   }
 }
 
+enum class PoissonAppType { simple_diff_reaction, debye_huckel };
+
+static constexpr auto getPoissonAppType(const std::string_view appTypeName) -> PoissonAppType {
+  if(appTypeName == "debye_huckel") {
+    return PoissonAppType::debye_huckel;
+  }
+  if(appTypeName == "simple_diff_reaction") {
+    return PoissonAppType::simple_diff_reaction;
+  }
+
+  TERMM(-1, "Invalid model configuration!");
+}
 
 #endif // LBM_CONSTANTS_H

@@ -34,7 +34,7 @@ add_executable(lbm
         src/lbm/equilibrium_func.h
         src/lpt/particle.h src/lpt/forces.h src/lpt/solver.cpp src/lpt/solver.h src/common/sphere.h src/lpt/solverExe.h
         src/lpt/solver_inst_2d.cpp src/lpt/solver_inst_3d.cpp src/lpt/constants.h src/common/random.h
-        src/lpt/analytical_solutions.h src/lbm/analytical_solutions.h)
+        src/lpt/analytical_solutions.h src/lbm/analytical_solutions.h src/lbm/bnd_neumann.h)
 
 #TARGET_LINK_LIBRARIES(lbm PUBLIC mpi)
 target_link_libraries(lbm PUBLIC MPI::MPI_CXX dl tinfo pthread)

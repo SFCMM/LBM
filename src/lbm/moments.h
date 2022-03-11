@@ -24,6 +24,16 @@ inline void calcDensity(const std::vector<GInt>& cells, const std::function<GDou
         vars(cellId, LBMVariables<LBEquationType::Navier_Stokes, NDIM>::rho()) += fold(cellId, dist);
       }
     }
+  } else if(EQ == LBEquationType::Poisson) {
+    using METH = LBMethod<getLBMethodType(NDIM, NDIST)>;
+
+    for(const GInt cellId : cells) {
+      GDouble acc_f = 0;
+      for(GInt dist = 0; dist < NDIST - 1; ++dist) {
+        acc_f += fold(cellId, dist);
+      }
+      vars(cellId, LBMVariables<EQ, NDIM>::electricPotential()) = 1.0 / (1.0 - METH::m_weights[NDIST - 1]) * acc_f;
+    }
   } else {
     TERMM(-1, "Invalid LBEquation");
   }

@@ -66,6 +66,7 @@ inline auto poiseuille2D_1s(const Point<2> coord) -> Point<2> { return poiseuill
 namespace euler {}
 
 namespace poisson {
+// todo: add reference
 ///
 /// \param x Position
 /// \return Solution as given by CHAI08
@@ -79,46 +80,22 @@ inline auto poissonCHAI08_1(const Point<1> x) -> Point<1> {
 
   return Point<1>((exp_pK - 1.0) / (exp_pK - exp_mK) * exp_mKx + (1.0 - exp_mK) / (exp_pK - exp_mK) * exp_pKx);
 }
+
+inline auto poissonSimpleDiffReaction(const Point<1> x) -> Point<1> {
+  static constexpr GDouble th = 1.0;
+  return Point<1>(gcem::cosh(th * (1.0 - x[0])) / gcem::cosh(th));
+}
+
 } // namespace poisson
-
-namespace lpt {
-template <GInt NDIM, LPTType P>
-static constexpr auto freefall_noDrag_vel(const ParticleData<NDIM, P>& part, const VectorD<NDIM>& init_v, const GDouble t,
-                                          const Point<NDIM>& gravity, const GDouble rho_a = 0) -> Point<NDIM> {
-  return gravity * (1 - rho_a / part.density()) * t + init_v;
-}
-
-template <GInt NDIM, LPTType P>
-static constexpr auto freefall_noDrag_pos(const Point<NDIM>& start, const ParticleData<NDIM, P>& part, const VectorD<NDIM>& init_v,
-                                          const GDouble t, const Point<NDIM>& gravity, const GDouble rho_a = 0) -> VectorD<NDIM> {
-  return 0.5 * gravity * (1 - rho_a / part.density()) * gcem::pow(t, 2) + t * init_v + start;
-}
-
-template <GInt NDIM, LPTType P>
-static constexpr auto freefall_stokes_vel(const ParticleData<NDIM, P>& part, const VectorD<NDIM>& init_v, const GDouble nu_a,
-                                          const GDouble rho_a, const VectorD<NDIM>& v_a, const GDouble t, const VectorD<NDIM>& gravity)
-    -> VectorD<NDIM> {
-  const GDouble c1 = rho_a / part.density();
-  const GDouble c2 = 18.0 * nu_a / (4.0 * part.radius() * part.radius() * part.density()); // Pas /(m^2 * kg/m^3) -> kg/ms / (kg/m) = 1/s
-  return (gcem::exp(-c2 * t) * (c2 * (v_a * (gcem::exp(c2 * t) - 1) + init_v) - (c1 - 1) * gravity * (gcem::exp(c2 * t) - 1))) / c2;
-}
-
-template <GInt NDIM, LPTType P>
-static constexpr auto freefall_stokes_pos(const Point<NDIM>& start, const ParticleData<NDIM, P>& part, const VectorD<NDIM>& init_v,
-                                          const GDouble nu_a, const GDouble rho_a, const VectorD<NDIM>& v_a, const GDouble t,
-                                          const VectorD<NDIM>& gravity) -> VectorD<NDIM> {
-  const GDouble c1 = rho_a / part.density();
-  const GDouble c2 = 18.0 * nu_a / (4.0 * part.radius() * part.radius() * part.density()); // Pas /(m^2 * kg/m^3) -> kg/ms / (kg/m) = 1/s
-  return (gcem::exp(-c2 * t)(-c1 * gravity + c2 * v_a - c2 * init_v + gravity)) / (c2 * c2)
-         + (t * (-c1 * gravity + c2 * v_a + gravity)) / c2 + start;
-}
-} // namespace lpt
 
 template <GInt NDIM>
 auto getAnalyticalSolution(const GString& name, const SolutionConfig& config) -> std::function<Point<NDIM>(Point<NDIM>)> {
   if constexpr(NDIM == 1) {
     if(name == "poissonCHAI08_1") {
       return &poisson::poissonCHAI08_1;
+    }
+    if(name == "poissonSimpleDiffReaction") {
+      return &poisson::poissonSimpleDiffReaction;
     }
   }
 
@@ -134,11 +111,12 @@ auto getAnalyticalSolution(const GString& name, const SolutionConfig& config) ->
     }
   }
 
-  TERMM(-1, "Invalid analyticalSolution selected!");
+  TERMM(-1, "Invalid analyticalSolution :" + name + " selected!");
 }
 
-enum class ANALYTICAL_CASE_INDEX { poissonCHAI08_1, couette2D, poiseuille2D };
-static constexpr std::array<std::string_view, 3> analyticalNames{"poissonCHAI08_1", "couette2D_1_5", "poiseuille2D_1"};
+enum class ANALYTICAL_CASE_INDEX { poissonCHAI08_1, poissonSimpleDiffReaction, couette2D, poiseuille2D };
+static constexpr std::array<std::string_view, 4> analyticalNames{"poissonCHAI08_1", "poissonSimpleDiffReaction", "couette2D_1_5",
+                                                                 "poiseuille2D_1"};
 
 static constexpr auto getStr(ANALYTICAL_CASE_INDEX caseId) -> std::string_view { return analyticalNames[static_cast<GInt>(caseId)]; }
 

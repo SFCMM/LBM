@@ -217,7 +217,7 @@ void GridGenerator<DEBUG_LEVEL>::generateGrid() {
 
   // todo: add check that we have only
   if(m_alignWithSurface) {
-    gridGen<NDIM>().transformMaxRfnmtLvlToExtent();
+    gridGen<NDIM>().transformMaxRfnmtLvlToExtent(opt_config_value<GInt>("alignDir", 1));
   }
 
   RECORD_TIMER_START(TimeKeeper[Timers::IO]);
