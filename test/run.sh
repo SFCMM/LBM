@@ -96,6 +96,7 @@ cd ..
 
 cd poisson || exit
 time_test poisson1D.json
+time_test poisson1D_reaction.json
 time_test poisson2D.json
 time_test poissonD2Q9.json
 cd ..

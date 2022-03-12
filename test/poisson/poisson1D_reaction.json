@@ -41,7 +41,7 @@
     "info_interval": 1000,
     "solution_interval": 100000,
     "convergence": 1E-15,
-    "errorGRE": 9.6E-6,
+    "errorGRE": 1.44E-6,
     "assumeAxisAligned": true,
     "boundary": {
       "line": {

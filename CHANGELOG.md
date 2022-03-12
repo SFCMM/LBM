@@ -133,6 +133,13 @@
         - BB Dirichlet bnd
         - AntiBB pressure bnd
         - Neumann NEEM bnd
+    - analytical test:
+        - Poisson:
+            - 1D
+            - 1D
+        - Navier-Stokes:
+            - Couette
+            - Poiseuille
 
 - Cartesian grid
     - allow generation of boundary ghost cells
