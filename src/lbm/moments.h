@@ -15,14 +15,69 @@
 /// \param fold Distribution to use
 /// \param vars Variable storage
 template <GInt NDIM, GInt NDIST, LBEquationType EQ>
+inline void calcVelocity(const std::vector<GInt>& cells, const std::function<GDouble&(GInt, GInt)>& fold,
+                         const std::function<GDouble&(GInt, GInt)>& vars) {
+  using METH = LBMethod<getLBMethodType(NDIM, NDIST)>;
+
+  if(EQ == LBEquationType::Navier_Stokes) {
+    for(const GInt cellId : cells) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        vars(cellId, LBMVariables<EQ, NDIM>::velocity(dir)) = 0;
+        for(GInt dist = 0; dist < NDIST - 1; ++dist) {
+          vars(cellId, LBMVariables<EQ, NDIM>::velocity(dir)) += METH::m_dirs[dist][dir] * fold(cellId, dist);
+        }
+        vars(cellId, LBMVariables<EQ, NDIM>::velocity(dir)) /= vars(cellId, LBMVariables<EQ, NDIM>::rho());
+      }
+    }
+  } else {
+    TERMM(-1, "Invalid LBEquation");
+  }
+}
+
+/// Calculate the density for a given set of cells.
+/// \tparam NDIM Dimensionality
+/// \tparam NDIST Number of distributions
+/// \tparam EQ equation
+/// \param cells List of cells for which to calculate the density
+/// \param fold Distribution to use
+/// \param vars Variable storage
+template <GInt NDIM, GInt NDIST, LBEquationType EQ>
+inline auto calcVelocity(const GInt cellId, const std::function<GDouble&(GInt, GInt)>& fold,
+                         const std::function<GDouble&(GInt, GInt)>& vars) -> VectorD<NDIM> {
+  using METH = LBMethod<getLBMethodType(NDIM, NDIST)>;
+
+  VectorD<NDIM> tempV;
+  tempV.fill(0);
+  if(EQ == LBEquationType::Navier_Stokes) {
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      for(GInt dist = 0; dist < NDIST - 1; ++dist) {
+        tempV[dir] += METH::m_dirs[dist][dir] * fold(cellId, dist);
+      }
+      tempV[dir] /= vars(cellId, LBMVariables<EQ, NDIM>::rho());
+    }
+    return tempV;
+  }
+  TERMM(-1, "Invalid LBEquation");
+}
+
+/// Calculate the density for a given set of cells.
+/// \tparam NDIM Dimensionality
+/// \tparam NDIST Number of distributions
+/// \tparam EQ equation
+/// \param cells List of cells for which to calculate the density
+/// \param fold Distribution to use
+/// \param vars Variable storage
+template <GInt NDIM, GInt NDIST, LBEquationType EQ>
 inline void calcDensity(const std::vector<GInt>& cells, const std::function<GDouble&(GInt, GInt)>& fold,
                         const std::function<GDouble&(GInt, GInt)>& vars) {
   if(EQ == LBEquationType::Navier_Stokes) {
     for(const GInt cellId : cells) {
-      vars(cellId, LBMVariables<LBEquationType::Navier_Stokes, NDIM>::rho()) = fold(cellId, 0);
+      vars(cellId, LBMVariables<EQ, NDIM>::rho()) = fold(cellId, 0);
       for(GInt dist = 1; dist < NDIST; ++dist) {
-        vars(cellId, LBMVariables<LBEquationType::Navier_Stokes, NDIM>::rho()) += fold(cellId, dist);
+        vars(cellId, LBMVariables<EQ, NDIM>::rho()) += fold(cellId, dist);
+        //        cerr0 << "dist" << dist << " ";
       }
+      //      cerr0 << std::endl;
     }
   } else if(EQ == LBEquationType::Poisson) {
     using METH = LBMethod<getLBMethodType(NDIM, NDIST)>;

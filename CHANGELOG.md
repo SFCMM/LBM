@@ -8,6 +8,8 @@
 - [LPT] eliptic particles
 - [LPT] fluid collision model
 - [LPT] breakup model
+- [LPT] dynamic drag model
+- [LPT] plastic collision
 
 # V0.0.3
 
@@ -32,8 +34,7 @@
 - set write out precision
 - write out memory statistics
 - reduce todo below 50
-- dynamic drag model
-- plastic collision
+
 - ray tracing of particles
 - refactor comparison with analytical solution to postprocessing
 - initial material point method
@@ -45,6 +46,7 @@
 - [LIB] refactor kdtree and add more complete test
 - [LPT] calculate timestep by characteristic time
 - [LBM][POISSON][BUG] the precision of D2Q5 is not correct for Poisson
+- [LBM] change convergence criterium to some average not maximum
 
 ## moved
 
@@ -101,8 +103,8 @@
 
 - [LPT] finish for release
 
-- [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution? (velocity
-  profile close to the wall is not correct)
+- [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution? (
+  overprediction in the center??)
 
 
 ## Done:

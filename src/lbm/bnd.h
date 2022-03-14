@@ -167,7 +167,7 @@ class LBMBndManager : private Configuration {
           m_bndrys.emplace_back(std::make_unique<LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
           break;
         case BndryType::Wall_NEEM:
-          m_bndrys.emplace_back(std::make_unique<LBMBnd_wallNEEM<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));
+          m_bndrys.emplace_back(std::make_unique<LBMBnd_wallNEEM<DEBUG_LEVEL, LBTYPE, EQ>>(surf[0], properties));
           break;
         case BndryType::Wall_NEBB:
           m_bndrys.emplace_back(std::make_unique<LBMBnd_wallNEBB<DEBUG_LEVEL, LBTYPE>>(surf[0], properties));

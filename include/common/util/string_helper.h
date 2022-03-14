@@ -69,6 +69,21 @@ static inline auto strStreamify(const VectorD<LENGTH>& in) -> std::stringstream 
   return str;
 }
 
+/// Get a stringstream from a given array. Type needs to overload "<<".
+/// \tparam LENGTH Length of the vector to be streamed.
+/// \tparam T Type of the array
+/// \param in array to be stringstreamed
+/// \return std::stringstream of the in array.
+template <GInt LENGTH, class T>
+static inline auto strStreamify(const T* in) -> std::stringstream {
+  std::stringstream str;
+  str << in[0];
+  for(GInt i = 1; i < LENGTH; i++) {
+    str << " " << in[i];
+  }
+  return str;
+}
+
 /// Convert an input vector to a string vector of the same size or as per the given optional argument size.
 /// \tparam T Type of the vector.
 /// \param in Input vector to be stringified.

@@ -37,10 +37,10 @@
     "maxSteps": 20000,
     "info_interval": 100,
     "solution_interval": 500,
-    "convergence": 5E-13,
+    "convergence": 1E-14,
     "analyticalSolution": "couette2D_1_5",
-    "errorL2": 1E-13,
-    "errorMax": 6.27E-13,
+    "errorL2": 1E-15,
+    "errorMax": 3.46E-15,
     "assumeAxisAligned": true,
     "boundary": {
       "cube": {

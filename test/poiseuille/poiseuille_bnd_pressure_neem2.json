@@ -4,10 +4,10 @@
   "partitionLevel": 5,
   "uniformLevel": 5,
   "maxRfnmtLvl": 5,
+  "alignNodesWithSurface": true,
   "maxNoCells": 1000000,
   "outputDir": "out",
   "gridFileName": "gridD",
-  "alignNodesWithSurface": true,
   "gridOutput": {
     "format": "VTKB",
     "cellFilter": "leafCells",
@@ -42,24 +42,19 @@
     ],
     "maxSteps": 200000,
     "info_interval": 1000,
-    "solution_interval": 50000,
+    "solution_interval": 10000,
     "convergence": 3E-13,
-    "errorL2": 6.8E-4,
-    "errorMax": 2.74E-6,
+    "errorMax": 1.1E-5,
     "assumeAxisAligned": true,
     "boundary": {
       "cube": {
         "+x": {
-          "type": "periodic",
-          "generateBndry": true,
-          "connection": "-x",
-          "pressure": 1.0000008
+          "type": "pressure",
+          "pressure": 1.0
         },
         "-x": {
-          "type": "periodic",
-          "generateBndry": true,
-          "connection": "+x",
-          "pressure": 1.0
+          "type": "pressure",
+          "pressure": 1.0000008
         },
         "-y": {
           "type": "wall",

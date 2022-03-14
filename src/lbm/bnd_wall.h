@@ -314,14 +314,14 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
 /// Non-equilibrium extrapolation wall boundary condition.
 /// \tparam DEBUG_LEVEL
 /// \tparam LBTYPE
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE> {
  private:
-  using method                = LBMethod<LBTYPE>;
+  using METH                  = LBMethod<LBTYPE>;
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
 
-  using VAR = LBMVariables<LBEquationType::Navier_Stokes, NDIM>;
+  using VAR = LBMVariables<EQ, NDIM>;
 
  public:
   LBMBnd_wallNEEM(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) : LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>(surf) {
@@ -408,18 +408,25 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
 
   void apply_general(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
                      const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
-    // add the non-equilibrium part from the extrapolation cell
-    GInt index = 0;
-    for(const auto cellId : this->bnd()->getCellList()) {
-      const GInt extCellId = m_extrapolationCellId[index];
-      // todo: update macroscopic value for extrapolation cell??? (try!)
-      //  just set equilibrium dist if there is no valid extrapolation cell
-      if(extCellId != INVALID_CELLID) {
-        for(GInt dist = 0; dist < NDIST; ++dist) {
-          fold(cellId, dist) += fold(extCellId, dist) - feq(extCellId, dist);
+    if constexpr(EQ == LBEquationType::Navier_Stokes) {
+      // recalculate equilibrium dist because fold is post streaming!
+      calcDensity<NDIM, NDIST, EQ>(m_extrapolationCellId, fold, vars);
+      calcVelocity<NDIM, NDIST, EQ>(m_extrapolationCellId, fold, vars);
+
+      // add the non-equilibrium part from the extrapolation cell
+      GInt index = 0;
+      for(const auto cellId : this->bnd()->getCellList()) {
+        const GInt extCellId = m_extrapolationCellId[index];
+
+        //  just set equilibrium dist if there is no valid extrapolation cell
+        if(extCellId != INVALID_CELLID) {
+          for(GInt dist = 0; dist < NDIST; ++dist) {
+            fold(cellId, dist) +=
+                fold(extCellId, dist) - eq::defaultEq<LBTYPE>(dist, vars(extCellId, VAR::rho()), &vars(extCellId, VAR::velocity(0)));
+          }
         }
+        ++index;
       }
-      ++index;
     }
   }
 
@@ -497,7 +504,7 @@ class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_
       ++index;
     }
 
-    // reflect main direction
+    // reflect main directions
     for(const auto bndCellId : m_bnd->getCellList()) {
       for(GInt dist = 0; dist < cartesian::maxNoNghbrs<NDIM>(); ++dist) {
         if(m_bnd->neighbor(bndCellId, dist) == INVALID_CELLID) {
@@ -533,6 +540,7 @@ class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_
 
   void apply_constV(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>&   fold,
                     const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& vars) {
+    // todo: this is not correct see olb-1.4/src/boundary/wallFunctionB*/computeFneqRNEBB
     GInt index = 0;
     for(const auto cellId : m_bnd->getCellList()) {
       calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, false>(
