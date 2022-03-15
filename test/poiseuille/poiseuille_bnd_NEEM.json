@@ -40,7 +40,7 @@
       "+x",
       "-x"
     ],
-    "maxSteps": 200000,
+    "maxSteps": 2000000,
     "info_interval": 1000,
     "solution_interval": 50000,
     "convergence": 3E-13,

@@ -88,7 +88,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   // todo: make settable
   m_ma            = 0.0001;
   m_refLength     = 1.0;
-  GInt m_maxLevel = 5;
 
   const GDouble m_finestGridSpacing = 1.0 / (std::pow(size(), 1.0 / NDIM) - 1); // todo: replace with cellLength
 
@@ -105,9 +104,14 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
       m_re        = m_ma * m_refLength / m_nu;
     } else {
       m_re = required_config_value<GDouble>("reynoldsnumber");
-      m_nu = m_ma /** lbm_cs */ / m_re * m_refLength; // Re = |u| * l/nu -> nu = |u| * l/re with |u| = ma * lbm_cs
-      // this follows from nu = rho_0 * cssq * (tau - 1/2 * dt) with dt = tau and rho_0 = 1
-      m_omega = 2.0 / (1.0 + 2.0 * m_nu * gcem::pow(2.0, m_maxLevel));
+      //      m_nu = m_ma * lbm_cs / m_re * m_refLength; // Re = |u| * l/nu -> nu = |u| * l/re with |u| = ma * lbm_cs
+      //      // this follows from nu = rho_0 * cssq * (tau - 1/2 * dt) with dt = tau and rho_0 = 1
+      //      m_omega = 2.0 / (1.0 + 6.0 * m_nu * gcem::pow(2.0, m_maxLevel));
+      m_nu    = m_ma / m_re * m_refLength; // Re = |u| * l/nu -> nu = |u| * l/re with |u| = ma * lbm_cs
+      m_omega = 2.0 / (1.0 + 2.0 * m_nu * gcem::pow(2.0, maxLvl()));
+      //      m_omega = 2.0 / (1.0 + 6.0 * m_nu); // this should be correct??
+      //      m_omega *= 0.9987; // unknown correction factor
+      m_relaxTime = 1.0 / m_omega;
     }
     m_dt = m_finestGridSpacing * m_ma * lbm_cs / m_refLength;
   } else {
@@ -138,6 +142,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   cerr0 << "Equation " << LBEquationName[static_cast<GInt>(EQ)] << std::endl;
   cerr0 << "No. of variables " << std::to_string(NVARS) << std::endl;
   cerr0 << "No. Leaf cells: " << noLeafCells() << std::endl;
+  cerr0 << "Max Mesh Level: " << maxLvl() << std::endl;
   cerr0 << "No. Bnd cells: " << noBndCells() << std::endl;
   cerr0 << "Relaxation Time: " << m_relaxTime << std::endl;
   cerr0 << "Timestep: " << m_dt << std::endl;

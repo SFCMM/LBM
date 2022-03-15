@@ -57,6 +57,8 @@
 - [LPT] add tutorial
 - [LPT] compare solution at multiple time points
 - determine analytical solutions for 2D poisson cases
+- [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution?
+  (overprediction in the center??) (related to the uncertainty about calculating the relaxation??)
 
 # V0.0.2
 
@@ -102,10 +104,6 @@
 - run basic 2D NS obstruction case
 
 - [LPT] finish for release
-
-- [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution? (
-  overprediction in the center??)
-
 
 ## Done:
 
