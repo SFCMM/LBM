@@ -47,6 +47,8 @@
 - [LPT] calculate timestep by characteristic time
 - [LBM][POISSON][BUG] the precision of D2Q5 is not correct for Poisson
 - [LBM] change convergence criterium to some average not maximum
+- [LBM] fix NEBB bnd cnd
+- [LBM] add zou-he bnd cnd
 
 ## moved
 
@@ -99,9 +101,13 @@
 - [LBM] add support for boundary ghost cells in periodic boundary
 - add INFO_OUTPUT with physical time update
 
-### this month:
+### this week:
+
 - run basic 2D NS sphere case
-- run basic 2D NS obstruction case
+- run basic 2D poisson single step case
+- run 2D analytical poisson case
+
+- allow setting up the bnds for the step case correctly
 
 - [LPT] finish for release
 
@@ -135,11 +141,18 @@
         - Neumann NEEM bnd
     - analytical test:
         - Poisson:
-            - 1D
-            - 1D
+            - 1D Debye-Hueckel
+            - 1D Diffusion Slab
         - Navier-Stokes:
             - Couette
             - Poiseuille
+    - testcases
+        - Navier-Stokes:
+            - single step
+            - double step
+        - Poisson
+            - single step
+            - double step
 
 - Cartesian grid
     - allow generation of boundary ghost cells

@@ -7,8 +7,6 @@
 #include <utility>
 #include <vector>
 #include <sfcmm_common.h>
-//#include "common/kdtree.h"
-//#include "common/triangle.h"
 #include "common/configuration.h"
 #include "functions.h"
 
@@ -46,7 +44,7 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class GeometryRepresentation {
  public:
   GeometryRepresentation(const json& geom)
-    : m_body(config::opt_config_value(geom, "body", GString("unique"))), m_inside(config::opt_config_value(geom, "inside", true)){};
+    : m_body(config::opt_config_value(geom, "body", GString("unique"))), m_subtract(config::opt_config_value(geom, "subtract", false)){};
   GeometryRepresentation()                              = default;
   virtual ~GeometryRepresentation()                     = default;
   GeometryRepresentation(const GeometryRepresentation&) = delete;
@@ -68,7 +66,7 @@ class GeometryRepresentation {
   [[nodiscard]] inline auto name() const -> GString { return m_name; }
   // necessary if objectref cannot be cast to const
   [[nodiscard]] inline auto cname() const -> GString { return m_name; }
-  [[nodiscard]] inline auto inside() const -> GBool { return m_inside; }
+  [[nodiscard]] inline auto subtract() const -> GBool { return m_subtract; }
   [[nodiscard]] inline auto body() const -> GString { return m_body; }
   inline auto               body() -> GString& { return m_body; }
   [[nodiscard]] inline auto elementOffset() const -> GInt { return m_elementOffset; }
@@ -82,7 +80,7 @@ class GeometryRepresentation {
   GeomType              m_type = GeomType::unknown;
   GString               m_name = "undefined";
   GString               m_body;
-  GBool                 m_inside            = true;
+  GBool                 m_subtract          = false;
   BoundaryConditionType m_boundaryCondition = BoundaryConditionType::Wall;
   GInt                  m_elementOffset     = -1;
 };
@@ -105,7 +103,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool override {
     // 1. check if it is in object bounding box
     if(!pointInsideObjBB(x)) {
-      return !inside();
+      return false;
     }
 
 
@@ -145,7 +143,7 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
           if(fabs(a) < tolerance) {
             // ray lies in triangle plane
             logger << "Found ray in triangle plane" << std::endl;
-            return inside();
+            return true;
           }
           // ray disjoint from plane
           continue;
@@ -199,14 +197,14 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
       }
 
       if(isEven(intersectionPoints.size())) {
-        return !inside();
+        return false;
       }
 
       intersectionPoints.clear();
       nodeList.clear();
     }
 
-    return inside();
+    return true;
   }
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, const GDouble cellLength) const -> GBool override {
@@ -393,7 +391,6 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::name;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::body;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::type;
-  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::inside;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::elementOffset;
 
   void loadFile() {
@@ -659,7 +656,7 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
   };
 
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool override {
-    return (x - m_center).norm() < m_radius + GDoubleEps ? inside() : !inside();
+    return (x - m_center).norm() < m_radius + GDoubleEps;
   }
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override {
@@ -692,7 +689,6 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::name;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::body;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::type;
-  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::inside;
 
   Point<NDIM> m_center{NAN};
   GDouble     m_radius = 0;
@@ -725,10 +721,10 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool override {
     for(GInt dir = 0; dir < NDIM; ++dir) {
       if(m_A[dir] > x[dir] || m_B[dir] < x[dir]) {
-        return !inside();
+        return false;
       }
     }
-    return inside();
+    return true;
   }
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override {
@@ -760,6 +756,7 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
     ss << SP7 << "Body: " << body() << "\n";
     ss << SP7 << "Point A: " << strStreamify<NDIM>(m_A).str() << "\n";
     ss << SP7 << "Point B: " << strStreamify<NDIM>(m_B).str() << "\n";
+    ss << SP7 << "Subtract: " << std::boolalpha << subtract() << "\n";
     return ss.str();
   }
 
@@ -767,8 +764,7 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::name;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::body;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::type;
-  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::inside;
-
+  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::subtract;
 
   void checkValid() const {
     for(GInt dir = 0; dir < NDIM; dir++) {
@@ -799,10 +795,10 @@ class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& x) const -> GBool override {
     for(GInt dir = 0; dir < NDIM; ++dir) {
       if(abs(x[dir] - m_center[dir]) > m_length) {
-        return !inside();
+        return false;
       }
     }
-    return inside();
+    return true;
   }
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override {
@@ -842,8 +838,6 @@ class GeomCube : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::name;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::body;
   using GeometryRepresentation<DEBUG_LEVEL, NDIM>::type;
-  using GeometryRepresentation<DEBUG_LEVEL, NDIM>::inside;
-
 
   Point<NDIM> m_center{NAN};
   GDouble     m_length = 0;
@@ -945,9 +939,40 @@ class GeometryManager : public GeometryInterface {
 
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& point) const -> GBool {
     // \todo: check overall bounding box first
-    for(const auto& obj : m_geomObj) {
-      if(obj->pointIsInside(point)) {
-        return true;
+    cerr0 << "pointIsInside" << std::endl;
+
+    // iterate through bodies
+    for(const auto& [key, geomObjList] : m_bodyMap) {
+      // todo: move to global data to not always check
+      GBool hasSubtraction = false;
+      for(const auto& obj : geomObjList) {
+        if(obj->subtract()) {
+          hasSubtraction = true;
+        }
+      }
+      cerr0 << "hasSubtraction" << std::endl;
+      // check geometries within body
+      for(const auto& obj : geomObjList) {
+        if(obj->pointIsInside(point)) {
+          // no subtraction geometries in this body so no further checks
+          if(!hasSubtraction) {
+            return true;
+          }
+
+          // geometry should be subtracted
+          if(obj->subtract()) {
+            return false;
+          }
+
+          for(const auto& sub_obj : geomObjList) {
+            // point is within subtracted volume so not inside!
+            if(sub_obj->subtract() && sub_obj->pointIsInside(point)) {
+              return false;
+            }
+          }
+
+          return true;
+        }
       }
     }
     return false;
