@@ -42,7 +42,7 @@ class LBMBndManager : private Configuration {
       // todo: cleanup
       // todo: check that geometry exists
       // todo: access only bndrySurfaces of this geometry!
-      const GInt noBnds = geomBndConfig.size();
+      const GInt noBnds = bndConfig.size();
       for(const auto& [surfId, surfBndConfig] : geomBndConfig.items()) {
         GString surfIdName = surfId;
         if(noBnds > 1) {

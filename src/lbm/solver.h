@@ -88,7 +88,11 @@ class LBMSolver : public Runnable,
   //    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get());
   //  }
 
-  auto bndrySurface(const GString surfaceName) -> Surface<DEBUG_LEVEL, NDIM>& {
+  auto hasBndrySurface(const GString& surfaceName) -> GBool {
+    return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->hasBndrySurface(surfaceName);
+  }
+
+  auto bndrySurface(const GString& surfaceName) -> Surface<DEBUG_LEVEL, NDIM>& {
     return static_cast<CartesianGrid<DEBUG_LEVEL, NDIM>*>(m_grid.get())->bndrySurface(surfaceName);
   }
 
