@@ -993,6 +993,19 @@ class GeometryManager : public GeometryInterface {
     return false;
   }
 
+  [[nodiscard]] auto inline cutWithCell(const GString& geomName, const Point<NDIM>& cellCenter, const GDouble cellLength) const -> GBool {
+    // \todo: check overall bounding box first
+    for(const auto& obj : m_geomObj) {
+      if(obj->cname() == geomName) {
+        if(obj->cutWithCell(cellCenter, cellLength)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+
   [[nodiscard]] auto inline noObjects() const -> GInt override { return m_geomObj.size(); }
 
   [[nodiscard]] auto inline noElements() const -> GInt override {

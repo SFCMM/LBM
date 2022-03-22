@@ -49,6 +49,7 @@
 - [LBM] change convergence criterium to some average not maximum
 - [LBM] fix NEBB bnd cnd
 - [LBM] add zou-he bnd cnd
+- [LBM][BUG] Periodic bnd doesn't work always (see step_ns_bug1.json)
 
 ## moved
 
@@ -104,10 +105,9 @@
 ### this week:
 
 - run basic 2D NS sphere case
-- run basic 2D poisson single step case
 - run 2D analytical poisson case
 
-- allow setting up the bnds for the step case correctly
+- simplify setup for setting up bnds for bodies
 
 - [LPT] finish for release
 

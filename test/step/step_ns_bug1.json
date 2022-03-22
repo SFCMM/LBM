@@ -1,9 +1,9 @@
 {
   "dry-run": true,
   "dim": 2,
-  "partitionLevel": 6,
-  "uniformLevel": 6,
-  "maxRfnmtLvl": 6,
+  "partitionLevel": 4,
+  "uniformLevel": 4,
+  "maxRfnmtLvl": 4,
   "maxNoCells": 1000000,
   "outputDir": "out",
   "gridFileName": "gridD",
@@ -58,80 +58,75 @@
   },
   "solver": {
     "type": "lbm",
-    "equation": "poisson",
-    "model": "D2Q9",
-    "relaxation": 1.0,
-    "maxSteps": 10000,
-    "info_interval": 10,
+    "reynoldsnumber": 0.1,
+    "ma": 0.0001,
+    "poiseuillePressureGradient": 0.0000008,
+    "analyticalSolutionExcludeSurface": [
+      "+x",
+      "-x"
+    ],
+    "forcing": "poiseuille2D_1",
+    "maxSteps": 100000,
+    "info_interval": 100,
     "solution_interval": 1000,
-    "convergence": 2E-13,
-    "errorL2": 5E-3,
-    "errorMax": 1.1E-3,
+    "convergence": 2E-11,
+    "errorL2": 3.3E-5,
+    "errorMax": 1.3E-7,
     "boundary": {
       "cube": {
         "+x": {
-          "type": "dirichlet",
-          "model": "neem",
-          "value": 0
+          "type": "periodic",
+          "generateBndry": true,
+          "connection": "cube_-x"
         },
         "-x": {
-          "type": "dirichlet",
-          "model": "neem",
-          "value": 0
-        },
-        "+y": {
-          "type": "dirichlet",
-          "model": "neem",
-          "value": 3
+          "type": "periodic",
+          "generateBndry": true,
+          "connection": "cube_+x"
         },
         "-y": {
-          "type": "dirichlet",
-          "model": "neem",
-          "value": 0
+          "type": "wall",
+          "model": "bounceback"
+        },
+        "+y": {
+          "type": "wall",
+          "model": "bounceback"
         }
       },
       "step_a": {
         "+x": {
-          "type": "dirichlet",
-          "model": "neem",
-          "value": 5
+          "type": "wall",
+          "model": "bounceback"
         },
         "-x": {
-          "type": "dirichlet",
-          "model": "neem",
-          "value": 6
+          "type": "wall",
+          "model": "bounceback"
         },
         "+y": {
-          "type": "dirichlet",
-          "model": "neem",
-          "value": 7
+          "type": "wall",
+          "model": "bounceback"
         },
         "-y": {
-          "type": "dirichlet",
-          "model": "neem",
-          "value": 8
+          "type": "wall",
+          "model": "bounceback"
         }
       },
       "step_b": {
         "+x": {
-          "type": "dirichlet",
-          "model": "neem",
-          "value": 9
+          "type": "wall",
+          "model": "bounceback"
         },
         "-x": {
-          "type": "dirichlet",
-          "model": "neem",
-          "value": 10
+          "type": "wall",
+          "model": "bounceback"
         },
         "+y": {
-          "type": "dirichlet",
-          "model": "neem",
-          "value": 11
+          "type": "wall",
+          "model": "bounceback"
         },
         "-y": {
-          "type": "dirichlet",
-          "model": "neem",
-          "value": 12
+          "type": "wall",
+          "model": "bounceback"
         }
       }
     },
@@ -140,12 +135,12 @@
         "type": "line",
         "execute": "atEnd",
         "A": [
-          0.501,
+          5.1,
           0.0
         ],
         "B": [
-          0.501,
-          1.0
+          5.1,
+          10
         ]
       }
     }

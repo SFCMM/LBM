@@ -42,11 +42,19 @@ class LBMBndManager : private Configuration {
       // todo: cleanup
       // todo: check that geometry exists
       // todo: access only bndrySurfaces of this geometry!
+      const GInt noBnds = geomBndConfig.size();
       for(const auto& [surfId, surfBndConfig] : geomBndConfig.items()) {
+        GString surfIdName = surfId;
+        if(noBnds > 1) {
+          surfIdName = geometry + "_" + surfIdName;
+        }
         const auto bndType = config::required_config_value<GString>(surfBndConfig, "type");
-        logger << "Adding bndCnd to surfaceId " << surfId;
+        logger << "Adding bndCnd to surfaceId " << surfIdName;
 
-        Surface<DEBUG_LEVEL, dim(LBTYPE)>&              srf = bndrySurface(surfId);
+        Surface<DEBUG_LEVEL, dim(LBTYPE)>& srf = bndrySurface(surfIdName);
+        if(srf.size() == 0) {
+          continue;
+        }
         std::vector<Surface<DEBUG_LEVEL, dim(LBTYPE)>*> bndrySrf;
         bndrySrf.emplace_back(&srf);
 

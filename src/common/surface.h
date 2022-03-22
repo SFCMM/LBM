@@ -69,7 +69,6 @@ class Surface : public SurfaceInterface {
 
 
   [[nodiscard]] auto size() const -> GInt {
-    ASSERT(!m_cellId.empty(), "Not inited!");
     return m_cellId.size();
   }
 

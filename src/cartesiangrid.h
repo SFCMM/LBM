@@ -295,11 +295,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 #endif
 
     m_axisAlignedBnd = opt_config_value<GBool>("assumeAxisAligned", m_axisAlignedBnd);
-    if(!m_axisAlignedBnd) {
-      TERMM(-1, "Not implemented!");
-    }
-    m_periodic = has_any_key_value("type", "periodic");
-
+    m_periodic       = has_any_key_value("type", "periodic");
 
     setProperties();
 
@@ -511,12 +507,17 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 
   void determineBoundaryCells() {
     for(GInt cellId = 0; cellId < noCells(); ++cellId) {
-      // is a partition cell determine for each if it can be a boundary cell (no existent parent)
+      // is a partition cell determine for each if it can be a boundary cell
+      // cell has no parent -> might have cut
       // parent has a cut with the boundary -> possible cut of child!
       if(parent(cellId) == -1 || property(parent(cellId), CellProperties::bndry)) {
-        const GDouble cellLength                = lengthOnLvl(std::to_integer<GInt>(level(cellId)));
+        const GDouble cellLength = lengthOnLvl(std::to_integer<GInt>(level(cellId)));
+
+        // check for cut with geometry
         property(cellId, CellProperties::bndry) = m_geometry->cutWithCell(center(cellId), cellLength);
         //        if(DEBUG_LEVEL > Debug_Level::min_debug && property(cellId, CellProperties::bndry)){
+
+        // we currently only care for cells which have missing neighbors!
         if(property(cellId, CellProperties::bndry)) {
           GInt noNeighbors = 0;
           for(GInt nghbrId = 0; nghbrId < cartesian::maxNoNghbrs<NDIM>(); ++nghbrId) {
@@ -524,12 +525,16 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
               ++noNeighbors;
             }
           }
+
+          // remove cells that have no missing neighbor
           if(cartesian::maxNoNghbrs<NDIM>() == noNeighbors) {
             //            cerr0 << "Removed boundary property cellId: " << cellId << " (" << center(cellId)[0] << ", " <<
             //            center(cellId)[1]
             //                  << ") L:" << cellLength << std::endl;
             property(cellId, CellProperties::bndry) = false;
-            logger << "Simplified bndry process!!!" << std::endl;
+            if(property(cellId, CellProperties::leaf)) {
+              logger << "Simplified bndry process!!! Cell had cut with surface but is not missing Neighbors." << std::endl;
+            }
             //            TERMM(-1, "Cell marked as boundary, but is not on a boundary!");
           }
         }
@@ -546,7 +551,10 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   void identifyBndrySurfaces() {
     json bndryConfig = getObject("boundary");
     //    GBool defaultBndryGhost = false;
+
+
     if(m_axisAlignedBnd) {
+      // todo: simplify
       for(GInt surfId = 0; surfId < cartesian::maxNoNghbrs<NDIM>(); ++surfId) {
         m_bndrySurfaces.insert(std::make_pair(static_cast<GString>(DirIdString[surfId]),
                                               Surface<DEBUG_LEVEL, NDIM>(this->getCartesianGridData(), &property(0))));
@@ -574,7 +582,49 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
         }
       }
     } else {
-      TERMM(-1, "Not implemented");
+      cerr0 << "Create boundary surfaces for " << m_geometry->noObjects() << " geometries" << std::endl;
+
+      std::set<std::pair<GInt, GInt>> assignedBnds;
+
+      // iterate over all geometries
+      for(const auto& [surfName, surfConfig] : bndryConfig.items()) {
+        const GInt noBnds = surfConfig.size();
+        for(const auto& [surfDirName, config] : surfConfig.items()) {
+          const GString surfNameAp = (noBnds > 1) ? surfName + "_" + surfDirName : surfName;
+          cerr0 << surfNameAp << std::endl;
+          cerr0 << config << std::endl;
+          m_bndrySurfaces.insert(std::make_pair(surfNameAp, Surface<DEBUG_LEVEL, NDIM>(this->getCartesianGridData(), &property(0))));
+
+          for(GInt cellId = 0; cellId < size(); ++cellId) {
+            if(property(cellId, Cell::bndry)) {
+              const GDouble cellLength = lengthOnLvl(std::to_integer<GInt>(level(cellId)));
+              const GInt    dir        = dirIdString2Id(surfDirName);
+              if(!hasNeighbor(cellId, dir)) {
+                // cell has cut with the boundary surface
+                if(m_geometry->cutWithCell(surfName, center(cellId), cellLength)) {
+                  const auto [iter, added] = assignedBnds.insert({cellId, dir});
+
+                  if(added) {
+                    // todo: diagonal missing cells are not assigned!
+                    cerr0 << surfName << " : " << cellId << std::endl;
+                    m_bndrySurfaces.at(surfNameAp).addCell(cellId, dir);
+                  } else {
+                    cerr0 << "cellId: " << cellId << " was already assigned a bnd in direction " << dir << std::endl;
+                  }
+                }
+              }
+            }
+          }
+          if(m_bndrySurfaces.at(surfNameAp).size() == 0) {
+            //            m_bndrySurfaces.erase(surfNameAp);
+            cerr0 << "WARNING: surface " << surfNameAp << " has no cells!" << std::endl;
+            logger << "WARNING: surface " << surfNameAp << " has no cells!" << std::endl;
+          }
+        }
+      }
+
+
+      //      TERMM(-1, "Not implemented");
     }
   }
 #ifdef CLANG_COMPILER

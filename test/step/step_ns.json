@@ -26,7 +26,7 @@
       ],
       "B": [
         10.0,
-        7.0
+        9.0
       ]
     },
     "step_a": {
@@ -35,7 +35,7 @@
       "subtract": false,
       "A": [
         0.0,
-        0.0
+        9.0
       ],
       "B": [
         4.0,
@@ -48,7 +48,7 @@
       "subtract": false,
       "A": [
         6.0,
-        0.0
+        9.0
       ],
       "B": [
         10.0,
@@ -65,31 +65,63 @@
       "+x",
       "-x"
     ],
-    "forcing": "poiseuille2D_1",
     "maxSteps": 100000,
     "info_interval": 100,
     "solution_interval": 1000,
     "convergence": 2E-11,
     "errorL2": 3.3E-5,
     "errorMax": 1.3E-7,
-    "assumeAxisAligned": true,
     "boundary": {
       "cube": {
         "+x": {
-          "type": "periodic",
-          "generateBndry": false,
-          "connection": "-x"
+          "type": "pressure",
+          "pressure": 1.0
         },
         "-x": {
-          "type": "periodic",
-          "generateBndry": false,
-          "connection": "+x"
+          "type": "pressure",
+          "pressure": 1.0000008
         },
         "-y": {
           "type": "wall",
           "model": "bounceback"
         },
         "+y": {
+          "type": "wall",
+          "model": "bounceback"
+        }
+      },
+      "step_a": {
+        "+x": {
+          "type": "wall",
+          "model": "bounceback"
+        },
+        "-x": {
+          "type": "pressure",
+          "pressure": 1.0000008
+        },
+        "+y": {
+          "type": "wall",
+          "model": "bounceback"
+        },
+        "-y": {
+          "type": "wall",
+          "model": "bounceback"
+        }
+      },
+      "step_b": {
+        "+x": {
+          "type": "pressure",
+          "pressure": 1.0
+        },
+        "-x": {
+          "type": "wall",
+          "model": "bounceback"
+        },
+        "+y": {
+          "type": "wall",
+          "model": "bounceback"
+        },
+        "-y": {
           "type": "wall",
           "model": "bounceback"
         }
