@@ -254,6 +254,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     return m_bndrySurfaces.at(id);
   }
 
+  auto hasBndrySurface(const GString& id) -> GBool { return m_bndrySurfaces.count(id) > 0; }
+
 
   /// Load the generated grid in-memory and set additional properties
   /// \param grid Generated grid.
@@ -622,9 +624,6 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
           }
         }
       }
-
-
-      //      TERMM(-1, "Not implemented");
     }
   }
 #ifdef CLANG_COMPILER
