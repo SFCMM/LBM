@@ -939,7 +939,6 @@ class GeometryManager : public GeometryInterface {
 
   [[nodiscard]] auto inline pointIsInside(const Point<NDIM>& point) const -> GBool {
     // \todo: check overall bounding box first
-    cerr0 << "pointIsInside" << std::endl;
 
     // iterate through bodies
     for(const auto& [key, geomObjList] : m_bodyMap) {
@@ -950,7 +949,6 @@ class GeometryManager : public GeometryInterface {
           hasSubtraction = true;
         }
       }
-      cerr0 << "hasSubtraction" << std::endl;
       // check geometries within body
       for(const auto& obj : geomObjList) {
         if(obj->pointIsInside(point)) {
