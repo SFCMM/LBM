@@ -660,7 +660,39 @@ class GeomSphere : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
   }
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override {
-    return (cellCenter - m_center).norm() < (m_radius + (gcem::sqrt(NDIM * gcem::pow(HALF * cellLength, 2))) + GDoubleEps);
+    const GDouble distance        = (cellCenter - m_center).norm();
+    const GDouble halfCellLength  = 0.5 * cellLength;
+    const GDouble surrCircleCellR = gcem::sqrt(2) * halfCellLength;
+
+    // cell has a possible cut with the sphere
+    if(distance <= m_radius + surrCircleCellR && distance >= m_radius - surrCircleCellR) {
+      GInt          pointsInside = 0;
+      VectorD<NDIM> l;
+      l.fill(halfCellLength);
+      Point<NDIM> cellOriginVert = cellCenter - l;
+
+      if constexpr(NDIM == 2) {
+        VectorD<2> ex = {1, 0};
+        VectorD<2> ey = {0, 1};
+
+        for(GInt dirX = 0; dirX < NDIM; ++dirX) {
+          for(GInt dirY = 0; dirY < NDIM; ++dirY) {
+            const Point<NDIM> vert  = cellOriginVert + cellLength * dirX * ex + cellLength * dirY * ey;
+            const GDouble     vertD = (vert - m_center).norm();
+            if(vertD <= m_radius) {
+              ++pointsInside;
+            }
+          }
+        }
+      }
+      if constexpr(NDIM == 3) {
+        TERMM(-1, "not implemented");
+      }
+      if(pointsInside < gcem::pow(2, NDIM)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   [[nodiscard]] inline auto getBoundingBox() const -> BoundingBoxDynamic override {
@@ -728,13 +760,39 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
   }
 
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override {
-    for(GInt dir = 0; dir < NDIM; ++dir) {
-      if((m_A[dir] > cellCenter[dir] || m_B[dir] < cellCenter[dir]) // cellCenter is within the box
-         && abs(m_A[dir] - cellCenter[dir]) > cellLength && abs(m_B[dir] - cellCenter[dir]) > cellLength /*cellcenter cuts the box*/) {
-        return false;
+    const GDouble halfCellLength = 0.5 * cellLength;
+    if constexpr(NDIM == 2) {
+      if(m_A[0] - cellLength <= cellCenter[0] and m_B[0] + halfCellLength >= cellCenter[0]) {
+        if(std::abs(cellCenter[1] - m_A[1]) <= halfCellLength) {
+          return true;
+        }
+        if(std::abs(cellCenter[1] - m_B[1]) <= halfCellLength) {
+          return true;
+        }
+      }
+      if(m_A[1] - cellLength <= cellCenter[1] and m_B[1] + halfCellLength >= cellCenter[1]) {
+        if(std::abs(cellCenter[0] - m_A[0]) <= halfCellLength) {
+          return true;
+        }
+        if(std::abs(cellCenter[0] - m_B[0]) <= halfCellLength) {
+          return true;
+        }
       }
     }
-    return true;
+
+    if constexpr(NDIM == 3) {
+      TERMM(-1, "impl");
+    }
+
+
+    //    for(GInt dir = 0; dir < NDIM; ++dir) {
+    //      if((m_A[dir] > cellCenter[dir] || m_B[dir] < cellCenter[dir]) // cellCenter is within the box
+    //         && abs(m_A[dir] - cellCenter[dir]) > cellLength && abs(m_B[dir] - cellCenter[dir]) > cellLength /*cellcenter cuts the box*/)
+    //         {
+    //        return false;
+    //      }
+    //    }
+    return false;
   }
 
   [[nodiscard]] inline auto getBoundingBox() const -> BoundingBoxDynamic override {

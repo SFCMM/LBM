@@ -103,8 +103,6 @@
 - add INFO_OUTPUT with physical time update
 
 ### this week:
-
-- run basic 2D NS sphere case
 - run 2D analytical poisson case
 
 - simplify setup for setting up bnds for bodies
@@ -150,6 +148,7 @@
         - Navier-Stokes:
             - single step
             - double step
+            - flow around cylinder
         - Poisson
             - single step
             - double step
