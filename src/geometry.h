@@ -762,7 +762,7 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
   [[nodiscard]] inline auto cutWithCell(const Point<NDIM>& cellCenter, GDouble cellLength) const -> GBool override {
     const GDouble halfCellLength = 0.5 * cellLength;
     if constexpr(NDIM == 2) {
-      if(m_A[0] - cellLength <= cellCenter[0] and m_B[0] + halfCellLength >= cellCenter[0]) {
+      if(m_A[0] - halfCellLength <= cellCenter[0] and m_B[0] + halfCellLength >= cellCenter[0]) {
         if(std::abs(cellCenter[1] - m_A[1]) <= halfCellLength) {
           return true;
         }
@@ -770,7 +770,7 @@ class GeomBox : public GeometryAnalytical<DEBUG_LEVEL, NDIM> {
           return true;
         }
       }
-      if(m_A[1] - cellLength <= cellCenter[1] and m_B[1] + halfCellLength >= cellCenter[1]) {
+      if(m_A[1] - halfCellLength <= cellCenter[1] and m_B[1] + halfCellLength >= cellCenter[1]) {
         if(std::abs(cellCenter[0] - m_A[0]) <= halfCellLength) {
           return true;
         }
