@@ -1,0 +1,71 @@
+{
+  "dry-run": true,
+  "dim": 2,
+  "partitionLevel": 6,
+  "uniformLevel": 6,
+  "maxRfnmtLvl": 6,
+  "maxNoCells": 1000000,
+  "outputDir": "out",
+  "gridFileName": "gridD",
+  "alignNodesWithSurface": true,
+  "alignDir": 0,
+  "gridOutput": {
+    "format": "VTKB",
+    "cellFilter": "leafCells",
+    "type": "points",
+    "outputValues": [
+      "level",
+      "noChildren"
+    ]
+  },
+  "geometry": {
+    "line": {
+      "type": "box",
+      "A": [
+        0.0,
+        0.0
+      ],
+      "B": [
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "solver": {
+    "type": "lbm",
+    "equation": "poisson",
+    "equation_application": "simple_diff_reaction",
+    "equation_th": 1.0,
+    "model": "D2Q9",
+    "relaxation": 1,
+    "maxSteps": 2000000,
+    "info_interval": 1000,
+    "solution_interval": 10000,
+    "convergence": 6E-15,
+    "assumeAxisAligned": true,
+    "boundary": {
+      "line": {
+        "+x": {
+          "type": "neumann",
+          "model": "neem",
+          "value": 0
+        },
+        "-x": {
+          "type": "dirichlet",
+          "model": "neem",
+          "value": 1
+        },
+        "+y": {
+          "type": "dirichlet",
+          "model": "neem",
+          "value": 0
+        },
+        "-y": {
+          "type": "dirichlet",
+          "model": "neem",
+          "value": 0
+        }
+      }
+    }
+  }
+}
