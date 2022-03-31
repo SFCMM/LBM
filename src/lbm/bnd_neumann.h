@@ -94,7 +94,8 @@ class LBMBnd_NeumannNEEM : public LBMBnd_DirichletNEEM<DEBUG_LEVEL, LBTYPE, EQ> 
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
 
-  using VAR = LBMVariables<EQ, NDIM>;
+  using VAR                  = LBMVariables<EQ, NDIM>;
+  static constexpr GInt NVAR = noVars<LBTYPE>(EQ);
 
  public:
   // todo: allow setting specified variables
@@ -124,8 +125,10 @@ class LBMBnd_NeumannNEEM : public LBMBnd_DirichletNEEM<DEBUG_LEVEL, LBTYPE, EQ> 
     for(GUint id = 0; id < this->no_cells(); ++id) {
       const GInt extrapolationId = this->extrapolationCellId(id);
 
-      const GInt ex2Id = this->neighbor(extrapolationId, this->extrapolationDir(id));
-      this->value(id) = (4.0 * vars(extrapolationId, VAR::electricPotential()) - vars(ex2Id, VAR::electricPotential()) + m_gradValue) / 3.0;
+      const GInt    ex2Id = this->neighbor(extrapolationId, this->extrapolationDir(id));
+      VectorD<NVAR> temp;
+      temp[0]         = (4.0 * vars(extrapolationId, VAR::electricPotential()) - vars(ex2Id, VAR::electricPotential()) + m_gradValue) / 3.0;
+      this->value(id) = temp;
     }
     LBMBnd_DirichletNEEM<DEBUG_LEVEL, LBTYPE, EQ>::apply(f, fold, feq, vars);
   }

@@ -81,6 +81,16 @@ inline auto poissonCHAI08_1(const Point<1> x) -> Point<1> {
   return Point<1>((exp_pK - 1.0) / (exp_pK - exp_mK) * exp_mKx + (1.0 - exp_mK) / (exp_pK - exp_mK) * exp_pKx);
 }
 
+// todo: add reference
+///
+/// \param x Position
+/// \return Solution as given by CHAI08
+inline auto poissonCHAI08_2(const Point<2> x) -> Point<2> {
+  // see equation 3.4 in CHAI08
+  constexpr GDouble mu = gcem::sqrt(4 + M_PI * M_PI);
+
+  return {gcem::cos(M_PI * x[0]) * gcem::sinh(mu * (1 - x[1])) / gcem::sinh(mu), 0};
+}
 inline auto poissonSimpleDiffReaction(const Point<1> x) -> Point<1> {
   static constexpr GDouble th = 1.0;
   return Point<1>(gcem::cosh(th * (1.0 - x[0])) / gcem::cosh(th));
@@ -100,6 +110,9 @@ auto getAnalyticalSolution(const GString& name, const SolutionConfig& config) ->
   }
 
   if constexpr(NDIM == 2) {
+    if(name == "poissonCHAI08_2") {
+      return &poisson::poissonCHAI08_2;
+    }
     if(name == "couette2D_1_5") {
       return &ns::couette2D_1_5;
     }
@@ -114,9 +127,9 @@ auto getAnalyticalSolution(const GString& name, const SolutionConfig& config) ->
   TERMM(-1, "Invalid analyticalSolution :" + name + " selected!");
 }
 
-enum class ANALYTICAL_CASE_INDEX { poissonCHAI08_1, poissonSimpleDiffReaction, couette2D, poiseuille2D };
-static constexpr std::array<std::string_view, 4> analyticalNames{"poissonCHAI08_1", "poissonSimpleDiffReaction", "couette2D_1_5",
-                                                                 "poiseuille2D_1"};
+enum class ANALYTICAL_CASE_INDEX { poissonCHAI08_1, poissonCHAI08_2, poissonSimpleDiffReaction, couette2D, poiseuille2D };
+static constexpr std::array<std::string_view, 5> analyticalNames{"poissonCHAI08_1", "poissonCHAI08_2", "poissonSimpleDiffReaction",
+                                                                 "couette2D_1_5", "poiseuille2D_1"};
 
 static constexpr auto getStr(ANALYTICAL_CASE_INDEX caseId) -> std::string_view { return analyticalNames[static_cast<GInt>(caseId)]; }
 

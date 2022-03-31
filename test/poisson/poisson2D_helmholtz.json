@@ -1,0 +1,72 @@
+{
+  "dim": 2,
+  "partitionLevel": 9,
+  "uniformLevel": 9,
+  "maxRfnmtLvl": 9,
+  "maxNoCells": 1000000,
+  "outputDir": "out",
+  "gridFileName": "gridD",
+  "alignNodesWithSurface": true,
+  "alignDir": 0,
+  "gridOutput": {
+    "format": "VTKB",
+    "cellFilter": "leafCells",
+    "type": "points",
+    "outputValues": [
+      "level",
+      "noChildren"
+    ]
+  },
+  "geometry": {
+    "line": {
+      "type": "box",
+      "A": [
+        0.0,
+        0.0
+      ],
+      "B": [
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "solver": {
+    "type": "lbm",
+    "equation": "poisson",
+    "equation_application": "simple_diff_reaction",
+    "equation_th": 2.0,
+    "model": "D2Q9",
+    "analyticalSolution": "poissonCHAI08_2",
+    "relaxation": 1,
+    "maxSteps": 2000000,
+    "info_interval": 1000,
+    "solution_interval": 10000,
+    "convergence": 2E-14,
+    "errorGRE": 2.3E-5,
+    "assumeAxisAligned": true,
+    "boundary": {
+      "line": {
+        "+x": {
+          "type": "dirichlet",
+          "model": "neem",
+          "value": "-sinh(sqrt(4+pi^2)*(1-y))/sinh(sqrt(4+pi^2))"
+        },
+        "-x": {
+          "type": "dirichlet",
+          "model": "neem",
+          "value": "sinh(sqrt(4+pi^2)*(1-y))/sinh(sqrt(4+pi^2))"
+        },
+        "+y": {
+          "type": "dirichlet",
+          "model": "neem",
+          "value": 0
+        },
+        "-y": {
+          "type": "dirichlet",
+          "model": "neem",
+          "value": "cos(pi*x)"
+        }
+      }
+    }
+  }
+}

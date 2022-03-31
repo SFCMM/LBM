@@ -140,7 +140,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
         << "BGK" << std::endl; // todo: fix me
   cerr0 << "LBM Model " << METH::m_name << std::endl;
   cerr0 << "Equation " << LBEquationName[static_cast<GInt>(EQ)] << std::endl;
-  cerr0 << "No. of variables " << std::to_string(NVARS) << std::endl;
+  cerr0 << "No. of variables " << std::to_string(NVAR) << std::endl;
   cerr0 << "No. Leaf cells: " << noLeafCells() << std::endl;
   cerr0 << "Max Mesh Level: " << maxLvl() << std::endl;
   cerr0 << "No. Bnd cells: " << noBndCells() << std::endl;
@@ -159,8 +159,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::allocateMemory() {
   m_f.resize(grid().totalSize() * NDIST);
   m_feq.resize(grid().totalSize() * NDIST);
   m_fold.resize(grid().totalSize() * NDIST);
-  m_vars.resize(grid().totalSize() * NVARS);
-  m_varsold.resize(grid().totalSize() * NVARS);
+  m_vars.resize(grid().totalSize() * NVAR);
+  m_varsold.resize(grid().totalSize() * NVAR);
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
@@ -211,8 +211,8 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::convergenceCondition() -> GBool {
     cerr0 << m_timeStep << ": ";
     logger << m_timeStep << ": ";
 
-    std::array<GDouble, NVARS> conv;
-    for(GInt vid = 0; vid < NVARS; ++vid) {
+    std::array<GDouble, NVAR> conv;
+    for(GInt vid = 0; vid < NVAR; ++vid) {
       conv[vid] = sumAbsDiff(vid);
       cerr0 << "d" << VAR::varStr(vid) << "=" << conv[vid] << " ";
       logger << "d" << VAR::varStr(vid) << "=" << conv[vid] << " ";
@@ -244,8 +244,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
   // init to zero:
   for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     for(const auto dir : VAR::velocities()) {
-      m_vars[cellId * NVARS + dir]    = 0;
-      m_varsold[cellId * NVARS + dir] = 0;
+      m_vars[cellId * NVAR + dir]    = 0;
+      m_varsold[cellId * NVAR + dir] = 0;
     }
     if(EQ == LBEquationType::Navier_Stokes) {
       rho(cellId) = 1.0;
@@ -414,7 +414,12 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::compareToAnalyticalResult() {
     if(excluded) {
       continue;
     }
-    VectorD<NDIM> v(&velocity(cellId, 0));
+    VectorD<NDIM> v;
+    if(EQ == LBEquationType::Navier_Stokes) {
+      v = VectorD<NDIM>(&velocity(cellId, 0));
+    } else {
+      v[0] = electricPotential(cellId);
+    }
 
     const Point<NDIM>   shiftedCenter = shiftCenter(center(cellId));
     const VectorD<NDIM> solution      = anaSolution(shiftedCenter);
@@ -789,7 +794,7 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::sumAbsDiff(const GInt var) const -> GDouble {
   GDouble conv = 0.0;
   for(GInt cellId = 0; cellId < noInternalCells(); ++cellId) {
-    conv += std::abs(m_vars[cellId * NVARS + var] - m_varsold[cellId * NVARS + var]);
+    conv += std::abs(m_vars[cellId * NVAR + var] - m_varsold[cellId * NVAR + var]);
   }
   return conv;
 }

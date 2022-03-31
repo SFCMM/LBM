@@ -62,6 +62,8 @@
 - determine analytical solutions for 2D poisson cases
 - [BUG] All wetnode boundary condition case for poiseuille don't converge against a precise enough solution?
   (overprediction in the center??) (related to the uncertainty about calculating the relaxation??)
+- move comparison with analytical solution to postprocessing
+- order boundary conditions by type (is this needed?)
 
 # V0.0.2
 
@@ -76,21 +78,22 @@
 - refactor forcing setup
 - refactor IO code
 - make types definitions in include/common/constant
-- move comparison with analytical solution to postprocessing
 - fix keys in unused config value detection
 - improve boundary condition with methods that use wet nodes
 - make neem boundary condition available for NS
 - add way to just iterate over leaf cells
-- order boundary conditions by type
 
 - add more openmp
 - in cartesiangrid don't use the configuration.json but the accessor to mark the unused values correctly
+- reduce todos below 100
+
+
+### this week:
 
 - [BUG] D2Q5 still uses diagonal neighbors also this is not necessary
 - simplify boundary by not making it necessary to copy the cellIds for each boundary separately
 - generalize NEEM boundary condition
 - fix poisson method to allow changes of relaxation
-- reduce todos below 100
 
 - warn when overwriting files
 - give option to not overwrite files
@@ -102,12 +105,11 @@
 - [LBM] add support for boundary ghost cells in periodic boundary
 - add INFO_OUTPUT with physical time update
 
-### this week:
-- run 2D analytical poisson case
-
-- simplify setup for setting up bnds for bodies
+- simplify setup for setting up bnds for bodies e.g. allow to set all directions
 
 - [LPT] finish for release
+
+- [BUG][LBM][POISSON] poisson2D_helmholtz configuration should have a GRE < 2.3E-5 at lvl 9
 
 ## Done:
 
@@ -128,7 +130,7 @@
         - terminal velocity
     - simple injection model
 
-- Lattice Boltzmann Code
+- Lattice Boltzmann Solver
     - add D3Q19 and D3Q27
     - Boundary conditions
         - Wet node equilibrium method wall
@@ -137,14 +139,15 @@
         - BB Dirichlet bnd
         - AntiBB pressure bnd
         - Neumann NEEM bnd
-    - analytical test:
+    - Analytical test:
         - Poisson:
             - 1D Debye-Hueckel
             - 1D Diffusion Slab
+            - 2D Helmholtz Equation
         - Navier-Stokes:
             - Couette
             - Poiseuille
-    - testcases
+    - Examples:
         - Navier-Stokes:
             - single step
             - double step
@@ -152,12 +155,16 @@
         - Poisson
             - single step
             - double step
+            - 2D diffusion
+            - 2D Debye-Hueckel
 
 - Cartesian grid
     - allow generation of boundary ghost cells
 
 - Poisson
     - 1D Reaction example added for 1D catalyst slab
+
+- Math expression support
 
 ### Buildsystem
 

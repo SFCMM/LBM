@@ -6,8 +6,8 @@
 #include "bnd_interface.h"
 #include "common/surface.h"
 #include "constants.h"
-#include "variables.h"
 #include "moments.h"
+#include "variables.h"
 
 using json = nlohmann::json;
 
@@ -91,8 +91,9 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
 
-  using METH = LBMethod<getLBMethodType(NDIM, NDIST)>;
-  using VAR  = LBMVariables<EQ, NDIM>;
+  using METH                 = LBMethod<getLBMethodType(NDIM, NDIST)>;
+  using VAR                  = LBMVariables<EQ, NDIM>;
+  static constexpr GInt NVAR = noVars<LBTYPE>(EQ);
 
  public:
   // todo: allow setting specified variables
@@ -103,8 +104,24 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
     m_normal = surf->normal(m_bndCells[0]);
 
     m_value.resize(m_bndCells.size());
-    const GDouble value_to_set = (config::opt_config_value(properties, "value", NAN));
-    std::fill(m_value.begin(), m_value.end(), value_to_set);
+
+    // todo: move this to a function and object
+    if(properties["value"].is_string() || (properties["value"].is_array() && properties["value"][0].is_string())) {
+      if(properties["value"].is_array()) {
+        TERMM(-1, "Impl");
+      } else {
+        m_mathExpression[0] = config::required_math_expression<NDIM>(properties, "value");
+      }
+      for(GInt bndId = 0; bndId < m_bndCells.size(); ++bndId) {
+        const GInt cellId = m_bndCells[bndId];
+        for(GInt dir = 0; dir < NVAR; ++dir) {
+          m_value[bndId][dir] = m_mathExpression[dir]->eval(surf->center(cellId));
+        }
+      }
+    } else {
+      const VectorD<NVAR> value_to_set = (config::required_config_value<NVAR>(properties, "value"));
+      std::fill(m_value.begin(), m_value.end(), value_to_set);
+    }
 
     for(const auto bndCellId : m_bndCells) {
       GInt extrapolationDir = -1;
@@ -144,8 +161,7 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
     // todo: move this some where else
     if(setAnalyticalValue) {
       if constexpr(NDIM == 1) {
-        std::fill(m_value.begin(), m_value.end(), analytical::poisson::poissonCHAI08_1(surf->center(m_bndCells[0]))[0]);
-        //        m_value = analytical::poisson::poissonCHAI08_1(surf->center(m_bndCells[0]))[0];
+        std::fill(m_value.begin(), m_value.end(), analytical::poisson::poissonCHAI08_1(surf->center(m_bndCells[0])));
       }
     }
 
@@ -164,7 +180,7 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
   void initCnd(const std::function<GDouble&(GInt, GInt)>& vars) override {
     GInt id = 0;
     for(const auto cellId : m_bndCells) {
-      vars(cellId, VAR::electricPotential()) = m_value[id];
+      vars(cellId, VAR::electricPotential()) = m_value[id][0];
       ++id;
     }
   }
@@ -182,9 +198,9 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
       for(GInt dist = 0; dist < NDIST - 1; ++dist) {
         const GDouble weight = LBMethod<LBTYPE>::m_weights[dist];
         fold(cellId, dist) =
-            weight * m_value[id] + fold(extraPolationCellId, dist) - weight * vars(extraPolationCellId, VAR::electricPotential());
+            weight * m_value[id][0] + fold(extraPolationCellId, dist) - weight * vars(extraPolationCellId, VAR::electricPotential());
       }
-      fold(cellId, NDIST - 1) = (LBMethod<LBTYPE>::m_weights[NDIST - 1] - 1.0) * m_value[id] + fold(extraPolationCellId, NDIST - 1)
+      fold(cellId, NDIST - 1) = (LBMethod<LBTYPE>::m_weights[NDIST - 1] - 1.0) * m_value[id][0] + fold(extraPolationCellId, NDIST - 1)
                                 - (LBMethod<LBTYPE>::m_weights[NDIST - 1] - 1.0) * vars(extraPolationCellId, VAR::electricPotential());
       //      vars(cellId, VAR::electricPotential()) = m_value[id];
       //      cerr0 << "used " << extraPolationCellId <<": " << vars(extraPolationCellId, VAR::electricPotential()) << " vs " << tmpv <<
@@ -201,15 +217,16 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
 
   [[nodiscard]] auto neighbor(const GInt cellId, const GInt dir) const -> GInt { return m_bnd->neighbor(cellId, dir); }
 
-  auto value(const GInt id) -> GDouble& { return m_value[id]; }
+  auto value(const GInt id) -> VectorD<NVAR>& { return m_value[id]; }
 
 
  private:
-  std::vector<GDouble>    m_value;
-  VectorD<NDIM>           m_normal;
-  std::vector<GInt>       m_bndCells;
-  std::vector<GInt>       m_extrapolationCellId;
-  std::vector<GInt>       m_extrapolationDir;
-  const SurfaceInterface* m_bnd = nullptr;
+  std::vector<VectorD<NVAR>>                              m_value;
+  std::array<std::unique_ptr<MathExpression<NDIM>>, NDIM> m_mathExpression;
+  VectorD<NDIM>                                           m_normal;
+  std::vector<GInt>                                       m_bndCells;
+  std::vector<GInt>                                       m_extrapolationCellId;
+  std::vector<GInt>                                       m_extrapolationDir;
+  const SurfaceInterface*                                 m_bnd = nullptr;
 };
 #endif // LBM_BND_DIRICHLET_H

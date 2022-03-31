@@ -5,6 +5,7 @@
 #include <utility>
 #include <stack>
 #include "term.h"
+#include "mathexpr.h"
 
 using json = nlohmann::json;
 
@@ -24,11 +25,31 @@ static constexpr inline auto required_config_value(const json& config, const GSt
 
 template <GInt NDIM>
 static inline auto required_config_value(const json& config, const GString& key) -> Point<NDIM> {
-  // todo: check for types
   if(config.template contains(key)) {
     // todo: check size
-    std::vector<GDouble> tmp = config[key];
-    return Point<NDIM>(tmp.data());
+    // value is just a number
+    if(NDIM == 1 && config[key].is_number()) {
+      GDouble tmp = config[key];
+      return Point<NDIM>(&tmp);
+    }
+    // array could be also just be an array of size 1
+    if(config[key].is_array()) {
+      std::vector<GDouble> tmp = config[key];
+      return Point<NDIM>(tmp.data());
+    }
+    std::stringstream ss;
+    ss << config;
+    TERMM(-1, "Not a number! config: " + ss.str() + " for the value: " + key);
+  }
+  cerr0 << config << std::endl;
+  TERMM(-1, "The required configuration value is missing: " + key);
+}
+
+template <GInt NDIM>
+static inline auto required_math_expression(const json& config, const GString& key) -> std::unique_ptr<MathExpression<NDIM>> {
+  if(config.template contains(key)) {
+    const GString expr = config[key];
+    return std::make_unique<MathExpression<NDIM>>(expr);
   }
   cerr0 << config << std::endl;
   TERMM(-1, "The required configuration value is missing: " + key);

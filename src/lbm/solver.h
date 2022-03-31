@@ -17,7 +17,7 @@ class LBMSolver : public Runnable,
   // Type declarations and template variables only
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
-  static constexpr GInt NVARS = noVars<LBTYPE>(EQ);
+  static constexpr GInt NVAR  = noVars<LBTYPE>(EQ);
 
   using METH = LBMethod<LBTYPE>;
 
@@ -118,30 +118,40 @@ class LBMSolver : public Runnable,
 
   auto inline rho(const GInt cellId) -> GDouble& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
-      if(NVARS < VAR::rho()) {
-        TERMM(-1, "Invalid number of variables (" + std::to_string(NVARS) + ")");
+      if(NVAR < VAR::rho()) {
+        TERMM(-1, "Invalid number of variables (" + std::to_string(NVAR) + ")");
       }
-      return m_vars.at(cellId * NVARS + VAR::rho());
+      return m_vars.at(cellId * NVAR + VAR::rho());
     }
-    return m_vars[cellId * NVARS + VAR::rho()];
+    return m_vars[cellId * NVAR + VAR::rho()];
   }
 
   auto inline electricPotential(const GInt cellId) -> GDouble& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
-      if(NVARS < VAR::electricPotential()) {
-        TERMM(-1, "Invalid number of variables (" + std::to_string(NVARS) + ")");
+      if(NVAR < VAR::electricPotential()) {
+        TERMM(-1, "Invalid number of variables (" + std::to_string(NVAR) + ")");
       }
-      return m_vars.at(cellId * NVARS + VAR::electricPotential());
+      return m_vars.at(cellId * NVAR + VAR::electricPotential());
     }
-    return m_vars[cellId * NVARS + VAR::electricPotential()];
+    return m_vars[cellId * NVAR + VAR::electricPotential()];
   }
 
   // todo: this should be mapped...
-  auto inline velocity(const GInt cellId) -> GDouble* { return &m_vars[cellId * NVARS + VAR::velocities()[0]]; }
+  auto inline velocity(const GInt cellId) -> GDouble* {
+    if(EQ == LBEquationType::Poisson) {
+      TERMM(-1, "Invalid use of velocity for this equation type");
+    }
+    return &m_vars[cellId * NVAR + VAR::velocities()[0]];
+  }
 
-  auto inline velocity(const GInt cellId, const GInt dir) -> GDouble& { return m_vars[cellId * NVARS + VAR::velocities()[dir]]; }
+  auto inline velocity(const GInt cellId, const GInt dir) -> GDouble& {
+    if(EQ == LBEquationType::Poisson) {
+      TERMM(-1, "Invalid use of velocity for this equation type");
+    }
+    return m_vars[cellId * NVAR + VAR::velocities()[dir]];
+  }
 
-  auto inline vars(const GInt cellId, const GInt varId) -> GDouble& { return m_vars[cellId * NVARS + varId]; }
+  auto inline vars(const GInt cellId, const GInt varId) -> GDouble& { return m_vars[cellId * NVAR + varId]; }
 
   auto inline f(const GInt cellId, const GInt dir) -> GDouble& { return m_f[cellId * NDIST + dir]; }
 
