@@ -64,6 +64,7 @@
   (overprediction in the center??) (related to the uncertainty about calculating the relaxation??)
 - move comparison with analytical solution to postprocessing
 - order boundary conditions by type (is this needed?)
+- [BUG] D2Q5 still uses diagonal neighbors also this is not necessary(is this needed?)
 
 # V0.0.2
 
@@ -90,7 +91,6 @@
 
 ### this week:
 
-- [BUG] D2Q5 still uses diagonal neighbors also this is not necessary
 - simplify boundary by not making it necessary to copy the cellIds for each boundary separately
 - generalize NEEM boundary condition
 - fix poisson method to allow changes of relaxation
