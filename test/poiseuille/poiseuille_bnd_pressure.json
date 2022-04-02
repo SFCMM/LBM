@@ -37,8 +37,8 @@
     "analyticalSolution": "poiseuille2D_1",
     "poiseuillePressureGradient": 0.0000008,
     "analyticalSolutionExcludeSurface": [
-      "+x",
-      "-x"
+      "cube_+x",
+      "cube_-x"
     ],
     "maxSteps": 200000,
     "info_interval": 100,

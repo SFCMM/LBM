@@ -6,6 +6,7 @@
 #include <array>
 #include <limits>
 #include <vector>
+#include <iostream>
 #include "sfcmm_types.h"
 
 static constexpr GInt    BASE2          = 2;
@@ -118,6 +119,7 @@ static inline auto dirIdString2Id(const GString& dirId) -> GInt {
   if(dirId == "+z") {
     return 5;
   }
+  std::cerr << "ERROR: Invalid direction " << dirId << std::endl;
   std::exit(-1);
 }
 

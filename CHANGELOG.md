@@ -177,6 +177,7 @@
 ### Usability
 
 - add pressure forcing term in periodic boundary condition
+- allow to set a bnd per geometry obj
 
 ### IO
 

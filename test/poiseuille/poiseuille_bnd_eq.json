@@ -37,8 +37,8 @@
     "analyticalSolution": "poiseuille2D_1",
     "poiseuillePressureGradient": 0.0000008,
     "analyticalSolutionExcludeSurface": [
-      "+x",
-      "-x"
+      "cube_+x",
+      "cube_-x"
     ],
     "maxSteps": 275000,
     "info_interval": 100,
@@ -51,13 +51,13 @@
         "+x": {
           "type": "periodic",
           "generateBndry": true,
-          "connection": "-x",
+          "connection": "cube_-x",
           "pressure": 1.0000008
         },
         "-x": {
           "type": "periodic",
           "generateBndry": true,
-          "connection": "+x",
+          "connection": "cube_+x",
           "pressure": 1.0
         },
         "-y": {

@@ -75,19 +75,7 @@
         }
       },
       "sphere": {
-        "+x": {
-          "type": "wall",
-          "model": "bounceback"
-        },
-        "-x": {
-          "type": "wall",
-          "model": "bounceback"
-        },
-        "+y": {
-          "type": "wall",
-          "model": "bounceback"
-        },
-        "-y": {
+        "all": {
           "type": "wall",
           "model": "bounceback"
         }

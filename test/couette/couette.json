@@ -49,12 +49,12 @@
         "+x": {
           "type": "periodic",
           "generateBndry": false,
-          "connection": "-x"
+          "connection": "cube_-x"
         },
         "-x": {
           "type": "periodic",
           "generateBndry": false,
-          "connection": "+x"
+          "connection": "cube_+x"
         },
         "+y": {
           "type": "wall",

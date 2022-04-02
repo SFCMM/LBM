@@ -622,8 +622,9 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::forcing() {
       info = false;
     }
 
-    const auto inlet  = bndrySurface("-x");
-    const auto outlet = bndrySurface("+x");
+    // todo: remove hard coding
+    const auto inlet  = bndrySurface("cube_-x");
+    const auto outlet = bndrySurface("cube_+x");
 
     // const GDouble umax = 0.1;
     //    const GDouble gradP = 0.00011276015; //gradP=8*nu*u_max/(NY)^2;

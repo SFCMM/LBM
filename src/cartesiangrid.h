@@ -552,55 +552,28 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 #endif
   void identifyBndrySurfaces() {
     json bndryConfig = getObject("boundary");
-    //    GBool defaultBndryGhost = false;
 
+    cerr0 << "Create boundary surfaces for " << m_geometry->noObjects() << " geometries" << std::endl;
 
-    if(m_axisAlignedBnd) {
-      // todo: simplify
-      for(GInt surfId = 0; surfId < cartesian::maxNoNghbrs<NDIM>(); ++surfId) {
-        m_bndrySurfaces.insert(std::make_pair(static_cast<GString>(DirIdString[surfId]),
-                                              Surface<DEBUG_LEVEL, NDIM>(this->getCartesianGridData(), &property(0))));
-        auto modelName = config::opt_config_value<GString>(bndryConfig["cube"][static_cast<GString>(DirIdString[surfId])], "model", "none");
-        if(modelName == "equilibrium") {
-          // todo: probably not needed
-          m_bndrySurfaces.at(static_cast<GString>(DirIdString[surfId])).setBndryGhostCells();
-        }
-      }
+    std::set<std::pair<GInt, GInt>> assignedBnds;
 
-      for(GInt cellId = 0; cellId < size(); ++cellId) {
-        if(property(cellId, Cell::bndry)) {
-          for(GInt dir = 0; dir < cartesian::maxNoNghbrs<NDIM>(); ++dir) {
-            if(!hasNeighbor(cellId, dir)) {
-              m_bndrySurfaces.at(static_cast<GString>(DirIdString[dir])).addCell(cellId, dir);
-            }
-          }
-        }
-      }
-      if(DEBUG_LEVEL == Debug_Level::max_debug) {
-        cerr0 << "Total number boundary cells: " << m_noBndCells << std::endl;
-        cerr0 << "created surfaces with:" << std::endl;
-        for(const auto& [name, bndry] : m_bndrySurfaces) {
-          cerr0 << "name: " << name << " cells: " << bndry.size() << std::endl;
-        }
-      }
-    } else {
-      cerr0 << "Create boundary surfaces for " << m_geometry->noObjects() << " geometries" << std::endl;
+    // iterate over all geometries
+    for(const auto& [surfName, surfConfig] : bndryConfig.items()) {
+      const GInt noBnds = surfConfig.size();
+      for(const auto& [surfDirName, config] : surfConfig.items()) {
+        const GString surfNameAp = (noBnds > 1) ? surfName + "_" + surfDirName : surfName;
+        cerr0 << "Surface name: " << surfNameAp << std::endl;
+        cerr0 << "bndConfig: " << config << std::endl;
+        m_bndrySurfaces.insert(std::make_pair(surfNameAp, Surface<DEBUG_LEVEL, NDIM>(this->getCartesianGridData(), &property(0))));
 
-      std::set<std::pair<GInt, GInt>> assignedBnds;
+        // use "all" to set all direction for this bnd
+        const GInt dirBegin = surfDirName == "all" ? 0 : dirIdString2Id(surfDirName);
+        const GInt dirEnd   = surfDirName == "all" ? cartesian::maxNoNghbrs<NDIM>() : dirIdString2Id(surfDirName) + 1;
 
-      // iterate over all geometries
-      for(const auto& [surfName, surfConfig] : bndryConfig.items()) {
-        const GInt noBnds = surfConfig.size();
-        for(const auto& [surfDirName, config] : surfConfig.items()) {
-          const GString surfNameAp = (noBnds > 1) ? surfName + "_" + surfDirName : surfName;
-          cerr0 << surfNameAp << std::endl;
-          cerr0 << config << std::endl;
-          m_bndrySurfaces.insert(std::make_pair(surfNameAp, Surface<DEBUG_LEVEL, NDIM>(this->getCartesianGridData(), &property(0))));
-
+        for(GInt dir = dirBegin; dir < dirEnd; ++dir) {
           for(GInt cellId = 0; cellId < size(); ++cellId) {
             if(property(cellId, Cell::bndry)) {
               const GDouble cellLength = lengthOnLvl(std::to_integer<GInt>(level(cellId)));
-              const GInt    dir        = dirIdString2Id(surfDirName);
               if(!hasNeighbor(cellId, dir)) {
                 // cell has cut with the boundary surface
                 if(m_geometry->cutWithCell(surfName, center(cellId), cellLength)) {
@@ -608,7 +581,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 
                   if(added) {
                     // todo: diagonal missing cells are not assigned!
-                    cerr0 << surfName << " : " << cellId << std::endl;
+                    //                    cerr0 << surfName << " : " << cellId << std::endl;
                     m_bndrySurfaces.at(surfNameAp).addCell(cellId, dir);
                   } else {
                     cerr0 << "cellId: " << cellId << " was already assigned a bnd in direction " << dir << std::endl;
@@ -617,11 +590,13 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
               }
             }
           }
-          if(m_bndrySurfaces.at(surfNameAp).size() == 0) {
-            //            m_bndrySurfaces.erase(surfNameAp);
-            cerr0 << "WARNING: surface " << surfNameAp << " has no cells!" << std::endl;
-            logger << "WARNING: surface " << surfNameAp << " has no cells!" << std::endl;
-          }
+        }
+        if(m_bndrySurfaces.at(surfNameAp).size() == 0) {
+          //            m_bndrySurfaces.erase(surfNameAp);
+          cerr0 << "WARNING: surface " << surfNameAp << " has no cells!" << std::endl;
+          logger << "WARNING: surface " << surfNameAp << " has no cells!" << std::endl;
+        } else {
+          cerr0 << "Surface assigned " << m_bndrySurfaces.at(surfNameAp).size() << " cells" << std::endl;
         }
       }
     }
@@ -632,24 +607,33 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 
   void setupPeriodicConnections() {
     if(m_periodic) {
-      std::vector<json>                    periodicBnds = get_all_items_with_value("periodic");
+      json                                 bndryConfig = getObject("boundary");
       std::unordered_map<GString, GString> periodicConnections;
-      for(const auto& bnd : periodicBnds) {
-        for(const auto& [surfName, props] : bnd.items()) {
-          // check if periodic boundary should be handled as a boundary condition
-          const auto generateBndry = config::opt_config_value<GBool>(props, "generateBndry", true);
-          // skip if it should be
-          if(!generateBndry) {
-            periodicConnections.emplace(surfName, config::required_config_value<GString>(props, "connection"));
+
+      for(const auto& [geometryName, geomConf] : bndryConfig.items()) {
+        std::vector<json> periodicBnds = get_all_items_with_value("periodic");
+
+        for(const auto& [surfName, surfConf] : geomConf.items()) {
+          if(config::opt_config_value(surfConf, "type", static_cast<GString>("notset")) == "periodic") {
+            // check if periodic boundary should be handled as a boundary condition
+            const auto generateBndry = config::opt_config_value<GBool>(surfConf, "generateBndry", true);
+            // skip if it should be
+            if(!generateBndry) {
+              periodicConnections.emplace(geometryName + "_" + surfName, config::required_config_value<GString>(surfConf, "connection"));
+              cerr0 << "Add connection: " << geometryName + "_" + surfName << " with " << surfConf << std::endl;
+            }
           }
         }
       }
+
       if(!periodicConnections.empty()) {
         logger << "Setting up periodic connections!" << std::endl;
         for(const auto& connection : periodicConnections) {
           if(periodicConnections.count(connection.second) != 0) {
             periodicConnections.erase(connection.second);
             addPeriodicConnection(bndrySurface(connection.first), bndrySurface(connection.second));
+          } else {
+            TERMM(-1, "Invalid periodic setup!");
           }
         }
       }
@@ -695,6 +679,9 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
             }
             neighbor(cellIdB, nghbrDir)     = cellIdA;
             neighbor(cellIdA, nghbrDir + 1) = cellIdB;
+            if constexpr(DEBUG_LEVEL == Debug_Level::max_debug) {
+              logger << "connected " << cellIdA << " with " << cellIdB << std::endl;
+            }
           } else {
             if constexpr(DEBUG_LEVEL >= Debug_Level::debug) {
               if(neighbor(cellIdA, nghbrDir) != INVALID_CELLID) {
@@ -706,7 +693,13 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
             }
             neighbor(cellIdA, nghbrDir)     = cellIdB;
             neighbor(cellIdB, nghbrDir + 1) = cellIdA;
+
+            if constexpr(DEBUG_LEVEL == Debug_Level::max_debug) {
+              logger << "connected " << cellIdA << " with " << cellIdB << std::endl;
+            }
           }
+        } else {
+          logger << "No periodic connection found for cells: " << cellIdA << " and " << cellIdB << std::endl;
         }
       }
     }

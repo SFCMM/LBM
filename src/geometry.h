@@ -1072,7 +1072,6 @@ class GeometryManager : public GeometryInterface {
     return false;
   }
 
-
   [[nodiscard]] auto inline noObjects() const -> GInt override { return m_geomObj.size(); }
 
   [[nodiscard]] auto inline noElements() const -> GInt override {

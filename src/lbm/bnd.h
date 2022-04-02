@@ -42,11 +42,11 @@ class LBMBndManager : private Configuration {
       // todo: cleanup
       // todo: check that geometry exists
       // todo: access only bndrySurfaces of this geometry!
-      const GInt noBnds = bndConfig.size();
+      const GInt noBnds = geomBndConfig.size();
       for(const auto& [surfId, surfBndConfig] : geomBndConfig.items()) {
-        GString surfIdName = surfId;
+        GString surfIdName = geometry;
         if(noBnds > 1) {
-          surfIdName = geometry + "_" + surfIdName;
+          surfIdName = geometry + "_" + surfId;
         }
         const auto bndType = config::required_config_value<GString>(surfBndConfig, "type");
         logger << "Adding bndCnd to surfaceId " << surfIdName;
@@ -214,7 +214,7 @@ class LBMBndManager : private Configuration {
           TERMM(-1, "Invalid bndry Type!");
       }
     } else {
-      logger << "Generated dummy boundary!" << std::endl;
+      logger << "Generated dummy boundary! (generateBndry = false)" << std::endl;
       m_bndrys.emplace_back(std::make_unique<LBMBnd_dummy>());
     }
   }
