@@ -103,6 +103,7 @@ class LBMSolver : public Runnable,
   auto shiftCenter(const Point<NDIM>& center) const -> Point<NDIM>;
   void initialCondition();
   void initBndryValues();
+  void writeInfo();
   auto convergenceCondition() -> GBool;
   void forcing();
   void prePropBoundaryCnd();
@@ -136,7 +137,7 @@ class LBMSolver : public Runnable,
     return m_vars[cellId * NVAR + VAR::electricPotential()];
   }
 
-  // todo: this should be mapped...
+  // todo: this should be mapped..(???).
   auto inline velocity(const GInt cellId) -> GDouble* {
     if(EQ == LBEquationType::Poisson) {
       TERMM(-1, "Invalid use of velocity for this equation type");
@@ -191,11 +192,13 @@ class LBMSolver : public Runnable,
   GInt32 m_noDomains = -1;
 
   /// Output
-  GString m_outputDir              = "out/";
-  GString m_solutionFileName       = "solution";
-  GInt    m_outputInfoInterval     = defaultInfoOutInterval;
-  GInt    m_outputSolutionInterval = defaultSolutionInterval;
-  GBool   m_generatePath           = true;
+  GString m_outputDir                = "out/";
+  GString m_solutionFileName         = "solution";
+  GInt    m_infoInterval             = defaultInfoOutInterval;
+  GInt    m_keepAliveMsg             = defaultKeepAlive;
+  GInt    m_convergenceCheckInterval = defaultConvCheckInterval;
+  GInt    m_outputSolutionInterval   = defaultSolutionInterval;
+  GBool   m_generatePath             = true;
 
   /// Variables
   std::vector<GDouble> m_f;
@@ -210,8 +213,8 @@ class LBMSolver : public Runnable,
   GDouble m_refT      = defaultT20C;
   GDouble m_refU      = 1.0;
 
-  GDouble m_nu           = 0;
-  GDouble m_re           = 1;
+  GDouble m_nu              = 0;
+  GDouble m_re              = 1;
   GDouble m_ma              = defaultMachNumber;
   GDouble m_latticeVelocity = 1.0;
 
@@ -219,6 +222,7 @@ class LBMSolver : public Runnable,
   GDouble m_omega     = 1.0 / m_relaxTime;
 
   GInt    m_timeStep    = 0;
+  GInt    m_maxTimeStep = 0;
   GDouble m_dt          = NAN;
   GDouble m_currentTime = 0;
 };

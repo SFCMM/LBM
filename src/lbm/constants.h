@@ -13,9 +13,11 @@ static constexpr GDouble defaultMachNumber = 0.01;
 static constexpr GDouble defaultRelaxT = 0.9;
 
 // default solver setting
-static constexpr GInt defaultInfoOutInterval  = 10;
-static constexpr GInt defaultSolutionInterval = 100;
-static constexpr GInt maxNumberDistributions  = 30;
+static constexpr GInt defaultInfoOutInterval   = 10;
+static constexpr GInt defaultKeepAlive         = 60;
+static constexpr GInt defaultConvCheckInterval = 100;
+static constexpr GInt defaultSolutionInterval  = 100;
+static constexpr GInt maxNumberDistributions   = 30;
 
 // default speed of sound
 static constexpr GDouble lbm_cs   = 1.0 / gcem::sqrt(3.0); // assuming dx/dt = 1

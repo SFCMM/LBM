@@ -65,6 +65,7 @@
 - move comparison with analytical solution to postprocessing
 - order boundary conditions by type (is this needed?)
 - [BUG] D2Q5 still uses diagonal neighbors also this is not necessary(is this needed?)
+- [LBM] add support for boundary ghost cells in periodic boundary (needed??)
 
 # V0.0.2
 
@@ -77,39 +78,33 @@
 - store reference to the surfaces in each boundary
 - allow comments in configuration files
 - refactor forcing setup
-- refactor IO code
 - make types definitions in include/common/constant
 - fix keys in unused config value detection
-- improve boundary condition with methods that use wet nodes
-- make neem boundary condition available for NS
 - add way to just iterate over leaf cells
 
 - add more openmp
 - in cartesiangrid don't use the configuration.json but the accessor to mark the unused values correctly
 - reduce todos below 100
 
-
 ### this week:
 
-- simplify boundary by not making it necessary to copy the cellIds for each boundary separately
-- generalize NEEM boundary condition
-- fix poisson method to allow changes of relaxation
+- [IMPROVEMENT][LBM] generalize NEEM boundary condition
+- make neem boundary condition available for NS
+- [IMPROVEMENT][LBM] simplify boundary by not making it necessary to copy the cellIds for each boundary separately
+
+- [CLEANUP][LPT] finish for release
+
+- [BUG][LBM][POISSON] poisson2D_helmholtz configuration should have a GRE < 2.3E-5 at lvl 9
+- [BUG][LBM][POISSON] fix poisson method to allow changes of relaxation
+
+- simplify writing output
+- refactor IO code
 
 - warn when overwriting files
 - give option to not overwrite files
 - set output format for the solvers
 - set output variables for the solvers
 - check in output functions if fileformat ending is already included
-- simplify writing output
-
-- [LBM] add support for boundary ghost cells in periodic boundary
-- add INFO_OUTPUT with physical time update
-
-- simplify setup for setting up bnds for bodies e.g. allow to set all directions
-
-- [LPT] finish for release
-
-- [BUG][LBM][POISSON] poisson2D_helmholtz configuration should have a GRE < 2.3E-5 at lvl 9
 
 ## Done:
 
@@ -178,6 +173,9 @@
 
 - add pressure forcing term in periodic boundary condition
 - allow to set a bnd per geometry obj
+- allow setting "conv_interval" for the interval for the convergence check
+- write output every "60" seconds by default as a keep alive msg
+    - time interval is settable by "keep_alive_time"
 
 ### IO
 

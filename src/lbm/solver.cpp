@@ -71,8 +71,16 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   m_solverType = LBSolverType::BGK; // todo: load from file
 
+  m_infoInterval = opt_config_value<GInt>("info_interval", m_infoInterval);
+
+  m_convergenceCheckInterval = m_infoInterval;
+  m_convergenceCheckInterval = opt_config_value<GInt>("conv_interval", m_convergenceCheckInterval);
+
+  m_keepAliveMsg = opt_config_value<GInt>("keep_alive_time", m_keepAliveMsg);
+
+  m_maxTimeStep = required_config_value<GInt>("maxSteps");
+
   m_outputDir              = opt_config_value<GString>("output_dir", m_outputDir);
-  m_outputInfoInterval     = opt_config_value<GInt>("info_interval", m_outputInfoInterval);
   m_outputSolutionInterval = opt_config_value<GInt>("solution_interval", m_outputSolutionInterval);
   m_solutionFileName       = opt_config_value<GString>("solution_filename", m_solutionFileName);
 
@@ -86,8 +94,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
 
 
   // todo: make settable
-  m_ma            = 0.0001;
-  m_refLength     = 1.0;
+  m_ma        = 0.0001;
+  m_refLength = 1.0;
 
   const GDouble m_finestGridSpacing = 1.0 / (std::pow(size(), 1.0 / NDIM) - 1); // todo: replace with cellLength
 
@@ -173,18 +181,17 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::run() -> GInt {
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMInit]);
 
   RECORD_TIMER_START(TimeKeeper[Timers::LBMMainLoop]);
-  // todo: make settable
-  const GInt noTimesteps = required_config_value<GInt>("maxSteps");
-  GBool      converged   = false;
+  GBool converged = false;
 
   executePostprocess(pp::HOOK::ATSTART);
 
-  for(m_timeStep = 0; m_timeStep < noTimesteps && !converged; ++m_timeStep) {
+  for(m_timeStep = 0; m_timeStep < m_maxTimeStep && !converged; ++m_timeStep) {
+    writeInfo();
     converged = convergenceCondition();
     timeStep();
 
     // also write an output if it's the last time step or if the solution has converged
-    output(m_timeStep == noTimesteps - 1 || converged);
+    output(m_timeStep == m_maxTimeStep - 1 || converged);
     m_currentTime += m_dt;
   }
 
@@ -206,8 +213,24 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::run() -> GInt {
 }
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
+void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::writeInfo() {
+  using namespace std::literals;
+
+  static auto                   lastTimeInfo       = std::chrono::system_clock::now();
+  static GInt                   lastTimeStep       = 0;
+  std::chrono::duration<double> diff               = std::chrono::system_clock::now() - lastTimeInfo;
+  GInt                          timeInSecSinceLast = std::max(static_cast<GInt>(floor(diff / 1s)), static_cast<GInt>(1));
+
+  if((m_timeStep > 0 && m_timeStep % m_infoInterval == 0) || timeInSecSinceLast % m_keepAliveMsg == 0) {
+    cerr0 << m_timeStep << "/" << m_maxTimeStep << " " << (m_timeStep - lastTimeStep) / diff.count() << "it/s \n";
+    lastTimeInfo = std::chrono::system_clock::now();
+    lastTimeStep = m_timeStep;
+  }
+}
+
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::convergenceCondition() -> GBool {
-  if(m_timeStep > 0 && m_timeStep % m_outputInfoInterval == 0) {
+  if(m_timeStep > 0 && m_timeStep % m_convergenceCheckInterval == 0) {
     cerr0 << m_timeStep << ": ";
     logger << m_timeStep << ": ";
 

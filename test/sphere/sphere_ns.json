@@ -50,7 +50,7 @@
       "-x"
     ],
     "maxSteps": 100000,
-    "info_interval": 100,
+    "info_interval": 10000,
     "solution_interval": 1000,
     "convergence": 2E-11,
     "errorL2": 3.3E-5,
