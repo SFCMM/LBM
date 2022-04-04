@@ -3,7 +3,9 @@
 #include <config.h>
 #include <fstream>
 #include <iostream>
+#include <json.h>
 #include <sfcmm_common.h>
+#include "../cell_filter.h"
 //#include <csv/csv.hpp>
 
 namespace hidden::_detail {
@@ -29,11 +31,11 @@ using namespace std;
 /// \param coordinates The coordinates of the points to write.
 /// \param index Index for the name of the columns in the csv file.
 /// \param values Values to be written to the csv-file.
-/// \param filter Filter function to reduce the output points, e.g., only write points on a surface and so on.
+/// \param cellFilter Filter function to reduce the output points, e.g., only write points on a surface and so on.
 template <GInt DIM>
 inline void writePointsCSV(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
-                           const std::vector<IOIndex>& index = {}, const std::vector<std::vector<GString>>& values = {},
-                           const std::function<GBool(GInt)>& filter = hidden::_detail::defaultTrue) {
+                           const CellFilterManager<DIM>* cellFilter, const std::vector<IOIndex>& index = {},
+                           const std::vector<std::vector<GString>>& values = {}) {
   ASSERT(index.size() == values.size(), "Invalid values/index size!");
 
   cerr0 << SP1 << "Writing " << fileName << ".csv" << std::endl;
@@ -59,7 +61,7 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
   pointFile << "\n";
 
   for(GInt id = 0; id < noValues; ++id) {
-    if(!filter(id)) {
+    if(!cellFilter->eval(id)) {
       continue;
     }
     const auto& coord = coordinates[id];
@@ -75,6 +77,20 @@ inline void writePointsCSV(const GString& fileName, const GInt noValues, const s
     pointFile << "\n";
   }
   pointFile.close();
+}
+
+/// Write out a point-based CSV-file.
+/// \tparam DIM Dimensionality of the data and points
+/// \param fileName Name of the file to write.
+/// \param noValues The number of values to write.
+/// \param coordinates The coordinates of the points to write.
+/// \param index Index for the name of the columns in the csv file.
+/// \param values Values to be written to the csv-file.
+template <GInt DIM>
+inline void writePointsCSV(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
+                           const std::vector<IOIndex>& index = {}, const std::vector<std::vector<GString>>& values = {}) {
+  CellFilterManager<DIM> filterAll = CellFilterManager<DIM>();
+  writePointsCSV<DIM>(fileName, noValues, coordinates, &filterAll, index, values);
 }
 
 } // namespace ASCII
@@ -192,6 +208,8 @@ static constexpr auto point_data_footer() -> string_view { return "      </Point
 
 /// Namespace for functions to write VTK in ASCII format.
 namespace ASCII {
+using json = nlohmann::json;
+
 // todo: combine to functions ASCII and binary!!
 
 /// Write out a point-based VTK-file in ASCII-format.
@@ -204,16 +222,16 @@ namespace ASCII {
 /// \param filter Filter function to reduce the output points, e.g., only write points on a surface and so on.
 template <GInt DIM>
 inline void writePoints(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
-                        const std::vector<IOIndex>& index = {}, const std::vector<std::vector<GString>>& values = {},
-                        const std::function<GBool(GInt)>& filter = hidden::_detail::defaultTrue) {
-  cerr0 << SP1 << "Writing " << fileName << ".vtp" << std::endl;
-  logger << SP1 << "Writing " << fileName << ".vtp" << std::endl;
-
+                        const CellFilterManager<DIM>* cellFilter, const std::vector<IOIndex>& index = {},
+                        const std::vector<std::vector<GString>>& values = {}) {
   // number of points to output
   GInt noOutCells = 0;
   for(GInt id = 0; id < noValues; ++id) {
-    noOutCells += static_cast<GInt>(filter(id));
+    noOutCells += static_cast<GInt>(cellFilter->eval(id));
   }
+
+  cerr0 << SP1 << "Writing " << fileName << ".vtp with #" << noOutCells << " cells" << std::endl;
+  logger << SP1 << "Writing " << fileName << ".vtp with #" << noOutCells << " cells" << std::endl;
 
   ofstream                      pointFile;
   static constexpr unsigned int N           = 64;
@@ -228,7 +246,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   pointFile << point_header<DIM>();
 
   for(GInt id = 0; id < noValues; ++id) {
-    if(!filter(id)) {
+    if(!cellFilter->eval(id)) {
       continue;
     }
     const auto& coord = coordinates[id];
@@ -267,7 +285,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     }
     i++;
     for(GInt id = 0; id < noValues; ++id) {
-      if(!filter(id)) {
+      if(!cellFilter->eval(id)) {
         continue;
       }
       pointFile << column[id] << "\n";
@@ -293,8 +311,8 @@ namespace BINARY {
 /// \param filter Filter function to reduce the output points, e.g., only write points on a surface and so on.
 template <GInt DIM>
 inline void writePoints(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
-                        const std::vector<IOIndex>& index = {}, const std::vector<std::vector<GString>>& values = {},
-                        const std::function<GBool(GInt)>& filter = hidden::_detail::defaultTrue) {
+                        const CellFilterManager<DIM>* cellFilter, const std::vector<IOIndex>& index = {},
+                        const std::vector<std::vector<GString>>& values = {}) {
   cerr0 << SP1 << "Writing " << fileName << ".vtp" << std::endl;
   logger << SP1 << "Writing " << fileName << ".vtp" << std::endl;
 
@@ -302,7 +320,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   // number of points to output
   GInt noOutCells = 0;
   for(GInt id = 0; id < noValues; ++id) {
-    noOutCells += static_cast<GInt>(filter(id));
+    noOutCells += static_cast<GInt>(cellFilter->eval(id));
   }
 
   ofstream                                         pointFile;
@@ -323,7 +341,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     std::vector<GFloat> tmp_coords(noValues * 3);
 
     for(GInt id = 0; id < noValues; ++id) {
-      if(!filter(id)) {
+      if(!cellFilter->eval(id)) {
         continue;
       }
       const auto& coord = coordinates[id];
@@ -381,7 +399,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
       std::vector<GInt32> tmp_val;
 
       for(GInt id = 0; id < noValues; ++id) {
-        if(filter(id)) {
+        if(cellFilter->eval(id)) {
           tmp_val.emplace_back(std::stoi(column[id]));
         }
       }

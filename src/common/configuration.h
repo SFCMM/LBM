@@ -1,11 +1,11 @@
 #ifndef LBM_CONFIGURATION_H
 #define LBM_CONFIGURATION_H
-#include "json.h"
-#include <sfcmm_common.h>
-#include <utility>
 #include <stack>
-#include "term.h"
+#include <utility>
+#include <sfcmm_common.h>
+#include "json.h"
 #include "mathexpr.h"
+#include "term.h"
 
 using json = nlohmann::json;
 
@@ -178,6 +178,26 @@ class Configuration {
     if(m_config.template contains(key)) {
       m_unusedKeys[key] = true;
       return static_cast<T>(m_config[key]);
+    }
+    return defaultValue;
+  }
+
+  /// Get an optional configuration value (return default value if value not found)
+  /// \tparam T Type of the value
+  /// \param key Key of the value
+  /// \param parentObj Parent object path
+  /// \param defaultValue Default value
+  /// \return Configuration value if it exist or exit
+  template <typename T>
+  [[nodiscard]] auto opt_config_value(const std::vector<GString>& parentObjPath, const GString& key, const T& defaultValue) -> T {
+    // todo: check for types
+    json conf = m_config;
+    for(const auto& parentKey : parentObjPath) {
+      conf = conf[parentKey];
+    }
+    if(conf.template contains(key)) {
+      m_unusedKeys[key] = true;
+      return static_cast<T>(conf[key]);
     }
     return defaultValue;
   }

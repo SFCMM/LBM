@@ -83,6 +83,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   m_outputDir              = opt_config_value<GString>("output_dir", m_outputDir);
   m_outputSolutionInterval = opt_config_value<GInt>("solution_interval", m_outputSolutionInterval);
   m_solutionFileName       = opt_config_value<GString>("solution_filename", m_solutionFileName);
+  m_filterList = std::make_unique<CellFilterManager<NDIM>>(opt_config_value<json>("cellFilter", json({{"cellFilter", "leafCells"}})),
+                                                           getCartesianGridData());
 
   if(!isPath(m_outputDir, m_generatePath)) {
     TERMM(-1, "Invalid output directory set! (value: " + m_outputDir + ")");
@@ -346,9 +348,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
     std::vector<IOIndex>              index;
     std::vector<std::vector<GString>> values;
 
-    // only output leaf cells (i.e. cells without children)
-    std::function<GBool(GInt)> isLeaf = [&](GInt cellId) { return noChildren(cellId) == 0; };
-
     if(EQ != LBEquationType::Poisson) {
       std::array<std::vector<GDouble>, NDIM> tmpVel;
       std::vector<GDouble>                   tmpRho;
@@ -389,7 +388,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
     }
 
     VTK::ASCII::writePoints<NDIM>(m_outputDir + m_solutionFileName + "_" + std::to_string(m_timeStep) + postfix, allCells(), center(),
-                                  index, values, isLeaf);
+                                  m_filterList.get(), index, values);
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMIo]);
 }

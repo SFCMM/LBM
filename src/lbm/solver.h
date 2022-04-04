@@ -3,6 +3,7 @@
 #include <sfcmm_common.h>
 #include "bnd.h"
 #include "cartesiangrid.h"
+#include "cell_filter.h"
 #include "common/configuration.h"
 #include "constants.h"
 #include "interface/solver_interface.h"
@@ -192,13 +193,14 @@ class LBMSolver : public Runnable,
   GInt32 m_noDomains = -1;
 
   /// Output
-  GString m_outputDir                = "out/";
-  GString m_solutionFileName         = "solution";
-  GInt    m_infoInterval             = defaultInfoOutInterval;
-  GInt    m_keepAliveMsg             = defaultKeepAlive;
-  GInt    m_convergenceCheckInterval = defaultConvCheckInterval;
-  GInt    m_outputSolutionInterval   = defaultSolutionInterval;
-  GBool   m_generatePath             = true;
+  GString                                  m_outputDir                = "out/";
+  GString                                  m_solutionFileName         = "solution";
+  GInt                                     m_infoInterval             = defaultInfoOutInterval;
+  GInt                                     m_keepAliveMsg             = defaultKeepAlive;
+  GInt                                     m_convergenceCheckInterval = defaultConvCheckInterval;
+  GInt                                     m_outputSolutionInterval   = defaultSolutionInterval;
+  GBool                                    m_generatePath             = true;
+  std::unique_ptr<CellFilterManager<NDIM>> m_filterList               = nullptr;
 
   /// Variables
   std::vector<GDouble> m_f;

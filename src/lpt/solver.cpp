@@ -98,6 +98,8 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::loadConfiguration() {
   m_solutionFileName       = opt_config_value<GString>("solution_filename", m_solutionFileName);
   m_initialCondition       = initCond(opt_config_value<GString>("initialcondition", "none"));
 
+  m_filterList = std::make_unique<CellFilterManager<NDIM>>(opt_config_value<json>("cellFilter", json({{"particleFilter", "all"}})));
+
   m_capacity = opt_config_value<GInt>("capacity", m_capacity);
 
   m_gravity     = required_config_value<NDIM>("gravity");
@@ -649,7 +651,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::output(const GBool forced, const GString& 
     values.emplace_back(toStringVector(tmpTemperature, m_noParticles));
 
     VTK::ASCII::writePoints<NDIM>(m_outputDir + m_solutionFileName + "_" + std::to_string(m_timeStep) + postfix, m_noParticles, tmpCenter,
-                                  index, values);
+                                  m_filterList.get(), index, values);
   }
 }
 

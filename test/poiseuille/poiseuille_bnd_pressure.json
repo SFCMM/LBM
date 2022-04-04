@@ -8,7 +8,7 @@
   "maxNoCells": 1000000,
   "outputDir": "out",
   "gridFileName": "gridD",
-  "gridOutput": {
+  "output": {
     "format": "VTKB",
     "cellFilter": "leafCells",
     "type": "points",

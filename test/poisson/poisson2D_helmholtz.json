@@ -8,7 +8,7 @@
   "gridFileName": "gridD",
   "alignNodesWithSurface": true,
   "alignDir": 0,
-  "gridOutput": {
+  "output": {
     "format": "VTKB",
     "cellFilter": "leafCells",
     "type": "points",

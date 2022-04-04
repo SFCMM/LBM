@@ -191,6 +191,9 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
   /// Interval of the solution to be written to a file
   GInt m_outputSolutionInterval = 1000;
 
+  std::unique_ptr<CellFilterManager<NDIM>> m_filterList = nullptr;
+
+
   /// If output path doesnot exist generate it
   GBool m_generatePath = true;
   //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

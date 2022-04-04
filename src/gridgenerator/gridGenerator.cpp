@@ -254,7 +254,7 @@ void GridGenerator<DEBUG_LEVEL>::loadGridDefinition() {
   m_outGridFilename = opt_config_value<GString>("gridFileName", m_outGridFilename);
 
   json defaultGridOutConfig = {{"format", "ASCII"}, {"cellFilter", "highestLvl"}, {"type", "points"}};
-  m_gridOutConfig           = opt_config_value<json>("gridOutput", defaultGridOutConfig);
+  m_gridOutConfig           = opt_config_value<json>("output", defaultGridOutConfig);
 
   cout << SP1 << "Reading Geometry" << endl;
   m_geometry = std::make_shared<GeometryManager<DEBUG_LEVEL, NDIM>>(MPI_COMM_WORLD);

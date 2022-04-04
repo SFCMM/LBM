@@ -5,7 +5,7 @@
 
 #include <sfcmm_common.h>
 //#include "celltree.h"
-#include "common/IO.h"
+//#include "common/IO.h"
 #include "geometry.h"
 #include "globaltimers.h"
 #include "gridcell_properties.h"
@@ -51,7 +51,9 @@ class CartesianGridData {
       m_properties(initGrid.props()),
       m_level(initGrid.level()),
       m_nghbrIds(initGrid.neighbor()),
-      m_lengthOnLevel(initGrid.lengthOnLvl()) {}
+      m_lengthOnLevel(initGrid.lengthOnLvl()),
+      m_partitionLvl(initGrid.partitionLvl()),
+      m_currentHighestLvl(initGrid.currentHighestLvl()) {}
 
   // todo: add asserts
   [[nodiscard]] inline auto noCells() const -> GInt { return m_noCells; }
@@ -78,6 +80,10 @@ class CartesianGridData {
 
   [[nodiscard]] inline auto property(const GInt id, CellProperties p) const -> GBool { return m_properties[id][static_cast<GInt>(p)]; }
 
+  [[nodiscard]] inline auto currentHighestLvl() const -> GInt { return m_currentHighestLvl; }
+
+  [[nodiscard]] inline auto partitionLvl() const -> GInt { return m_partitionLvl; }
+
 
  private:
   const GInt m_noCells;
@@ -88,6 +94,9 @@ class CartesianGridData {
   const std::vector<std::byte>&          m_level;
   const std::vector<GInt>&               m_nghbrIds;
   const std::array<GDouble, MAX_LVL>     m_lengthOnLevel{NAN_LIST<MAX_LVL>()};
+
+  const GInt& m_partitionLvl;
+  const GInt& m_currentHighestLvl;
 };
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>

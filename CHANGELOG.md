@@ -164,13 +164,11 @@
 ### Buildsystem
 
 ### Testing
-
 - check for divergence when debug is active
 - write test report in CSV
 - for analytical testcases allow alignment with the boundary
 
 ### Usability
-
 - add pressure forcing term in periodic boundary condition
 - allow to set a bnd per geometry obj
 - allow setting "conv_interval" for the interval for the convergence check
@@ -178,8 +176,8 @@
     - time interval is settable by "keep_alive_time"
 
 ### IO
-
--set output dir and solution file name
+- set output dir and solution file name
+- allow multiple cell output filters
 
 ### Performance
 
@@ -194,6 +192,7 @@
 ### Refactoring
 
 - reduce the number of debug levels
+- refactor output cell filter code
 
 # V0.0.1
 
