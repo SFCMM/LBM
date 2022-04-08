@@ -3,7 +3,6 @@
 #include <config.h>
 #include <fstream>
 #include <iostream>
-#include <json.h>
 #include <sfcmm_common.h>
 #include "../cell_filter.h"
 //#include <csv/csv.hpp>
@@ -206,36 +205,34 @@ static inline auto point_data_float64(const GString& name) -> GString {
 /// \return String for the point data-array footer.
 static constexpr auto point_data_footer() -> string_view { return "      </PointData> \n"; }
 
-/// Namespace for functions to write VTK in ASCII format.
-namespace ASCII {
-using json = nlohmann::json;
-
-// todo: combine to functions ASCII and binary!!
-
 /// Write out a point-based VTK-file in ASCII-format.
 /// \tparam DIM Dimensionality of the data and points
+/// \tparam BIN Write as a binary file or not
 /// \param fileName Name of the file to write.
-/// \param noValues The number of values to write.
+/// \param maxNoValues The maximum number of values (or cellId) or size of the local memory of coordinates and values.
 /// \param coordinates The coordinates of the points to write.
 /// \param index Index for the name of the columns in the csv file.
 /// \param values Values to be written to the csv-file.
 /// \param filter Filter function to reduce the output points, e.g., only write points on a surface and so on.
-template <GInt DIM>
-inline void writePoints(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
+template <GInt DIM, GBool BIN>
+inline void writePoints(const GString& fileName, const GInt maxNoValues, const std::vector<VectorD<DIM>>& coordinates,
                         const CellFilterManager<DIM>* cellFilter, const std::vector<IOIndex>& index = {},
                         const std::vector<std::vector<GString>>& values = {}) {
+  TERMM(-1, "Work in progress");
   // number of points to output
   GInt noOutCells = 0;
-  for(GInt id = 0; id < noValues; ++id) {
+  for(GInt id = 0; id < maxNoValues; ++id) {
     noOutCells += static_cast<GInt>(cellFilter->eval(id));
   }
 
   cerr0 << SP1 << "Writing " << fileName << ".vtp with #" << noOutCells << " cells" << std::endl;
   logger << SP1 << "Writing " << fileName << ".vtp with #" << noOutCells << " cells" << std::endl;
 
-  ofstream                      pointFile;
-  static constexpr unsigned int N           = 64;
-  static constexpr unsigned int buffer_size = 1024 * N;
+  ofstream                                         pointFile;
+  static constexpr unsigned int                    no_kbs_buffer = 64;
+  static constexpr unsigned int                    buffer_size   = 1024 * no_kbs_buffer;
+  static constexpr std::array<std::string_view, 4> padders       = {"", "=", "==", "==="};
+
   std::array<char, buffer_size> buffer{};
   pointFile.rdbuf()->pubsetbuf(buffer.data(), buffer_size);
   pointFile.open(fileName + ".vtp");
@@ -243,9 +240,9 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
   pointFile << setprecision(std::numeric_limits<double>::digits10);
   pointFile << header();
   pointFile << piece_header(noOutCells);
-  pointFile << point_header<DIM>();
+  pointFile << point_header<DIM, BIN>();
 
-  for(GInt id = 0; id < noValues; ++id) {
+  for(GInt id = 0; id < maxNoValues; ++id) {
     if(!cellFilter->eval(id)) {
       continue;
     }
@@ -284,7 +281,97 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
       pointFile << point_data_int32(index[i].name);
     }
     i++;
-    for(GInt id = 0; id < noValues; ++id) {
+    for(GInt id = 0; id < maxNoValues; ++id) {
+      if(!cellFilter->eval(id)) {
+        continue;
+      }
+      pointFile << column[id] << "\n";
+    }
+    pointFile << data_footer();
+  }
+  pointFile << point_data_footer();
+  pointFile << footer();
+}
+
+/// Namespace for functions to write VTK in ASCII format.
+namespace ASCII {
+
+
+// todo: combine to functions ASCII and binary!!
+
+/// Write out a point-based VTK-file in ASCII-format.
+/// \tparam DIM Dimensionality of the data and points
+/// \param fileName Name of the file to write.
+/// \param maxNoValues The maximum number of values (or cellId) or size of the local memory of coordinates and values.
+/// \param coordinates The coordinates of the points to write.
+/// \param index Index for the name of the columns in the csv file.
+/// \param values Values to be written to the csv-file.
+/// \param filter Filter function to reduce the output points, e.g., only write points on a surface and so on.
+template <GInt DIM>
+inline void writePoints(const GString& fileName, const GInt maxNoValues, const std::vector<VectorD<DIM>>& coordinates,
+                        const CellFilterManager<DIM>* cellFilter, const std::vector<IOIndex>& index = {},
+                        const std::vector<std::vector<GString>>& values = {}) {
+  // number of points to output
+  GInt noOutCells = 0;
+  for(GInt id = 0; id < maxNoValues; ++id) {
+    noOutCells += static_cast<GInt>(cellFilter->eval(id));
+  }
+
+  cerr0 << SP1 << "Writing " << fileName << ".vtp with #" << noOutCells << " cells" << std::endl;
+  logger << SP1 << "Writing " << fileName << ".vtp with #" << noOutCells << " cells" << std::endl;
+
+  ofstream                      pointFile;
+  static constexpr unsigned int no_kbs_buffer = 64;
+  static constexpr unsigned int buffer_size   = 1024 * no_kbs_buffer;
+  std::array<char, buffer_size> buffer{};
+  pointFile.rdbuf()->pubsetbuf(buffer.data(), buffer_size);
+  pointFile.open(fileName + ".vtp");
+
+  pointFile << setprecision(std::numeric_limits<double>::digits10);
+  pointFile << header();
+  pointFile << piece_header(noOutCells);
+  pointFile << point_header<DIM>();
+
+  for(GInt id = 0; id < maxNoValues; ++id) {
+    if(!cellFilter->eval(id)) {
+      continue;
+    }
+    const auto& coord = coordinates[id];
+    for(GInt i = 0; i < DIM; ++i) {
+      pointFile << coord[i];
+      if(i + 1 < DIM) {
+        pointFile << " ";
+      }
+    }
+    if(DIM < 3) {
+      for(GInt i = DIM; i < 3; ++i) {
+        pointFile << " 0.0";
+      }
+    }
+    pointFile << "\n";
+  }
+
+  pointFile << point_footer();
+  pointFile << vert_header();
+  for(GInt id = 0; id < noOutCells; ++id) {
+    pointFile << id << "\n";
+  }
+  pointFile << data_footer();
+  pointFile << offset_data_header();
+  pointFile << noOutCells << "\n";
+  pointFile << data_footer();
+  pointFile << vert_footer();
+  pointFile << point_data_header();
+  GInt i = 0;
+  for(const auto& column : values) {
+    // todo: fix types
+    if(index[i].type == "float64" || index[i].type == "float32") {
+      pointFile << point_data_float64(index[i].name);
+    } else {
+      pointFile << point_data_int32(index[i].name);
+    }
+    i++;
+    for(GInt id = 0; id < maxNoValues; ++id) {
       if(!cellFilter->eval(id)) {
         continue;
       }
@@ -299,34 +386,49 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
 
 /// Namespace for functions to write VTK in binary format.
 namespace BINARY {
+
+// template<typename T>
+// inline void writeBinary(ofstream& outstream, const T* data, const GInt length){
+//   static constexpr std::array<std::string_view, 4> padders       = {"", "=", "==", "==="};
+//
+//   const GInt header_val_size = static_cast<GInt>(sizeof(T)) * length;
+//   const GInt number_bytes    = binary::BYTE_SIZE + header_val_size;
+//   const GInt number_chars    = static_cast<GInt>(gcem::ceil(number_bytes * 8.0 / 6.0));
+//   const GInt padding         = 4 - (number_chars % 4);
+//   outstream << base64::encodeLE<GInt, 1>(&header_val_size);
+//   //      pointFile.write(base64::encodeLE<GInt32, 2>(&tmp_val[0], noOutCells).c_str(), number_chars); //todo: some how broken??
+//   //      pointFile << padders[padding];
+//   outstream << base64::encodeLE<T, 2>(data, length) << padders[padding];
+//   outstream << "\n" << data_footer();
+// }
+
 // todo: combine to functions ASCII and binary!!
 
 /// Write out a point-based VTK-file in binary-format.
 /// \tparam DIM Dimensionality of the data and points
 /// \param fileName Name of the file to write.
-/// \param noValues The number of values to write.
+/// \param maxNoValues The maximum number of values (or cellId) or size of the local memory of coordinates and values.
 /// \param coordinates The coordinates of the points to write.
 /// \param index Index for the name of the columns in the csv file.
 /// \param values Values to be written to the csv-file.
 /// \param filter Filter function to reduce the output points, e.g., only write points on a surface and so on.
 template <GInt DIM>
-inline void writePoints(const GString& fileName, const GInt noValues, const std::vector<VectorD<DIM>>& coordinates,
-                        const CellFilterManager<DIM>* cellFilter, const std::vector<IOIndex>& index = {},
+inline void writePoints(const GString& fileName, const GInt maxNoValues, const std::vector<VectorD<DIM>>& coordinates,
+                        const CellFilterManager<DIM>* filterFunction, const std::vector<IOIndex>& index = {},
                         const std::vector<std::vector<GString>>& values = {}) {
-  cerr0 << SP1 << "Writing " << fileName << ".vtp" << std::endl;
-  logger << SP1 << "Writing " << fileName << ".vtp" << std::endl;
-
-
   // number of points to output
   GInt noOutCells = 0;
-  for(GInt id = 0; id < noValues; ++id) {
-    noOutCells += static_cast<GInt>(cellFilter->eval(id));
+  for(GInt id = 0; id < maxNoValues; ++id) {
+    noOutCells += static_cast<GInt>(filterFunction->eval(id));
   }
 
+  cerr0 << SP1 << "Writing " << fileName << ".vtp with #" << noOutCells << " cells" << std::endl;
+  logger << SP1 << "Writing " << fileName << ".vtp with #" << noOutCells << " cells" << std::endl;
+
   ofstream                                         pointFile;
-  static constexpr unsigned int                    N           = 64;
-  static constexpr unsigned int                    buffer_size = 1024 * N;
-  static constexpr std::array<std::string_view, 4> padders     = {"", "=", "==", "==="};
+  static constexpr unsigned int                    no_kbs_buffer = 64;
+  static constexpr unsigned int                    buffer_size   = 1024 * no_kbs_buffer;
+  static constexpr std::array<std::string_view, 4> padders       = {"", "=", "==", "==="};
 
   std::array<char, buffer_size> buffer{};
   pointFile.rdbuf()->pubsetbuf(buffer.data(), buffer_size);
@@ -338,30 +440,27 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
 
   {
     GInt                actualValues = 0;
-    std::vector<GFloat> tmp_coords(noValues * 3);
+    std::vector<GFloat> tmp_coords(noOutCells * 3);
 
-    for(GInt id = 0; id < noValues; ++id) {
-      if(!cellFilter->eval(id)) {
+    for(GInt id = 0; id < maxNoValues; ++id) {
+      if(!filterFunction->eval(id)) {
         continue;
       }
       const auto& coord = coordinates[id];
       for(GInt i = 0; i < DIM; ++i) {
         tmp_coords[actualValues++] = coord[i];
       }
-      if(DIM < 3) {
-        for(GInt i = DIM; i < 3; ++i) {
-          tmp_coords[actualValues++] = 0.0;
-        }
+      // pad to 3D
+      for(GInt i = DIM; i < 3; ++i) {
+        tmp_coords[actualValues++] = 0.0;
       }
     }
+
     const GInt header_coord_size = 4 * actualValues;
     const GInt number_bytes      = 8 + header_coord_size;
     const GInt number_chars      = static_cast<GInt>(gcem::ceil(static_cast<GDouble>(number_bytes) * 8.0 / 6.0));
     const GInt padding           = 4 - (number_chars % 4);
-    pointFile << base64::encodeLE<GInt, 1>(&header_coord_size);
-    //    pointFile.write(base64::encodeLE<GFloat, 2>(&tmp_coords[0], actualValues).c_str(), number_chars); //todo: some how broken??
-    //    pointFile << padders[padding];
-    pointFile << base64::encodeLE<GFloat, 2>(tmp_coords.data(), actualValues) << padders[padding];
+    pointFile << base64::encodeLE_header<GFloat, GInt>(tmp_coords.data(), actualValues) << padders[padding];
   }
 
   pointFile << "\n" << point_footer();
@@ -375,10 +474,7 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
     const GInt number_bytes      = binary::BYTE_SIZE + header_coord_size;
     const GInt number_chars      = static_cast<GInt>(gcem::ceil(number_bytes * 8.0 / 6.0));
     const GInt padding           = 4 - (number_chars % 4);
-    pointFile << base64::encodeLE<GInt, 1>(&header_coord_size);
-    //    pointFile.write(base64::encodeLE<GInt, 2>(&tmp_id[0], noOutCells).c_str(), number_chars); //todo: some how broken??
-    //    pointFile << padders[padding];
-    pointFile << base64::encodeLE<GInt, 2>(tmp_id.data(), noOutCells) << padders[padding];
+    pointFile << base64::encodeLE_header<GInt, GInt>(tmp_id.data(), noOutCells) << padders[padding];
   }
   pointFile << "\n";
   pointFile << data_footer();
@@ -396,26 +492,31 @@ inline void writePoints(const GString& fileName, const GInt noValues, const std:
       } else {
         pointFile << point_data_int32<true>(index[i++].name);
       }
-      std::vector<GInt32> tmp_val;
 
-      for(GInt id = 0; id < noValues; ++id) {
-        if(cellFilter->eval(id)) {
-          tmp_val.emplace_back(std::stoi(column[id]));
+
+      //      std::vector<GInt32> tmp_val;
+      std::vector<GDouble> tmp_val;
+      for(GInt id = 0; id < maxNoValues; ++id) {
+        if(filterFunction->eval(id)) {
+          //          tmp_val.emplace_back(std::stoi(column[id]));
+          tmp_val.emplace_back(std::stod(column[id]));
         }
       }
-      const GInt header_val_size = static_cast<GInt>(sizeof(GInt32)) * noOutCells;
+
+      //      writeBinary(pointFile, tmp_val.data(), noOutCells);
+
+      const GInt header_val_size = static_cast<GInt>(sizeof(GDouble)) * noOutCells;
       const GInt number_bytes    = binary::BYTE_SIZE + header_val_size;
       const GInt number_chars    = static_cast<GInt>(gcem::ceil(number_bytes * 8.0 / 6.0));
       const GInt padding         = 4 - (number_chars % 4);
-      pointFile << base64::encodeLE<GInt, 1>(&header_val_size);
-      //      pointFile.write(base64::encodeLE<GInt32, 2>(&tmp_val[0], noOutCells).c_str(), number_chars); //todo: some how broken??
-      //      pointFile << padders[padding];
-      pointFile << base64::encodeLE<GInt32, 2>(tmp_val.data(), noOutCells) << padders[padding];
+      pointFile << base64::encodeLE_header<GDouble, GInt>(tmp_val.data(), noOutCells) << padders[padding];
+
       pointFile << "\n" << data_footer();
     }
   }
   pointFile << point_data_footer();
   pointFile << footer();
+  pointFile.close();
 }
 } // namespace BINARY
 } // namespace VTK

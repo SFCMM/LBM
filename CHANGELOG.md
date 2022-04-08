@@ -50,6 +50,7 @@
 - [LBM] fix NEBB bnd cnd
 - [LBM] add zou-he bnd cnd
 - [LBM][BUG] Periodic bnd doesn't work always (see step_ns_bug1.json)
+- Allow in IO functions to set output variable types
 
 ## moved
 
@@ -98,7 +99,6 @@
 - [BUG][LBM][POISSON] fix poisson method to allow changes of relaxation
 
 - simplify writing output
-- refactor IO code
 
 - warn when overwriting files
 - give option to not overwrite files
@@ -142,24 +142,18 @@
         - Navier-Stokes:
             - Couette
             - Poiseuille
-    - Examples:
-        - Navier-Stokes:
-            - single step
-            - double step
-            - flow around cylinder
-        - Poisson
-            - single step
-            - double step
-            - 2D diffusion
-            - 2D Debye-Hueckel
+  - Examples:
+      - Navier-Stokes:
+          - single step
+          - double step
+          - flow around cylinder
+      - Poisson
+          - single step
+          - double step
+          - 2D diffusion
+          - 2D Debye-Hueckel
 
-- Cartesian grid
-    - allow generation of boundary ghost cells
-
-- Poisson
-    - 1D Reaction example added for 1D catalyst slab
-
-- Math expression support
+- Math expression support for boundary conditions
 
 ### Buildsystem
 
@@ -193,6 +187,7 @@
 
 - reduce the number of debug levels
 - refactor output cell filter code
+- refactoring IO functions
 
 # V0.0.1
 
