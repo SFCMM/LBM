@@ -387,20 +387,16 @@ inline void writePoints(const GString& fileName, const GInt maxNoValues, const s
 /// Namespace for functions to write VTK in binary format.
 namespace BINARY {
 
-// template<typename T>
-// inline void writeBinary(ofstream& outstream, const T* data, const GInt length){
-//   static constexpr std::array<std::string_view, 4> padders       = {"", "=", "==", "==="};
-//
-//   const GInt header_val_size = static_cast<GInt>(sizeof(T)) * length;
-//   const GInt number_bytes    = binary::BYTE_SIZE + header_val_size;
-//   const GInt number_chars    = static_cast<GInt>(gcem::ceil(number_bytes * 8.0 / 6.0));
-//   const GInt padding         = 4 - (number_chars % 4);
-//   outstream << base64::encodeLE<GInt, 1>(&header_val_size);
-//   //      pointFile.write(base64::encodeLE<GInt32, 2>(&tmp_val[0], noOutCells).c_str(), number_chars); //todo: some how broken??
-//   //      pointFile << padders[padding];
-//   outstream << base64::encodeLE<T, 2>(data, length) << padders[padding];
-//   outstream << "\n" << data_footer();
-// }
+template <typename T>
+inline void writeBinary(ofstream& outstream, const T* data, const GInt length) {
+  static constexpr std::array<std::string_view, 4> padders = {"", "=", "==", "==="};
+
+  const GInt header_val_size = static_cast<GInt>(sizeof(T)) * length;
+  const GInt number_bytes    = binary::BYTE_SIZE + header_val_size;
+  const GInt number_chars    = static_cast<GInt>(gcem::ceil(number_bytes * 8.0 / 6.0));
+  const GInt padding         = 4 - (number_chars % 4);
+  outstream << base64::encodeLE_header<T, GInt>(data, length) << padders[padding];
+}
 
 // todo: combine to functions ASCII and binary!!
 
@@ -455,12 +451,7 @@ inline void writePoints(const GString& fileName, const GInt maxNoValues, const s
         tmp_coords[actualValues++] = 0.0;
       }
     }
-
-    const GInt header_coord_size = 4 * actualValues;
-    const GInt number_bytes      = 8 + header_coord_size;
-    const GInt number_chars      = static_cast<GInt>(gcem::ceil(static_cast<GDouble>(number_bytes) * 8.0 / 6.0));
-    const GInt padding           = 4 - (number_chars % 4);
-    pointFile << base64::encodeLE_header<GFloat, GInt>(tmp_coords.data(), actualValues) << padders[padding];
+    writeBinary(pointFile, tmp_coords.data(), actualValues);
   }
 
   pointFile << "\n" << point_footer();
@@ -470,11 +461,7 @@ inline void writePoints(const GString& fileName, const GInt maxNoValues, const s
     for(GInt id = 0; id < noOutCells; ++id) {
       tmp_id[id] = id;
     }
-    const GInt header_coord_size = binary::BYTE_SIZE * noOutCells;
-    const GInt number_bytes      = binary::BYTE_SIZE + header_coord_size;
-    const GInt number_chars      = static_cast<GInt>(gcem::ceil(number_bytes * 8.0 / 6.0));
-    const GInt padding           = 4 - (number_chars % 4);
-    pointFile << base64::encodeLE_header<GInt, GInt>(tmp_id.data(), noOutCells) << padders[padding];
+    writeBinary(pointFile, tmp_id.data(), noOutCells);
   }
   pointFile << "\n";
   pointFile << data_footer();
@@ -503,14 +490,7 @@ inline void writePoints(const GString& fileName, const GInt maxNoValues, const s
         }
       }
 
-      //      writeBinary(pointFile, tmp_val.data(), noOutCells);
-
-      const GInt header_val_size = static_cast<GInt>(sizeof(GDouble)) * noOutCells;
-      const GInt number_bytes    = binary::BYTE_SIZE + header_val_size;
-      const GInt number_chars    = static_cast<GInt>(gcem::ceil(number_bytes * 8.0 / 6.0));
-      const GInt padding         = 4 - (number_chars % 4);
-      pointFile << base64::encodeLE_header<GDouble, GInt>(tmp_val.data(), noOutCells) << padders[padding];
-
+      writeBinary(pointFile, tmp_val.data(), noOutCells);
       pointFile << "\n" << data_footer();
     }
   }
