@@ -50,6 +50,7 @@
 - [LBM] fix NEBB bnd cnd
 - [LBM] add zou-he bnd cnd
 - [LBM][BUG] Periodic bnd doesn't work always (see step_ns_bug1.json)
+- Allow in IO functions to set output variable types
 
 ## moved
 
@@ -66,6 +67,13 @@
 - order boundary conditions by type (is this needed?)
 - [BUG] D2Q5 still uses diagonal neighbors also this is not necessary(is this needed?)
 - [LBM] add support for boundary ghost cells in periodic boundary (needed??)
+- [IO] allow switching of output filetypes by handling a configuration object
+- [IO] simplify writing output
+- [IO] warn when overwriting files
+- [IO] give option to not overwrite files
+- [IO] set output format for the solvers
+- [IO] set output variables for the solvers
+- [IO] check in output functions if fileformat ending is already included
 
 # V0.0.2
 
@@ -97,14 +105,7 @@
 - [BUG][LBM][POISSON] poisson2D_helmholtz configuration should have a GRE < 2.3E-5 at lvl 9
 - [BUG][LBM][POISSON] fix poisson method to allow changes of relaxation
 
-- simplify writing output
-- refactor IO code
 
-- warn when overwriting files
-- give option to not overwrite files
-- set output format for the solvers
-- set output variables for the solvers
-- check in output functions if fileformat ending is already included
 
 ## Done:
 
@@ -142,24 +143,18 @@
         - Navier-Stokes:
             - Couette
             - Poiseuille
-    - Examples:
-        - Navier-Stokes:
-            - single step
-            - double step
-            - flow around cylinder
-        - Poisson
-            - single step
-            - double step
-            - 2D diffusion
-            - 2D Debye-Hueckel
+  - Examples:
+      - Navier-Stokes:
+          - single step
+          - double step
+          - flow around cylinder
+      - Poisson
+          - single step
+          - double step
+          - 2D diffusion
+          - 2D Debye-Hueckel
 
-- Cartesian grid
-    - allow generation of boundary ghost cells
-
-- Poisson
-    - 1D Reaction example added for 1D catalyst slab
-
-- Math expression support
+- Math expression support for boundary conditions
 
 ### Buildsystem
 
@@ -178,6 +173,7 @@
 ### IO
 - set output dir and solution file name
 - allow multiple cell output filters
+- correctly handle switch between int and double in writePoints()
 
 ### Performance
 
@@ -185,6 +181,7 @@
 - segmentation fault after divergence
 - write out full double precision
 - [LBM][POISSON] fix D2Q9 for Poisson
+- error in Base64 encoding
 
 ### Documentation
 - improve documentation of testcases
@@ -193,6 +190,7 @@
 
 - reduce the number of debug levels
 - refactor output cell filter code
+- remove shift from base64 which didn't work
 
 # V0.0.1
 

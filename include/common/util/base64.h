@@ -3,9 +3,9 @@
 
 #include "binary.h"
 namespace base64 {
-static constexpr GChar                         maxValue = 64;
+static constexpr GChar maxValue = 64;
 // initialization value (0)
-static constexpr GChar                         base64_zero{'A'};
+static constexpr GChar base64_zero{'A'};
 // transposition table
 static constexpr std::array<unsigned char, 65> encodeTable{"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"};
 
@@ -143,6 +143,7 @@ inline static auto encodeLE(const T* c) -> GString {
           mem[index] = tmp_bitset[bit];
         } else if(shifted > 0 && tmp_bitset[bit]) {
           std::cerr << "WARNING: could be wrong" << std::endl; // todo: remove
+          TERMM(-1, "writing is incorrect");
         }
       }
     }
@@ -156,15 +157,15 @@ inline static auto encodeLE(const T* c) -> GString {
   return {std::begin(encoded_base64), std::end(encoded_base64)};
 }
 
-//todo: unify with the compile-time constant version!
+// todo: unify with the compile-time constant version!
+
 /// Encode an array of type T variables to Base64  (Little Endian) (non compile-time constant version)
 /// \tparam T Type of the variables to be encoded.
-/// \tparam shifted Pad at the beginning to align with byte boundary.
 /// \param length Length of the array to be encoded.
 /// \param c Values to be encoded.
 /// \return String of the encoded array.
-template <typename T, GInt shifted = 0>
-inline static auto encodeLE(T* c, const GInt length) -> GString {
+template <typename T>
+inline static auto encodeLE(const T* c, const GInt length) -> GString {
   // Nothing to do for length 0
   if(length == 0) {
     std::cerr << "ERROR: Invalid call to encodeLE() with length = 0" << std::endl;
@@ -172,33 +173,98 @@ inline static auto encodeLE(T* c, const GInt length) -> GString {
     // return "";
   }
 
-  const GInt num_chars = gcem::ceil((sizeof(T) * 8 * length - shifted) / 6.0);
+  const auto num_chars = static_cast<GUint>(gcem::ceil((sizeof(T) * 8 * length) / 6.0));
 
   std::vector<T>      swapped_endian(length);
   std::vector<GUchar> encoded_base64(num_chars);
   std::vector<GBool>  mem(num_chars * 6);
+
+  // perform the actual endian swap
   for(GInt i = 0; i < length; ++i) {
     swapped_endian[i] = binary::getSwappedEndian(c[i]);
   }
 
-  auto* char_wise = static_cast<GUchar*>(static_cast<void*>(&swapped_endian[0]));
-
+  // perform byte alignment and switch to bit representation
+  auto* char_wise = static_cast<GUchar*>(static_cast<void*>(swapped_endian.data()));
   for(GInt i = 0; i < length; ++i) {
     for(GUint byte = 0; byte < sizeof(T); ++byte) {
       auto tmp_bitset = std::bitset<8>(char_wise[i * sizeof(T) + byte]);
       for(GInt bit = 0; bit < 8; ++bit) {
-        const GInt index = num_chars * 6 - (i + 1) * sizeof(T) * 8 + byte * 8 + bit + shifted;
-        if(shifted == 0 || index < num_chars * 6) {
-          mem[index] = tmp_bitset[bit];
-        } else if(shifted > 0 && tmp_bitset[bit]) {
-          std::cerr << "WARNING: could be wrong" << std::endl; // todo: remove
-        }
+        const GInt index = num_chars * 6 - (i + 1) * sizeof(T) * 8 + byte * 8 + bit;
+        mem[index]       = tmp_bitset[bit];
       }
     }
   }
 
+
   for(GInt i = 0; i < num_chars; ++i) {
+    // convert 6-bit representation to a number
     const GInt num = mem[i * 6] + mem[i * 6 + 1] * 2 + mem[i * 6 + 2] * 4 + mem[i * 6 + 3] * 8 + mem[i * 6 + 4] * 16 + mem[i * 6 + 5] * 32;
+    // reverse mem and encode to char
+    encoded_base64[num_chars - i - 1] = encodeTable[num];
+  }
+
+  return {std::begin(encoded_base64), std::end(encoded_base64)};
+}
+
+/// Encode an array of type T variables to Base64  (Little Endian) (non compile-time constant version)
+/// \tparam T Type of the variables to be encoded.
+/// \tparam shifted Number of bits to pad at the beginning to align with byte boundary.
+/// \param length Length of the array to be encoded.
+/// \param c Values to be encoded.
+/// \return String of the encoded array.
+template <typename T, typename U>
+inline static auto encodeLE_header(const T* c, const U length) -> GString {
+  // Nothing to do for length 0
+  if(length == 0) {
+    std::cerr << "ERROR: Invalid call to encodeLE() with length = 0" << std::endl;
+    std::exit(-1);
+    // return "";
+  }
+
+  const auto  num_chars      = static_cast<GUint>(gcem::ceil((sizeof(T) * 8 * length + sizeof(U) * 8) / 6.0));
+  const GUint actual_bit     = sizeof(T) * 8 * length + sizeof(U) * 8;
+  const GUint allocated_bits = num_chars * 6;
+
+  U                   swapped_length = 0;
+  std::vector<T>      swapped_endian(length);
+  std::vector<GUchar> encoded_base64(num_chars);
+  std::vector<GBool>  mem(num_chars * 6);
+
+  // perform the actual endian swap
+  swapped_length = binary::getSwappedEndian(length * binary::BYTE_SIZE);
+  for(GInt i = 0; i < length; ++i) {
+    swapped_endian[i] = binary::getSwappedEndian(c[i]);
+  }
+
+  // perform byte alignment and switch to bit representation
+  // todo: remove one loop
+  GUint count     = allocated_bits - actual_bit;
+  auto* char_wise = static_cast<GUchar*>(static_cast<void*>(swapped_endian.data()));
+  for(GInt i = 0; i < length; ++i) {
+    for(GUint byte = 0; byte < sizeof(T); ++byte) {
+      // access bytewise the swapped memory buffer
+      auto tmp_bitset = std::bitset<8>(char_wise[(length - i - 1) * sizeof(T) + byte]);
+      for(GInt bit = 0; bit < 8; ++bit) {
+        mem.at(count) = tmp_bitset[bit];
+        ++count;
+      }
+    }
+  }
+
+  // add length information to the beginning
+  // todo: remove loop
+  auto tmp_bitset = std::bitset<sizeof(U) * 8>(swapped_length);
+  for(GInt bit = 0; bit < sizeof(U) * 8; ++bit) {
+    mem.at(count) = tmp_bitset[bit];
+    ++count;
+  }
+
+
+  for(GInt i = 0; i < num_chars; ++i) {
+    // convert 6-bit representation to a number
+    const GInt num = mem[i * 6] + mem[i * 6 + 1] * 2 + mem[i * 6 + 2] * 4 + mem[i * 6 + 3] * 8 + mem[i * 6 + 4] * 16 + mem[i * 6 + 5] * 32;
+    // reverse mem and encode to char
     encoded_base64[num_chars - i - 1] = encodeTable[num];
   }
 

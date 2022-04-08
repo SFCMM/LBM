@@ -387,8 +387,8 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::output(const GBool forced, const GStrin
       values.emplace_back(toStringVector(tmpV, allCells()));
     }
 
-    VTK::ASCII::writePoints<NDIM>(m_outputDir + m_solutionFileName + "_" + std::to_string(m_timeStep) + postfix, allCells(), center(),
-                                  m_filterList.get(), index, values);
+    VTK::BINARY::writePoints<NDIM>(m_outputDir + m_solutionFileName + "_" + std::to_string(m_timeStep) + postfix, allCells(), center(),
+                                   m_filterList.get(), index, values);
   }
   RECORD_TIMER_STOP(TimeKeeper[Timers::LBMIo]);
 }
