@@ -476,21 +476,26 @@ inline void writePoints(const GString& fileName, const GInt maxNoValues, const s
       // todo: fix types
       if(index[i].type == "float64" || index[i].type == "float32") {
         pointFile << point_data_float64<true>(index[i++].name);
+        std::vector<GDouble> tmp_val;
+        for(GInt id = 0; id < maxNoValues; ++id) {
+          if(filterFunction->eval(id)) {
+            tmp_val.emplace_back(std::stod(column[id]));
+          }
+        }
+
+        writeBinary(pointFile, tmp_val.data(), noOutCells);
       } else {
         pointFile << point_data_int32<true>(index[i++].name);
-      }
 
-
-      //      std::vector<GInt32> tmp_val;
-      std::vector<GDouble> tmp_val;
-      for(GInt id = 0; id < maxNoValues; ++id) {
-        if(filterFunction->eval(id)) {
-          //          tmp_val.emplace_back(std::stoi(column[id]));
-          tmp_val.emplace_back(std::stod(column[id]));
+        std::vector<GInt32> tmp_val;
+        for(GInt id = 0; id < maxNoValues; ++id) {
+          if(filterFunction->eval(id)) {
+            tmp_val.emplace_back(std::stoi(column[id]));
+          }
         }
-      }
 
-      writeBinary(pointFile, tmp_val.data(), noOutCells);
+        writeBinary(pointFile, tmp_val.data(), noOutCells);
+      }
       pointFile << "\n" << data_footer();
     }
   }
