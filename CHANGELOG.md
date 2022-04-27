@@ -11,6 +11,13 @@
 - [LPT] dynamic drag model
 - [LPT] plastic collision
 
+# V0.0.4
+
+## Planned
+
+- [LPT] calculate timestep by characteristic time
+- [LPT] add simple collision model
+
 # V0.0.3
 
 ## Planned
@@ -30,7 +37,6 @@
 - add images to readme
 - allow more than one solver to run at the same time
 - write out lines as svg
-- [LPT] add simple collision model
 - set write out precision
 - write out memory statistics
 - reduce todo below 50
@@ -44,7 +50,6 @@
 - port testing tool over to python
 - [LIB] move more stuff to common lib project
 - [LIB] refactor kdtree and add more complete test
-- [LPT] calculate timestep by characteristic time
 - [LBM][POISSON][BUG] the precision of D2Q5 is not correct for Poisson
 - [LBM] change convergence criterium to some average not maximum
 - [LBM] fix NEBB bnd cnd
@@ -94,7 +99,7 @@
 - in cartesiangrid don't use the configuration.json but the accessor to mark the unused values correctly
 - reduce todos below 100
 
-### this week:
+### Working on:
 
 - [IMPROVEMENT][LBM] generalize NEEM boundary condition
 - make neem boundary condition available for NS
