@@ -110,13 +110,10 @@ static constexpr auto dragCoefficient(const GDouble rep) {
   switch(DM) {
     case DragModel::Stokes:
       return 1.0;
-      break;
     case DragModel::SchillerNaumann:
       return 1.0 + 0.15 * gcem::pow(rep, 0.687);
-      break;
     case DragModel::PinskyKhain:
       return 1.0 + 0.17 * gcem::pow(rep, 0.632) + 1.0e-6 * gcem::pow(rep, 2.25);
-      break;
     case DragModel::Putnam61:
       if(rep > 1000) {
         // Newton flow regime Re from 1k to 250k
@@ -128,7 +125,6 @@ static constexpr auto dragCoefficient(const GDouble rep) {
         // transition regime
         return 1.0 + gcem::pow(rep, 2.0 / 3.0) / 6.0;
       }
-      break;
     default:
       TERMM(-1, "Invalid drag model!");
   }
