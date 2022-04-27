@@ -18,6 +18,11 @@
       },
       "environment": {
         "APP_GNU_DEFAULT_FLAGS": "-Wall -Wextra -pedantic -Wabi -Wshadow -Wfloat-equal -Wcast-align -Wdisabled-optimization -Wformat=2 -Winvalid-pch -Wmissing-include-dirs -Wredundant-decls -Wpacked -Wpointer-arith -Wstack-protector -fstack-protector -Wstrict-aliasing=3 -fstrict-aliasing -Wswitch-default -Wlogical-op -fdiagnostics-color -Wshift-overflow=2 -Wnull-dereference -Wunused-const-variable=1 -Wduplicated-branches -Walloc-zero -Wformat-overflow=1 -Wduplicated-cond -Warray-bounds=2 -Wdeprecated-copy-dtor -Wredundant-tags -Wuseless-cast -Wmismatched-tags -Wold-style-cast -fopenmp"
+      },
+      "vendor": {
+        "jetbrains.com/clion": {
+          "toolchain": "GNU10"
+        }
       }
     },
     {
@@ -32,6 +37,11 @@
       },
       "environment": {
         "APP_CLANG_DEFAULT_FLAGS": "-Wall -Wextra -pedantic -Wshadow-all -Wfloat-equal -Wcast-align -Wdisabled-optimization -Wformat=2 -Winvalid-pch -Winit-self -Wmissing-include-dirs -Wredundant-decls -Wpacked -Wpointer-arith -Wstack-protector -Wswitch-default -Wwrite-strings -Wno-type-safety -Wunused -Winfinite-recursion -fcolor-diagnostics -Winconsistent-missing-destructor-override -Wextra-semi-stmt -Wtautological-bitwise-compare -Wc99-designator -Wreorder -fopenmp"
+      },
+      "vendor": {
+        "jetbrains.com/clion": {
+          "toolchain": "CLANG10"
+        }
       }
     },
     {

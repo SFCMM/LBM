@@ -105,8 +105,6 @@
 - [BUG][LBM][POISSON] poisson2D_helmholtz configuration should have a GRE < 2.3E-5 at lvl 9
 - [BUG][LBM][POISSON] fix poisson method to allow changes of relaxation
 
-
-
 ## Done:
 
 ### Features
