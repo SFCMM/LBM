@@ -285,7 +285,6 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
       // assuming initial set velocity (either 0 or bndry value) and density 1
       for(GInt dist = 0; dist < NDIST; ++dist) {
         eq::defaultEq<LBTYPE>(feq(cellId), rho(cellId), velocity(cellId));
-        ;
         f(cellId, dist)    = feq(cellId, dist);
         fold(cellId, dist) = feq(cellId, dist);
       }

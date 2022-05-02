@@ -112,7 +112,7 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
       } else {
         m_mathExpression[0] = config::required_math_expression<NDIM>(properties, "value");
       }
-      for(GInt bndId = 0; bndId < m_bndCells.size(); ++bndId) {
+      for(GUint bndId = 0; bndId < m_bndCells.size(); ++bndId) {
         const GInt cellId = m_bndCells[bndId];
         for(GInt dir = 0; dir < NVAR; ++dir) {
           m_value[bndId][dir] = m_mathExpression[dir]->eval(surf->center(cellId));

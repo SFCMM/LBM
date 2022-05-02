@@ -52,8 +52,8 @@ class CartesianGridData {
       m_level(initGrid.level()),
       m_nghbrIds(initGrid.neighbor()),
       m_lengthOnLevel(initGrid.lengthOnLvl()),
-      m_partitionLvl(initGrid.partitionLvl()),
-      m_currentHighestLvl(initGrid.currentHighestLvl()) {}
+      m_partitionLvl(initGrid.ref_partitionLvl()),
+      m_currentHighestLvl(initGrid.ref_currentHighestLvl()) {}
 
   // todo: add asserts
   [[nodiscard]] inline auto noCells() const -> GInt { return m_noCells; }
@@ -155,7 +155,6 @@ class BaseCartesianGrid : public GridInterface {
 
   [[nodiscard]] inline auto largestDir() const -> GInt override { return m_decisiveDirection; };
   [[nodiscard]] inline auto partitionLvl() const -> GInt override { return m_partitioningLvl; };
-  inline auto               partitionLvl() -> GInt& override { return m_partitioningLvl; }
   [[nodiscard]] inline auto maxLvl() const -> GInt override { return m_maxLvl; };
 
   [[nodiscard]] inline auto lengthOnLvl(const GInt lvl) const -> GDouble override {
@@ -311,7 +310,12 @@ class BaseCartesianGrid : public GridInterface {
   [[nodiscard]] inline auto props() const -> const std::vector<PropertyBitsetType>& { return m_properties; }
 
  protected:
-  inline auto currentHighestLvl() -> GInt& { return m_currentHighestLvl; }
+  inline auto ref_currentHighestLvl() -> GInt& { return m_currentHighestLvl; }
+  inline auto ref_currentHighestLvl() const -> const GInt& { return m_currentHighestLvl; }
+
+  inline auto ref_partitionLvl() -> GInt& override { return m_partitioningLvl; }
+  inline auto ref_partitionLvl() const -> const GInt& { return m_partitioningLvl; }
+
 
   inline auto parent(const GInt id) -> GInt& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {

@@ -424,7 +424,7 @@ inline void writePoints(const GString& fileName, const GInt maxNoValues, const s
   ofstream                                         pointFile;
   static constexpr unsigned int                    no_kbs_buffer = 64;
   static constexpr unsigned int                    buffer_size   = 1024 * no_kbs_buffer;
-  static constexpr std::array<std::string_view, 4> padders       = {"", "=", "==", "==="};
+  //  static constexpr std::array<std::string_view, 4> padders       = {"", "=", "==", "==="};
 
   std::array<char, buffer_size> buffer{};
   pointFile.rdbuf()->pubsetbuf(buffer.data(), buffer_size);

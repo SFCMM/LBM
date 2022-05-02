@@ -18,7 +18,8 @@ enum class Random_Dist { none, normal };
 /// \param distAttrb Distribution attribute (default: 0)
 /// \return A random normalized direction within the defined cone.
 inline auto randomNormalizedDirection_inCone(const VectorD<3>& coneAxis, const GDouble openingAngle, randxor& prng,
-                                             const Random_Dist dist = Random_Dist::none, const GDouble distAttrb = 0.0) -> VectorD<3> {
+                                             const Random_Dist /*dist*/ = Random_Dist::none, const GDouble /*distAttrb*/ = 0.0)
+    -> VectorD<3> {
   // angle between center cone axis and cone shell
   GDouble distedAngle = 0;
   // todo: implement

@@ -74,7 +74,7 @@ static inline void defaultEq(GDouble* feq, const GDouble density, const GDouble*
 
 template <LBMethodType LBTYPE>
 static inline auto defaultEq(const GInt dist, const GDouble density, const GDouble* const velocity) -> GDouble {
-  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+  //  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
 
   GDouble vsq = 0;
@@ -120,7 +120,7 @@ static inline void symmEq(GDouble* feq, const GDouble density, const GDouble* co
 
 template <LBMethodType LBTYPE>
 static inline auto symmEq(const GInt dist, const GDouble density, const GDouble* const velocity) -> GDouble {
-  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+  //  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
 
   GDouble vsq = 0;

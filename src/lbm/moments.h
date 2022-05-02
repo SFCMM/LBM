@@ -115,9 +115,9 @@ inline void calcDensity_limited(const GInt cellId, const std::set<GInt>& limited
   }
 
   if(EQ == LBEquationType::Navier_Stokes) {
-    const GInt sumC = std::accumulate(constants.begin(), constants.end(), 0);
+    //    const GInt sumC = std::accumulate(constants.begin(), constants.end(), 0);
 
-    const GDouble tmpRho = vars(cellId, LBMVariables<LBEquationType::Navier_Stokes, NDIM>::rho());
+    //    const GDouble tmpRho = vars(cellId, LBMVariables<LBEquationType::Navier_Stokes, NDIM>::rho());
     vars(cellId, LBMVariables<LBEquationType::Navier_Stokes, NDIM>::rho()) = 0;
     for(const GInt dist : limitedDists) {
       vars(cellId, LBMVariables<LBEquationType::Navier_Stokes, NDIM>::rho()) += constants[dist] * fold(cellId, dist);

@@ -100,12 +100,10 @@
 - reduce todos below 100
 
 ### Working on:
-
+- fix exprtk warning or suppress them
 - [IMPROVEMENT][LBM] generalize NEEM boundary condition
 - make neem boundary condition available for NS
 - [IMPROVEMENT][LBM] simplify boundary by not making it necessary to copy the cellIds for each boundary separately
-
-- [CLEANUP][LPT] finish for release
 
 - [BUG][LBM][POISSON] poisson2D_helmholtz configuration should have a GRE < 2.3E-5 at lvl 9
 - [BUG][LBM][POISSON] fix poisson method to allow changes of relaxation

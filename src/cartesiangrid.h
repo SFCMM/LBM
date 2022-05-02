@@ -42,7 +42,9 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::center;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::checkDir;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::currentHighestLvl;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::ref_currentHighestLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::partitionLvl;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::ref_partitionLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setMaxLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::boundingBox;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::setBoundingBox;
@@ -263,10 +265,10 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     setConfiguration(properties);
     // grid.balance(); //todo: implement
     setCapacity(grid.capacity()); // todo: change for adaptation
-    m_geometry          = grid.geometry();
-    size()              = grid.size();
-    currentHighestLvl() = grid.currentHighestLvl();
-    partitionLvl()      = grid.partitionLvl();
+    m_geometry              = grid.geometry();
+    size()                  = grid.size();
+    ref_currentHighestLvl() = grid.currentHighestLvl();
+    ref_partitionLvl()      = grid.partitionLvl();
     setMaxLvl(grid.maxLvl());
     setBoundingBox(grid.boundingBox());
     transformMaxLvl(grid.lengthOnLvl(maxLvl()) / lengthOnLvl(maxLvl()));
@@ -389,7 +391,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
       ASSERT(value.dir.size() <= 2, "Unsupported!" + std::to_string(value.dir.size()));
 
       const GString surfId  = value.linkedSurfaces[0];
-      GInt          ghostId = INVALID_CELLID;
+      //      GInt          ghostId = INVALID_CELLID;
 
       if(value.dir.size() == 1) {
         const GInt dir = value.dir[0];

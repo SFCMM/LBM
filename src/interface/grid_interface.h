@@ -78,7 +78,7 @@ class GridInterface {
 
   /// Set the partition level of the grid.
   /// \return Partition level.
-  virtual inline auto partitionLvl() -> GInt& = 0;
+  virtual inline auto ref_partitionLvl() -> GInt& = 0;
 
   /// The maximum level supported by this grid.
   /// \return The maximum level this grid can possibly have.

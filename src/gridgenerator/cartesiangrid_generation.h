@@ -8,6 +8,7 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
  public:
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::partitionLvl;
+  using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::ref_partitionLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::maxLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::lengthOnLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::cog;
@@ -76,7 +77,7 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       TERMM(-1, "No geometry set");
     }
 
-    partitionLvl() = partitioningLvl;
+    ref_partitionLvl() = partitioningLvl;
     logger << SP1 << "Create partitioning grid with level " << partitionLvl() << std::endl;
     std::cout << SP1 << "Create partitioning grid with level " << partitionLvl() << std::endl;
 

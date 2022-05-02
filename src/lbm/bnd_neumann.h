@@ -109,7 +109,7 @@ class LBMBnd_NeumannNEEM : public LBMBnd_DirichletNEEM<DEBUG_LEVEL, LBTYPE, EQ> 
   auto operator=(const LBMBnd_NeumannNEEM&) -> LBMBnd_NeumannNEEM& = delete;
   auto operator=(LBMBnd_NeumannNEEM&&) -> LBMBnd_NeumannNEEM& = delete;
 
-  void initCnd(const std::function<GDouble&(GInt, GInt)>& vars) override {}
+  void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
@@ -122,7 +122,7 @@ class LBMBnd_NeumannNEEM : public LBMBnd_DirichletNEEM<DEBUG_LEVEL, LBTYPE, EQ> 
     }
 
     // update value to the calculated gradient value
-    for(GUint id = 0; id < this->no_cells(); ++id) {
+    for(GInt id = 0; id < this->no_cells(); ++id) {
       const GInt extrapolationId = this->extrapolationCellId(id);
 
       const GInt    ex2Id = this->neighbor(extrapolationId, this->extrapolationDir(id));

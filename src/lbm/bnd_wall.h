@@ -406,8 +406,8 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
     apply_general(fpre, fold, feq, vars);
   }
 
-  void apply_general(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
-                     const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
+  void apply_general(const std::function<GDouble&(GInt, GInt)>& /*fpre*/, const std::function<GDouble&(GInt, GInt)>& fold,
+                     const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>&  vars) {
     if constexpr(EQ == LBEquationType::Navier_Stokes) {
       // recalculate equilibrium dist because fold is post streaming!
       calcDensity<NDIM, NDIST, EQ>(m_extrapolationCellId, fold, vars);

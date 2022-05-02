@@ -13,7 +13,7 @@ class LBMBnd_Pressure : public LBMBndInterface {
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
 
-  static constexpr GInt NVAR = noVars<LBTYPE>(LBEquationType::Navier_Stokes);
+  //  static constexpr GInt NVAR = noVars<LBTYPE>(LBEquationType::Navier_Stokes);
 
   using VAR = LBMVariables<LBEquationType::Navier_Stokes, NDIM>;
 
@@ -36,7 +36,7 @@ class LBMBnd_Pressure : public LBMBndInterface {
     }
   }
 
-  void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>&       fold,
+  void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& vars) override {
     // value is set first so that this value can be used in other boundary conditions
     // todo: this is wrong if there are two pressure boundary conditions with different values
@@ -112,8 +112,8 @@ class LBMBnd_Pressure : public LBMBndInterface {
 
           //          cerr0 << "fold " << fold(bndCellId, oppositeDist) << " fpre " << fpre(bndCellId, dist) << std::endl;
 
-          const GDouble currentPressure = vars(bndCellId, VAR::rho());
-          const GDouble dP              = m_pressure - currentPressure;
+          //          const GDouble currentPressure = vars(bndCellId, VAR::rho());
+          //          const GDouble dP              = m_pressure - currentPressure;
           //          if(std::abs(dP) > m_pressure) {
           //            TERMM(-1, "testing");
           //          }
@@ -125,9 +125,9 @@ class LBMBnd_Pressure : public LBMBndInterface {
 
 
  private:
-  GDouble m_pressure = 1.0;
-
   const SurfaceInterface* m_bnd = nullptr;
+
+  GDouble m_pressure = 1.0;
 };
 
 #endif // LBM_BND_IN_OUT_H

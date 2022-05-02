@@ -16,9 +16,9 @@ class CellFilterBase : public FilterBase {
  public:
   CellFilterBase(CartesianGridData<NDIM> grid) : m_grid(grid) {}
 
-  [[nodiscard]] virtual auto eval(const GInt /*cellId*/) const -> GBool { return true; };
+  [[nodiscard]] auto eval(const GInt /*cellId*/) const -> GBool override { return true; };
 
-  auto grid() -> CartesianGridData<NDIM>& { return m_grid; }
+  auto grid() const -> const CartesianGridData<NDIM>& { return m_grid; }
 
  private:
   CartesianGridData<NDIM> m_grid;
@@ -29,7 +29,7 @@ class LeafCellFilter : public CellFilterBase<NDIM> {
  public:
   LeafCellFilter(CartesianGridData<NDIM> grid) : CellFilterBase<NDIM>(grid) {}
 
-  auto eval(const GInt cellId) -> GBool { return CellFilterBase<NDIM>::grid().isLeaf(cellId); }
+  [[nodiscard]] auto eval(const GInt cellId) const -> GBool override { return CellFilterBase<NDIM>::grid().isLeaf(cellId); }
 };
 
 template <GInt NDIM>
@@ -37,7 +37,9 @@ class LevelCellFilter : public CellFilterBase<NDIM> {
  public:
   LevelCellFilter(CartesianGridData<NDIM> grid, const GInt lvl) : CellFilterBase<NDIM>(grid), m_targetLvl(lvl) {}
 
-  auto eval(const GInt cellId) -> GBool { return CellFilterBase<NDIM>::grid().level(cellId) == m_targetLvl; }
+  [[nodiscard]] auto eval(const GInt cellId) const -> GBool override {
+    return std::to_integer<GInt>(CellFilterBase<NDIM>::grid().level(cellId)) == m_targetLvl;
+  }
 
  private:
   GInt m_targetLvl;
@@ -48,7 +50,7 @@ class AllFilter : public FilterBase {
  public:
   AllFilter() = default;
 
-  auto eval(const GInt /*cellId*/) -> GBool { return true; }
+  [[nodiscard]] auto eval(const GInt /*cellId*/) const -> GBool override { return true; }
 };
 
 template <GInt NDIM>
@@ -59,7 +61,7 @@ class CellFilterManager {
  public:
   CellFilterManager() { m_filter.emplace_back(std::make_unique<AllFilter<NDIM>>()); }
 
-  CellFilterManager(const json& filterConf) { m_filter.emplace_back(std::make_unique<AllFilter<NDIM>>()); }
+  CellFilterManager(const json& /*filterConf*/) { m_filter.emplace_back(std::make_unique<AllFilter<NDIM>>()); }
 
   CellFilterManager(const json& filterConf, CartesianGridData<NDIM> grid) {
     if(config::has_config_value(filterConf, "cellFilter")) {
