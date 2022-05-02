@@ -18894,7 +18894,7 @@ public:
               0;
 
           if (0 != (bracket_checker_ptr =
-                        dynamic_cast<lexer::helper::bracket_checker *>(
+                        static_cast<lexer::helper::bracket_checker *>(
                             helper_assembly_.error_token_scanner))) {
             set_error(make_error(
                 parser_error::e_token, bracket_checker_ptr->error_token(),
@@ -18902,7 +18902,7 @@ public:
                     bracket_checker_ptr->error_token().value + "'",
                 exprtk_error_location));
           } else if (0 != (numeric_checker_ptr =
-                               dynamic_cast<lexer::helper::numeric_checker *>(
+                               static_cast<lexer::helper::numeric_checker *>(
                                    helper_assembly_.error_token_scanner))) {
             for (std::size_t i = 0; i < numeric_checker_ptr->error_count();
                  ++i) {
@@ -18920,8 +18920,8 @@ public:
             }
           } else if (0 !=
                      (sequence_validator_ptr =
-                          dynamic_cast<lexer::helper::sequence_validator *>(
-                              helper_assembly_.error_token_scanner))) {
+                               static_cast<lexer::helper::sequence_validator *>(
+                                   helper_assembly_.error_token_scanner))) {
             for (std::size_t i = 0; i < sequence_validator_ptr->error_count();
                  ++i) {
               std::pair<lexer::token, lexer::token> error_token =
@@ -18937,7 +18937,7 @@ public:
             if (sequence_validator_ptr->error_count()) {
               sequence_validator_ptr->clear_errors();
             }
-          } else if (0 != (sequence_validator3_ptr = dynamic_cast<
+          } else if (0 != (sequence_validator3_ptr = static_cast<
                                lexer::helper::sequence_validator_3tokens *>(
                                helper_assembly_.error_token_scanner))) {
             for (std::size_t i = 0; i < sequence_validator3_ptr->error_count();
