@@ -101,6 +101,7 @@
 
 ### Working on:
 - fix exprtk warnings
+
 - [IMPROVEMENT][LBM] generalize NEEM boundary condition
 - make neem boundary condition available for NS
 - [IMPROVEMENT][LBM] simplify boundary by not making it necessary to copy the cellIds for each boundary separately

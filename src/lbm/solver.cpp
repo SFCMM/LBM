@@ -125,6 +125,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
     }
     m_dt = m_finestGridSpacing * m_ma * lbm_cs / m_refLength;
   } else {
+    // set variables for not Navier-Stokes cases
     m_relaxTime = required_config_value<GDouble>("relaxation");
     m_re        = 0;
     m_ma        = 1.0 / lbm_cs;
