@@ -96,7 +96,7 @@
 - add way to just iterate over leaf cells
 
 - add more openmp
-- in cartesiangrid don't use the configuration.json but the accessor to mark the unused values correctly
+- in cartesiangrid don't use configuration.json but the accessor to mark the unused values correctly
 - reduce todos below 100
 
 ### Working on:

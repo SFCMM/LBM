@@ -1879,9 +1879,9 @@ struct loop_runtime_check {
     details::_uint64_t iteration_count;
   };
 
-  virtual void handle_runtime_violation(const violation_context &) {
-    throw std::runtime_error("ExprTk Loop run-time violation.");
-  }
+  //  virtual void handle_runtime_violation(const violation_context &) {
+  //    throw std::runtime_error("ExprTk Loop run-time violation.");
+  //  }
 
   virtual ~loop_runtime_check() {}
 };
@@ -6202,11 +6202,14 @@ struct loop_runtime_checker {
       return true;
     }
 
-    loop_runtime_check::violation_context ctxt;
-    ctxt.loop = loop_type_;
-    ctxt.violation = loop_runtime_check::e_iteration_count;
+    //    loop_runtime_check::violation_context ctxt;
+    //    ctxt.loop = loop_type_;
+    //    ctxt.violation = loop_runtime_check::e_iteration_count;
+    //
+    //    loop_runtime_check_->handle_runtime_violation(ctxt);
 
-    loop_runtime_check_->handle_runtime_violation(ctxt);
+    std::cerr << "ERROR: ExprTk Loop run-time violation." << std::endl;
+    std::exit(-1);
 
     return false;
   }
