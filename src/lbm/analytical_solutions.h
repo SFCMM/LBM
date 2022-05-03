@@ -66,8 +66,7 @@ inline auto poiseuille2D_1s(const Point<2> coord) -> Point<2> { return poiseuill
 namespace euler {}
 
 namespace poisson {
-// todo: add reference
-///
+/// Solution for a Debye-Hueckel approximation as defined in Chai08 as Example 1
 /// \param x Position
 /// \return Solution as given by CHAI08
 inline auto poissonCHAI08_1(const Point<1> x) -> Point<1> {
@@ -81,8 +80,7 @@ inline auto poissonCHAI08_1(const Point<1> x) -> Point<1> {
   return Point<1>((exp_pK - 1.0) / (exp_pK - exp_mK) * exp_mKx + (1.0 - exp_mK) / (exp_pK - exp_mK) * exp_pKx);
 }
 
-// todo: add reference
-///
+/// For a homogeneous Helmholtz equation as defined in Chai08 as Example 2
 /// \param x Position
 /// \return Solution as given by CHAI08
 inline auto poissonCHAI08_2(const Point<2> x) -> Point<2> {
@@ -91,6 +89,10 @@ inline auto poissonCHAI08_2(const Point<2> x) -> Point<2> {
 
   return {gcem::cos(M_PI * x[0]) * gcem::sinh(mu * (1 - x[1])) / gcem::sinh(mu), 0};
 }
+
+/// Giving the solution for a reaction 1D catalyst slab
+/// \param x
+/// \return
 inline auto poissonSimpleDiffReaction(const Point<1> x) -> Point<1> {
   static constexpr GDouble th = 1.0;
   return Point<1>(gcem::cosh(th * (1.0 - x[0])) / gcem::cosh(th));

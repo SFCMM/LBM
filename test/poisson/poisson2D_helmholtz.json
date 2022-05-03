@@ -41,7 +41,7 @@
     "maxSteps": 2000000,
     "info_interval": 1000,
     "solution_interval": 10000,
-    "convergence": 2E-14,
+    "convergence": 3.5E-14,
     "errorGRE": 2.3E-5,
     "assumeAxisAligned": true,
     "boundary": {

@@ -63,7 +63,7 @@
       "binaryDir": "${sourceDir}/build/release-gnu",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_FLAGS": "$env{APP_GNU_DEFAULT_FLAGS} -O3 -fno-rtti -fno-exceptions -fomit-frame-pointer -flto"
+        "CMAKE_CXX_FLAGS": "$env{APP_GNU_DEFAULT_FLAGS} -O3 -fexceptions -fomit-frame-pointer -flto"
       }
     },
     {
