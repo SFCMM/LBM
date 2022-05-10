@@ -271,13 +271,25 @@ class CartesianGridGen : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       }
     }
 
-    cerr0 << "actual nodal extent: " << actualExtent.str() << std::endl;
+    // check if we are on a square domain
+    GBool allExtendIdentical = true;
+    for(GInt dir = 0; dir < NDIM && allExtendIdentical; ++dir) {
+      for(GInt dirB = dir + 1; dirB < NDIM; ++dirB) {
+        if(!approx(actualExtent.min(dir), actualExtent.min(dirB)) || !approx(actualExtent.max(dir), actualExtent.max(dirB))) {
+          allExtendIdentical = false;
+          break;
+        }
+      }
+    }
+
+    cerr0 << "actual nodal extent: " << actualExtent.str() << " identical: " << std::boolalpha << allExtendIdentical << std::endl;
     GDouble transformationValue = boundingBox().max(alignDir) / (actualExtent.max(alignDir) - actualExtent.min(alignDir));
 
 
     for(GInt cellId = m_levelOffsets[maxLvl()].begin; cellId < m_levelOffsets[maxLvl()].end; ++cellId) {
       for(GInt dir = 0; dir < NDIM; ++dir) {
-        if(dir == alignDir) {
+        // a square domain can be aligned for all directions
+        if(dir == alignDir || allExtendIdentical) {
           center(cellId, dir) =
               center(cellId, dir) * transformationValue - (transformationValue * actualExtent.max(dir) - boundingBox().max(dir));
         } else {

@@ -194,7 +194,7 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
              const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& vars) override {
     // recalculate density because fold is post streaming!
     calcDensity<NDIM, NDIST, EQ>(m_extrapolationCellId, fold, vars);
-    
+
     for(GUint id = 0; id < m_bndCells.size(); ++id) {
       const GInt cellId              = m_bndCells[id];
       const GInt extraPolationCellId = m_extrapolationCellId[id];

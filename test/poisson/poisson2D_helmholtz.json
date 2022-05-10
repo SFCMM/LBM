@@ -1,8 +1,8 @@
 {
   "dim": 2,
-  "partitionLevel": 9,
-  "uniformLevel": 9,
-  "maxRfnmtLvl": 9,
+  "partitionLevel": 7,
+  "uniformLevel": 7,
+  "maxRfnmtLvl": 7,
   "maxNoCells": 1000000,
   "outputDir": "out",
   "gridFileName": "gridD",
