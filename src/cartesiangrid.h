@@ -500,6 +500,10 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 
   auto totalSize() const -> GInt { return size() + m_noGhostsCells; }
 
+  auto isBndryCell(const GInt cellId) const -> GBool {
+    return property(cellId, CellProperties::bndry);
+  }
+
  private:
   void setProperties() {
     for(GInt cellId = 0; cellId < noCells(); ++cellId) {

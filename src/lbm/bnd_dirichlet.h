@@ -6,6 +6,7 @@
 #include "bnd_interface.h"
 #include "common/surface.h"
 #include "constants.h"
+#include "equilibrium_func.h"
 #include "moments.h"
 #include "variables.h"
 
@@ -191,9 +192,13 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
 
   void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>&   fold,
              const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& vars) override {
+    // recalculate density because fold is post streaming!
+    calcDensity<NDIM, NDIST, EQ>(m_extrapolationCellId, fold, vars);
+    
     for(GUint id = 0; id < m_bndCells.size(); ++id) {
       const GInt cellId              = m_bndCells[id];
       const GInt extraPolationCellId = m_extrapolationCellId[id];
+      vars(cellId, VAR::electricPotential()) = m_value[id][0];
 
       for(GInt dist = 0; dist < NDIST - 1; ++dist) {
         const GDouble weight = LBMethod<LBTYPE>::m_weights[dist];
@@ -202,9 +207,6 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
       }
       fold(cellId, NDIST - 1) = (LBMethod<LBTYPE>::m_weights[NDIST - 1] - 1.0) * m_value[id][0] + fold(extraPolationCellId, NDIST - 1)
                                 - (LBMethod<LBTYPE>::m_weights[NDIST - 1] - 1.0) * vars(extraPolationCellId, VAR::electricPotential());
-      //      vars(cellId, VAR::electricPotential()) = m_value[id];
-      //      cerr0 << "used " << extraPolationCellId <<": " << vars(extraPolationCellId, VAR::electricPotential()) << " vs " << tmpv <<
-      //      std::endl;
     }
   }
 
