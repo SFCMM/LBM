@@ -7,6 +7,7 @@
   "maxNoCells": 1000000,
   "outputDir": "out",
   "gridFileName": "gridD",
+  "alignNodesWithSurface": true,
   "output": {
     "format": "VTKB",
     "cellFilter": "leafCells",
@@ -33,7 +34,7 @@
     "type": "lbm",
     "equation": "poisson",
     "model": "D2Q5",
-    "relaxation": 0.9,
+    "relaxation": 1.0,
     "maxSteps": 10000,
     "info_interval": 10,
     "solution_interval": 1000,

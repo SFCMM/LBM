@@ -268,22 +268,14 @@ auto LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::convergenceCondition() -> GBool {
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initialCondition() {
   // init to zero:
-  for(GInt cellId = 0; cellId < allCells(); ++cellId) {
-    for(const auto dir : VAR::velocities()) {
-      m_vars[cellId * NVAR + dir]    = 0;
-      m_varsold[cellId * NVAR + dir] = 0;
-    }
-    if(EQ == LBEquationType::Navier_Stokes) {
-      rho(cellId) = 1.0;
-    } else if(EQ == LBEquationType::Poisson || EQ == LBEquationType::Navier_Stokes_Poisson) {
-      electricPotential(cellId) = 0.0;
-    }
-  }
+  std::fill(m_vars.begin(), m_vars.end(), 0);
+  std::fill(m_varsold.begin(), m_varsold.end(), 0);
   initBndryValues();
 
   for(GInt cellId = 0; cellId < allCells(); ++cellId) {
     if(EQ == LBEquationType::Navier_Stokes) {
       // assuming initial set velocity (either 0 or bndry value) and density 1
+      rho(cellId) = 1.0;
       for(GInt dist = 0; dist < NDIST; ++dist) {
         eq::defaultEq<LBTYPE>(feq(cellId), rho(cellId), velocity(cellId));
         f(cellId, dist)    = feq(cellId, dist);
@@ -614,7 +606,9 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::collisionStep() {
       if constexpr(EQ == LBEquationType::Poisson) {
         if(dist != NDIST - 1) {
           static const GDouble diffusivity = METH::m_poissonAlpha * gcem::pow(m_latticeVelocity, 2) * (0.5 - m_relaxTime) * m_dt;
-          f(cellId, dist) += m_dt * diffusivity * METH::m_poissonWeights[dist] * poisson_D * poisson_D * electricPotential(cellId);
+          // rhs of poisson equation
+          const GDouble rhs = poisson_D * poisson_D * electricPotential(cellId);
+          f(cellId, dist) += m_dt * diffusivity * METH::m_poissonWeights[dist] * rhs;
         }
       }
     }

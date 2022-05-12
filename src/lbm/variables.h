@@ -32,6 +32,9 @@ class LBMVariables {
   /// Get an array of all the velocities for iterations
   /// \return Array of velocity position in variable array
   static constexpr auto velocities() -> std::array<GInt, NDIM> {
+    if(EQ == LBEquationType::Poisson) {
+      TERMM(-1, "Invalid variable used");
+    }
     if constexpr(NDIM == 1) {
       return {U()};
     }
@@ -48,6 +51,9 @@ class LBMVariables {
   /// \param dir Axis direction (0 = x, 1=y, 2=z...)
   /// \return Position of velocity in axis direction in the variable array.
   static constexpr auto velocity(const GInt dir) -> GInt {
+    if(EQ == LBEquationType::Poisson) {
+      TERMM(-1, "Invalid variable used");
+    }
     if(dir == 0) {
       return U();
     }
@@ -66,9 +72,9 @@ class LBMVariables {
   /// Get the position of the density.
   /// \return Position of rho within the variable array.
   static constexpr auto rho() -> GInt {
-    //    if(EQ == LBEquation::Poisson) {
-    //      TERMM(-1, "Invalid variable used");
-    //    }
+    if(EQ == LBEquationType::Poisson) {
+      TERMM(-1, "Invalid variable used");
+    }
     return velocity(NDIM - 1) + 1;
   }
 
