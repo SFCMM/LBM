@@ -64,33 +64,44 @@ inline auto calcVelocity(const GInt cellId, const std::function<GDouble&(GInt, G
 /// \tparam NDIM Dimensionality
 /// \tparam NDIST Number of distributions
 /// \tparam EQ equation
+/// \param cellId List of cells for which to calculate the density
+/// \param fold Distribution to use
+/// \param vars Variable storage
+template <GInt NDIM, GInt NDIST, LBEquationType EQ>
+inline void calcDensity(const GInt cellId, const std::function<GDouble&(GInt, GInt)>& fold,
+                        const std::function<GDouble&(GInt, GInt)>& vars) {
+  if(EQ == LBEquationType::Navier_Stokes) {
+    vars(cellId, LBMVariables<EQ, NDIM>::rho()) = fold(cellId, 0);
+    for(GInt dist = 1; dist < NDIST; ++dist) {
+      vars(cellId, LBMVariables<EQ, NDIM>::rho()) += fold(cellId, dist);
+    }
+
+  } else if(EQ == LBEquationType::Poisson) {
+    using METH = LBMethod<getLBMethodType(NDIM, NDIST)>;
+
+    GDouble acc_f = 0;
+    for(GInt dist = 0; dist < NDIST - 1; ++dist) {
+      acc_f += fold(cellId, dist);
+    }
+    vars(cellId, LBMVariables<EQ, NDIM>::electricPotential()) = 1.0 / (1.0 - METH::m_weights[NDIST - 1]) * acc_f;
+
+  } else {
+    TERMM(-1, "Invalid LBEquation");
+  }
+}
+
+/// Calculate the density for a given set of cells.
+/// \tparam NDIM Dimensionality
+/// \tparam NDIST Number of distributions
+/// \tparam EQ equation
 /// \param cells List of cells for which to calculate the density
 /// \param fold Distribution to use
 /// \param vars Variable storage
 template <GInt NDIM, GInt NDIST, LBEquationType EQ>
 inline void calcDensity(const std::vector<GInt>& cells, const std::function<GDouble&(GInt, GInt)>& fold,
                         const std::function<GDouble&(GInt, GInt)>& vars) {
-  if(EQ == LBEquationType::Navier_Stokes) {
-    for(const GInt cellId : cells) {
-      vars(cellId, LBMVariables<EQ, NDIM>::rho()) = fold(cellId, 0);
-      for(GInt dist = 1; dist < NDIST; ++dist) {
-        vars(cellId, LBMVariables<EQ, NDIM>::rho()) += fold(cellId, dist);
-        //        cerr0 << "dist" << dist << " ";
-      }
-      //      cerr0 << std::endl;
-    }
-  } else if(EQ == LBEquationType::Poisson) {
-    using METH = LBMethod<getLBMethodType(NDIM, NDIST)>;
-
-    for(const GInt cellId : cells) {
-      GDouble acc_f = 0;
-      for(GInt dist = 0; dist < NDIST - 1; ++dist) {
-        acc_f += fold(cellId, dist);
-      }
-      vars(cellId, LBMVariables<EQ, NDIM>::electricPotential()) = 1.0 / (1.0 - METH::m_weights[NDIST - 1]) * acc_f;
-    }
-  } else {
-    TERMM(-1, "Invalid LBEquation");
+  for(const GInt cellId : cells) {
+    calcDensity<NDIM, NDIST, EQ>(cellId, fold, vars);
   }
 }
 

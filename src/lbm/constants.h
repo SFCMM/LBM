@@ -1,6 +1,9 @@
 #ifndef LBM_CONSTANTS_H
 #define LBM_CONSTANTS_H
 
+#include "sfcmm_common.h"
+
+
 enum class LBMethodType;
 template <LBMethodType LBTYPE>
 class LBMethod;
@@ -270,7 +273,7 @@ class LBMethod<LBMethodType::D2Q5> {
   static constexpr std::array<GDouble, 5> m_weights = {1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 6.0, 1.0 / 3.0};
 
   // see equation 2.3 in CHAI08
-  static constexpr GDouble m_poissonAlpha = 1.0 / 2.0; // 2.0 / 3.0; // test gave 1/3
+  static constexpr GDouble m_poissonAlpha = 1.0 / 2.0;
   // see CHAI08
   static constexpr std::array<GDouble, 5> m_poissonWeights = {0.25, 0.25, 0.25, 0.25, 0.0};
 

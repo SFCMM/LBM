@@ -125,7 +125,9 @@ class LBMBnd_NeumannNEEM : public LBMBnd_DirichletNEEM<DEBUG_LEVEL, LBTYPE, EQ> 
     for(GInt id = 0; id < this->no_cells(); ++id) {
       const GInt extrapolationId = this->extrapolationCellId(id);
 
-      const GInt    ex2Id = this->neighbor(extrapolationId, this->extrapolationDir(id));
+      const GInt ex2Id = this->neighbor(extrapolationId, this->extrapolationDir(id));
+      calcDensity<NDIM, NDIST, EQ>(ex2Id, fold, vars);
+
       VectorD<NVAR> temp;
       temp[0]         = (4.0 * vars(extrapolationId, VAR::electricPotential()) - vars(ex2Id, VAR::electricPotential()) + m_gradValue) / 3.0;
       this->value(id) = temp;

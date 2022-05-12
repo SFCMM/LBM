@@ -1,8 +1,8 @@
 {
   "dim": 2,
-  "partitionLevel": 7,
-  "uniformLevel": 7,
-  "maxRfnmtLvl": 7,
+  "partitionLevel": 8,
+  "uniformLevel": 8,
+  "maxRfnmtLvl": 8,
   "maxNoCells": 1000000,
   "outputDir": "out",
   "gridFileName": "gridD",
@@ -42,7 +42,7 @@
     "info_interval": 1000,
     "solution_interval": 10000,
     "convergence": 3.5E-14,
-    "errorGRE": 2.3E-5,
+    "errorGRE": 3.4E-6,
     "assumeAxisAligned": true,
     "boundary": {
       "line": {
