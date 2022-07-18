@@ -57,6 +57,9 @@
 - [LBM][BUG] Periodic bnd doesn't work always (see step_ns_bug1.json)
 - Allow in IO functions to set output variable types
 - in test script check if bin is current
+- update to gnu 11
+- update to clang 11
+- add intel compiler option
 
 ## moved
 

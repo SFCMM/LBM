@@ -9,6 +9,7 @@ if [[ -z "${SFCMM_LBM_BIN}" ]]; then
   exit
 else
   BINPATH="${SFCMM_LBM_BIN}"
+  echo "Using the binary:" "$BINPATH"
 fi
 
 DEFAULT_OMP_THREADS=4
