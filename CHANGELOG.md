@@ -56,6 +56,7 @@
 - [LBM] add zou-he bnd cnd
 - [LBM][BUG] Periodic bnd doesn't work always (see step_ns_bug1.json)
 - Allow in IO functions to set output variable types
+- in test script check if bin is current
 
 ## moved
 
@@ -79,23 +80,21 @@
 - [IO] set output format for the solvers
 - [IO] set output variables for the solvers
 - [IO] check in output functions if fileformat ending is already included
+- add more openmp
+- allow comments in configuration files
 
 # V0.0.2
 
 ## Planned
-
 - output analytical solution if wanted
 - check in periodic boundaries if all cells have been linked
 - get boundary const access to grid information
 - pass all surfaces to the boundary manager
 - store reference to the surfaces in each boundary
-- allow comments in configuration files
 - refactor forcing setup
 - make types definitions in include/common/constant
 - fix keys in unused config value detection
 - add way to just iterate over leaf cells
-
-- add more openmp
 - in cartesiangrid don't use configuration.json but the accessor to mark the unused values correctly
 - reduce todos below 100
 
