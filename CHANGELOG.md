@@ -56,7 +56,9 @@
 - [LBM] add zou-he bnd cnd
 - [LBM][BUG] Periodic bnd doesn't work always (see step_ns_bug1.json)
 - Allow in IO functions to set output variable types
-- in test script check if bin is current
+- [test script] in test script check if bin is current
+- [test script] run multiple bins 
+- [test script] backup binary for each run
 - update to gnu 11
 - update to clang 11
 - add intel compiler option
@@ -103,13 +105,10 @@
 
 ### Working on:
 
-- fix exprtk warnings
 
 - [IMPROVEMENT][LBM] generalize NEEM boundary condition
 - make neem boundary condition available for NS
 - [IMPROVEMENT][LBM] simplify boundary by not making it necessary to copy the cellIds for each boundary separately
-
-- [BUG][LBM][POISSON] fix poisson method to allow changes of relaxation e.g. allow change of the value c
 
 ## Done:
 

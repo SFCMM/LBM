@@ -1,6 +1,7 @@
 #ifndef LBM_BND_PERIODIC_H
 #define LBM_BND_PERIODIC_H
 #include "bnd_interface.h"
+#include "bnd_cell.h"
 #include "constants.h"
 #include "equilibrium_func.h"
 #include "variables.h"
