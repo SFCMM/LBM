@@ -59,6 +59,7 @@
 - [test script] in test script check if bin is current
 - [test script] run multiple bins 
 - [test script] backup binary for each run
+- [test script] run test on remote host
 - update to gnu 11
 - update to clang 11
 - add intel compiler option
