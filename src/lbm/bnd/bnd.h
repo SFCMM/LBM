@@ -33,12 +33,20 @@ class LBMBndManager : private Configuration {
   auto operator=(const LBMBndManager&) -> LBMBndManager& = delete;
   auto operator=(LBMBndManager&&) -> LBMBndManager&      = delete;
 
+  /// Initialise the boundary conditions.
+  /// \param vars Variable memory access
   void initCndBnd(const std::function<GDouble&(GInt, GInt)>& vars) {
     for(const auto& bndry : m_bndrys) {
       bndry->initCnd(vars);
     }
   }
 
+  // todo: fix description
+  /// Apply boundary condition before the
+  /// \param f
+  /// \param fold
+  /// \param feq
+  /// \param vars
   void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
                 const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
     for(const auto& bndry : m_bndrys) {
@@ -46,6 +54,11 @@ class LBMBndManager : private Configuration {
     }
   }
 
+  /// Apply boundary conditions
+  /// \param f
+  /// \param fold
+  /// \param feq
+  /// \param vars
   void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
     for(const auto& bndry : m_bndrys) {
@@ -132,6 +145,9 @@ class LBMBndManager : private Configuration {
 
 
  private:
+  /// Handle dummy boundary condition i.e. boundary condition that are set to be not generated
+  /// \param properties Configuration properties
+  /// \return Bndry was handled as a dummy boundary condition
   auto handleDummyBnd(Surface<DEBUG_LEVEL, dim(LBTYPE)>& /*surf*/, const json& properties) -> GBool {
     // actually generate a boundary or just create a dummy e.g. the boundary is handled in a non standard way!
     const auto generateBndry = config::opt_config_value<GBool>(properties, "generateBndry", true);
@@ -144,6 +160,10 @@ class LBMBndManager : private Configuration {
     return false;
   }
 
+  /// Add a boundary condition to a surface
+  /// \param bnd boundaryType to be added
+  /// \param properties the configuration properties of the boundary condition
+  /// \param surf the surface the boundary condition is to be added to
   void addBndry(const BndryType bnd, const json& properties, Surface<DEBUG_LEVEL, dim(LBTYPE)>& surf) {
     if(handleDummyBnd(surf, properties)) {
       return;
@@ -181,6 +201,10 @@ class LBMBndManager : private Configuration {
     }
   }
 
+  /// Add a periodic boundary condition to the surface with the parameters provided by the properties
+  /// \param surfA Surface the boundary should be applied to
+  /// \param surfB Surface periodically connected to the first surface
+  /// \param properties The configuration properties of the boundary condition
   void addPeriodicBndry(const BndryType bnd, const json& properties, Surface<DEBUG_LEVEL, dim(LBTYPE)>& surfA,
                         Surface<DEBUG_LEVEL, dim(LBTYPE)>& surfB) {
     if(handleDummyBnd(surfA, properties)) {
@@ -203,7 +227,9 @@ class LBMBndManager : private Configuration {
     }
   }
 
-
+  /// Add a wall boundary condition to the surface with the parameters provided by the properties
+  /// \param surf Surface the boundary should be applied to
+  /// \param properties The configuration properties of the boundary condition
   void addWallBndry(Surface<DEBUG_LEVEL, dim(LBTYPE)>& surf, const json& properties) {
     if(handleDummyBnd(surf, properties)) {
       return;
