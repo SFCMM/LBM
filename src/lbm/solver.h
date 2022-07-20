@@ -1,12 +1,12 @@
 #ifndef LBM_SOLVER_H
 #define LBM_SOLVER_H
 #include <sfcmm_common.h>
-#include "bnd.h"
 #include "cartesiangrid.h"
 #include "cell_filter.h"
 #include "common/configuration.h"
 #include "constants.h"
 #include "interface/solver_interface.h"
+#include "lbm/bnd/bnd.h"
 #include "postprocessing.h"
 #include "variables.h"
 

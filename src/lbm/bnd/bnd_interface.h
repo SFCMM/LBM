@@ -1,7 +1,7 @@
 #ifndef LBM_BND_INTERFACE_H
 #define LBM_BND_INTERFACE_H
-#include <sfcmm_common.h>
-#include "constants.h"
+#include "lbm/constants.h"
+#include "sfcmm_common.h"
 
 class LBMBndInterface {
  public:

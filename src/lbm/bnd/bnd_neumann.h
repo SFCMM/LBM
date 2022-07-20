@@ -1,13 +1,13 @@
 #ifndef LBM_BND_NEUMANN_H
 #define LBM_BND_NEUMANN_H
 #include <json.h>
-#include <sfcmm_common.h>
-#include "analytical_solutions.h"
 #include "bnd_dirichlet.h"
 #include "bnd_interface.h"
 #include "common/surface.h"
-#include "constants.h"
-#include "variables.h"
+#include "lbm/analytical_solutions.h"
+#include "lbm/constants.h"
+#include "lbm/variables.h"
+#include "sfcmm_common.h"
 
 using json = nlohmann::json;
 

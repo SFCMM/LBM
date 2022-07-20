@@ -1,8 +1,8 @@
 #ifndef LBM_BND_CELL_H
 #define LBM_BND_CELL_H
 
-#include <sfcmm_common.h>
-#include "constants.h"
+#include "lbm/constants.h"
+#include "sfcmm_common.h"
 
 template <LBMethodType LBTYPE>
 class LBMBndCell {

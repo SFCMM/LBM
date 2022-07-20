@@ -1,15 +1,15 @@
 #ifndef LBM_BND_H
 #define LBM_BND_H
 
-#include <sfcmm_common.h>
 #include "bnd_dirichlet.h"
-#include "bnd_neumann.h"
 #include "bnd_in_out.h"
 #include "bnd_interface.h"
+#include "bnd_neumann.h"
 #include "bnd_periodic.h"
 #include "bnd_wall.h"
 #include "common/configuration.h"
 #include "common/surface.h"
+#include "sfcmm_common.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, GBool TANGENTIALVELO>
 class LBMBnd_wallBB;

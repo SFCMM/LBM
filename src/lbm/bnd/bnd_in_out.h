@@ -2,9 +2,9 @@
 #define LBM_BND_IN_OUT_H
 #include "bnd_interface.h"
 #include "common/surface.h"
-#include "constants.h"
-#include "equilibrium_func.h"
-#include "variables.h"
+#include "lbm/constants.h"
+#include "lbm/equilibrium_func.h"
+#include "lbm/variables.h"
 
 // Antibounceback pressure boundary condition
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>

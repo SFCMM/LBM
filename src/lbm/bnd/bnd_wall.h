@@ -1,8 +1,8 @@
 #ifndef LBM_BND_WALL_H
 #define LBM_BND_WALL_H
 #include "bnd_interface.h"
-#include "constants.h"
-#include "moments.h"
+#include "lbm/constants.h"
+#include "lbm/moments.h"
 
 // todo: remove!
 template <LBMethodType LBTYPE, GBool TANGENTIALVELO>
