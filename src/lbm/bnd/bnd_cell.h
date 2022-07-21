@@ -7,7 +7,9 @@
 template <LBMethodType LBTYPE>
 class LBMBndCell {
  public:
-  LBMBndCell(const GInt mappedCellId, const VectorD<dim(LBTYPE)>& normal) : m_normal(normal), m_mappedCellId(mappedCellId) {}
+  LBMBndCell(const GInt mappedCellId, const VectorD<dim(LBTYPE)>& normal) : m_normal(normal), m_mappedCellId(mappedCellId) {
+    m_outsideDir.fill(INVALID_DIR);
+  }
   virtual ~LBMBndCell() = default;
 
   LBMBndCell(const LBMBndCell&)                            = default;
@@ -16,6 +18,13 @@ class LBMBndCell {
   virtual auto operator=(LBMBndCell&&) -> LBMBndCell&      = delete;
 
   virtual void init() {
+    // precalculate weight and bndIndex
+    for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
+      // determine if the dist points into the outside normal direction of bndry
+      if(inDirection<dim(LBTYPE)>(normal(), LBMethod<LBTYPE>::m_dirs[dist])) {
+        m_outsideDir[dist] = dist;
+      }
+    }
   }
 
   /** Map the bndCell to the cellId of the local cell storage
@@ -31,12 +40,12 @@ class LBMBndCell {
   /** Return the orientation pointing to the outside of the geometry
    * @return Orientation pointing outside
    */
-  [[nodiscard]] auto dir() const -> std::byte { return m_dir; }
+  [[nodiscard]] auto outsideDir(const GInt dist) const -> GInt { return m_outsideDir[dist]; }
 
  private:
-  VectorD<dim(LBTYPE)> m_normal;
-  GInt                 m_mappedCellId = -1;
-  std::byte            m_dir = std::byte(255);
+  VectorD<dim(LBTYPE)>              m_normal;
+  GInt                              m_mappedCellId = -1;
+  std::array<GInt, noDists(LBTYPE)> m_outsideDir;
 };
 
 #endif // LBM_BND_CELL_H

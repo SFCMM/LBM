@@ -17,22 +17,17 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
 
   void init() override {
     LBMBndCell<LBTYPE>::init();
-
-    // precalculate weight and bndIndex
-    for(GInt dist = 0; dist < noDists(LBTYPE); ++dist) {
-      // determine if the dist points into the outside normal direction of bndry
-      if(inDirection<dim(LBTYPE)>(normal(), LBMethod<LBTYPE>::m_dirs[dist])) {
-        m_bndIndex[m_noSetDists] = dist;
-        ++m_noSetDists;
-      }
-    }
   }
 
   void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold) {
     // iterate over the distributions that need to be set
-    for(GInt id = 0; id < m_noSetDists; ++id) {
+    for(GInt id = 0; id < noDists(LBTYPE); ++id) {
       // dists that point into the outside direction
-      const GInt dist = m_bndIndex[id];
+      const GInt dist = outsideDir(id);
+      if(dist == INVALID_DIR) {
+        continue;
+      }
+
       // dist in reflected/opposite direction i.e. to the inside of the wall
       GInt oppositeDist = LBMethod<LBTYPE>::oppositeDist(dist);
 
@@ -53,11 +48,16 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
 
       m_tangentialVelo.fill(0);
       const auto& _normal = normal();
-      for(GInt id = 0; id < m_noSetDists; ++id) {
-        const GInt           dist = LBMethod<LBTYPE>::oppositeDist(m_bndIndex[id]);
+      for(GInt id = 0; id < noDists(LBTYPE); ++id) {
+        const GInt dist = outsideDir(id);
+        if(dist == INVALID_DIR) {
+          continue;
+        }
+
+        const GInt           insideDir = LBMethod<LBTYPE>::oppositeDist(outsideDir(dist));
         VectorD<dim(LBTYPE)> dir;
         for(GInt axis = 0; axis < dim(LBTYPE); ++axis) {
-          dir[axis] = LBMethod<LBTYPE>::m_dirs[dist][axis];
+          dir[axis] = LBMethod<LBTYPE>::m_dirs[insideDir][axis];
         }
 
         VectorD<dim(LBTYPE)> tangentialVec;
@@ -82,20 +82,20 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
     }
   }
 
-  // todo: fix me
   //  deleted constructors not needed
-  //  LBMBndCell_wallBB(const LBMBndCell_wallBB&) = delete;
-  //  LBMBndCell_wallBB(LBMBndCell_wallBB&&)      = delete;
-  //  auto operator=(const LBMBndCell_wallBB&) -> LBMBndCell_wallBB& = delete;
-  //  auto operator=(LBMBndCell_wallBB&&) -> LBMBndCell_wallBB& = delete;
+  LBMBndCell_wallBB(const LBMBndCell_wallBB&)                    = default;
+  LBMBndCell_wallBB(LBMBndCell_wallBB&&)                         = delete;
+  auto operator=(const LBMBndCell_wallBB&) -> LBMBndCell_wallBB& = delete;
+  auto operator=(LBMBndCell_wallBB&&) -> LBMBndCell_wallBB&      = delete;
 
  private:
   using LBMBndCell<LBTYPE>::mapped;
   using LBMBndCell<LBTYPE>::normal;
+  using LBMBndCell<LBTYPE>::outsideDir;
 
   std::array<GDouble, noDists(LBTYPE) * static_cast<GInt>(TANGENTIALVELO)> m_tangentialVelo;
-  std::array<GInt, noDists(LBTYPE)>                                        m_bndIndex;
-  GInt                                                                     m_noSetDists = 0;
+  //  std::array<GInt, noDists(LBTYPE)>                                        m_bndIndex;
+  //  GInt                                                                     m_noSetDists = 0;
 };
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, GBool TANGENTIALVELO>
