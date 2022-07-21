@@ -16,7 +16,6 @@ class LBMBndCell {
   virtual auto operator=(LBMBndCell&&) -> LBMBndCell&      = delete;
 
   virtual void init() {
-    // calculate local bndry normal
   }
 
   /** Map the bndCell to the cellId of the local cell storage

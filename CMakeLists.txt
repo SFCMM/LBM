@@ -28,7 +28,7 @@ add_executable(lbm
         src/common/term.h src/interface/grid_interface.h src/gridgenerator/cartesiangrid_generation.h
         src/lbm/solver.h src/lbm/constants.h src/lbm/variables.h src/lbm/bnd/bnd.h src/common/surface.h
         src/lbm/solverExe.h src/common/configuration.h src/lbm/bnd/bnd_wall.h src/lbm/bnd/bnd_interface.h
-        src/lbm/bnd/bnd_in_out.h src/lbm/bnd/bnd_periodic.h src/postprocessing.h src/postprocessing_cartesian.h
+        src/lbm/bnd/bnd_pressure.h src/lbm/bnd/bnd_periodic.h src/postprocessing.h src/postprocessing_cartesian.h
         src/lbm/lbm_postprocessing.h src/postprocessing_func.h src/common/line.h src/common/mesh.h
         src/lbm/bnd/bnd_dirichlet.h src/lbm/solver_inst_1d.cpp src/lbm/solver_inst_2d.cpp src/lbm/solver_inst_3d.cpp
         src/lbm/equilibrium_func.h

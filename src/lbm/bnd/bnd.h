@@ -2,10 +2,10 @@
 #define LBM_BND_H
 
 #include "bnd_dirichlet.h"
-#include "bnd_in_out.h"
 #include "bnd_interface.h"
 #include "bnd_neumann.h"
 #include "bnd_periodic.h"
+#include "bnd_pressure.h"
 #include "bnd_wall.h"
 #include "common/configuration.h"
 #include "common/surface.h"

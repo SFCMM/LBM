@@ -3,6 +3,7 @@
 #include "lbm/constants.h"
 #include "sfcmm_common.h"
 
+/// Interface for a boundary condition
 class LBMBndInterface {
  public:
   LBMBndInterface()          = default;
@@ -19,10 +20,9 @@ class LBMBndInterface {
                         const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) = 0;
   virtual void apply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
                      const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars)    = 0;
-
- private:
 };
 
+/// Dummy boundary condition
 class LBMBnd_dummy : public LBMBndInterface {
  public:
   LBMBnd_dummy()           = default;

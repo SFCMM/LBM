@@ -86,17 +86,18 @@ class Surface : public SurfaceInterface {
     //    }
 
     if(DEBUG_LEVEL >= Debug_Level::debug) {
-      //      if(m_nghbrIds.count(cellId) == 0){
-      //        cerr0<<"ERROR: Invalid cellId " << cellId << std::endl;
-      //        std::exit(-1);
-      //      }
       if(dir >= cartesian::maxNoNghbrsDiag<NDIM>()) {
         cerr0 << "ERROR: Invalid direction for " << cellId << " and " << dir << std::endl;
         std::exit(-1);
       }
+      const GInt neighborId = m_grid.neighbor(cellId, dir);
+      if(neighborId == INVALID_CELLID) {
+        cerr0 << "ERROR: Invalid neighborId " << neighborId << " in dir " << dir << std::endl;
+        std::exit(-1);
+      }
+      return neighborId;
     }
     return m_grid.neighbor(cellId, dir);
-    //    return m_nghbrIds.at(cellId)[dir];
   }
 
   // todo: probably not needed
