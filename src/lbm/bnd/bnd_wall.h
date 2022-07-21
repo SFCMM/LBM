@@ -15,9 +15,7 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
   //  LBMBndCell_wallBB(const GInt cellId) {}
   ~LBMBndCell_wallBB() override = default;
 
-  void init() override {
-    LBMBndCell<LBTYPE>::init();
-  }
+  void init() override { LBMBndCell<LBTYPE>::init(); }
 
   void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold) {
     // iterate over the distributions that need to be set
@@ -49,12 +47,13 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
       m_tangentialVelo.fill(0);
       const auto& _normal = normal();
       for(GInt id = 0; id < noDists(LBTYPE); ++id) {
+        // dists that point into the outside direction
         const GInt dist = outsideDir(id);
         if(dist == INVALID_DIR) {
           continue;
         }
 
-        const GInt           insideDir = LBMethod<LBTYPE>::oppositeDist(outsideDir(dist));
+        const GInt           insideDir = LBMethod<LBTYPE>::oppositeDist(dist);
         VectorD<dim(LBTYPE)> dir;
         for(GInt axis = 0; axis < dim(LBTYPE); ++axis) {
           dir[axis] = LBMethod<LBTYPE>::m_dirs[insideDir][axis];
@@ -76,7 +75,7 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
 
         // vector is parallel to the normal vector -> velocity = 0
         if(!parallel) {
-          m_tangentialVelo[dist] = tangentialDotDir * 2 * LBMethod<LBTYPE>::m_weights[dist] * 1.0 / lbm_cssq * tangentialVelo;
+          m_tangentialVelo[insideDir] = tangentialDotDir * 2 * LBMethod<LBTYPE>::m_weights[insideDir] * 1.0 / lbm_cssq * tangentialVelo;
         }
       }
     }
@@ -94,8 +93,6 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
   using LBMBndCell<LBTYPE>::outsideDir;
 
   std::array<GDouble, noDists(LBTYPE) * static_cast<GInt>(TANGENTIALVELO)> m_tangentialVelo;
-  //  std::array<GInt, noDists(LBTYPE)>                                        m_bndIndex;
-  //  GInt                                                                     m_noSetDists = 0;
 };
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, GBool TANGENTIALVELO>
@@ -114,10 +111,10 @@ class LBMBnd_wallBB : public LBMBndInterface {
   ~LBMBnd_wallBB() override = default;
 
   // deleted constructors not needed
-  LBMBnd_wallBB(const LBMBnd_wallBB&) = delete;
-  LBMBnd_wallBB(LBMBnd_wallBB&&)      = delete;
+  LBMBnd_wallBB(const LBMBnd_wallBB&)                    = delete;
+  LBMBnd_wallBB(LBMBnd_wallBB&&)                         = delete;
   auto operator=(const LBMBnd_wallBB&) -> LBMBnd_wallBB& = delete;
-  auto operator=(LBMBnd_wallBB&&) -> LBMBnd_wallBB& = delete;
+  auto operator=(LBMBnd_wallBB&&) -> LBMBnd_wallBB&      = delete;
 
   void init() {
     for(auto& bndCell : m_bndCells) {
@@ -237,10 +234,10 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
   ~LBMBnd_wallEq() override = default;
 
   // deleted constructors not needed
-  LBMBnd_wallEq(const LBMBnd_wallEq&) = delete;
-  LBMBnd_wallEq(LBMBnd_wallEq&&)      = delete;
+  LBMBnd_wallEq(const LBMBnd_wallEq&)                    = delete;
+  LBMBnd_wallEq(LBMBnd_wallEq&&)                         = delete;
   auto operator=(const LBMBnd_wallEq&) -> LBMBnd_wallEq& = delete;
-  auto operator=(LBMBnd_wallEq&&) -> LBMBnd_wallEq& = delete;
+  auto operator=(LBMBnd_wallEq&&) -> LBMBnd_wallEq&      = delete;
 
   void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
@@ -338,10 +335,10 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
   ~LBMBnd_wallNEEM() override = default;
 
   // deleted constructors not needed
-  LBMBnd_wallNEEM(const LBMBnd_wallNEEM&) = delete;
-  LBMBnd_wallNEEM(LBMBnd_wallNEEM&&)      = delete;
+  LBMBnd_wallNEEM(const LBMBnd_wallNEEM&)                    = delete;
+  LBMBnd_wallNEEM(LBMBnd_wallNEEM&&)                         = delete;
   auto operator=(const LBMBnd_wallNEEM&) -> LBMBnd_wallNEEM& = delete;
-  auto operator=(LBMBnd_wallNEEM&&) -> LBMBnd_wallNEEM& = delete;
+  auto operator=(LBMBnd_wallNEEM&&) -> LBMBnd_wallNEEM&      = delete;
 
   void init() {
     auto extrapolationDir = [&](const GDouble* normal) {
@@ -472,10 +469,10 @@ class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_
   ~LBMBnd_wallNEBB() override = default;
 
   // deleted constructors not needed
-  LBMBnd_wallNEBB(const LBMBnd_wallNEBB&) = delete;
-  LBMBnd_wallNEBB(LBMBnd_wallNEBB&&)      = delete;
+  LBMBnd_wallNEBB(const LBMBnd_wallNEBB&)                    = delete;
+  LBMBnd_wallNEBB(LBMBnd_wallNEBB&&)                         = delete;
   auto operator=(const LBMBnd_wallNEBB&) -> LBMBnd_wallNEBB& = delete;
-  auto operator=(LBMBnd_wallNEBB&&) -> LBMBnd_wallNEBB& = delete;
+  auto operator=(LBMBnd_wallNEBB&&) -> LBMBnd_wallNEBB&      = delete;
 
   void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
