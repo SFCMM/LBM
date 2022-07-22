@@ -13,8 +13,6 @@ class SurfaceInterface {
   [[nodiscard]] virtual auto normal_p(const GInt surfCellId) const -> const GDouble*               = 0;
   [[nodiscard]] virtual auto neighbor(const GInt cellId, const GInt dir) const -> GInt             = 0;
   [[nodiscard]] virtual auto property(const GInt cellId, const CellProperties prop) const -> GBool = 0;
-
- private:
 };
 
 // 3D: Surface 2D: Line 1D: Point
@@ -68,9 +66,7 @@ class Surface : public SurfaceInterface {
   [[nodiscard]] auto normal_p(const GInt surfCellId) const -> const GDouble* override { return &m_normal.at(surfCellId)[0]; }
 
 
-  [[nodiscard]] auto size() const -> GInt {
-    return m_cellId.size();
-  }
+  [[nodiscard]] auto size() const -> GInt { return m_cellId.size(); }
 
   auto center(const GInt cellId) const -> const VectorD<NDIM>& { return m_grid.center(cellId); }
 

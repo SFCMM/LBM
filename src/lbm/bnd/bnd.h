@@ -11,7 +11,7 @@
 #include "common/surface.h"
 #include "sfcmm_common.h"
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, GBool TANGENTIALVELO>
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ, GBool TANGENTIALVELO>
 class LBMBnd_wallBB;
 
 class LBMBnd_dummy;
@@ -241,10 +241,10 @@ class LBMBndManager : private Configuration {
       const GDouble tangentialV = config::opt_config_value(properties, "tangentialVelocity", 0.0);
       if(std::abs(tangentialV) > GDoubleEps) {
         logger << " wall bounce-back with tangential velocity" << std::endl;
-        m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<DEBUG_LEVEL, LBTYPE, true>>(&surf, properties));
+        m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<DEBUG_LEVEL, LBTYPE, EQ, true>>(&surf, properties));
       } else {
         logger << " wall bounce-back with no slip" << std::endl;
-        m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<DEBUG_LEVEL, LBTYPE, false>>(&surf, properties));
+        m_bndrys.emplace_back(std::make_unique<LBMBnd_wallBB<DEBUG_LEVEL, LBTYPE, EQ, false>>(&surf, properties));
       }
     } else if(model == "equilibrium") {
       logger << " wall equilibrium wet node model" << std::endl;

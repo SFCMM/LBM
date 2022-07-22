@@ -145,7 +145,10 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
   }
 
   void apply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
-             const std::function<GDouble&(GInt, GInt)>& /*vars*/) {}
+             const std::function<GDouble&(GInt, GInt)>& /*vars*/) {
+    // intentionally empty
+  }
+
 
  private:
   using LBMBndCell<LBTYPE>::mapped;

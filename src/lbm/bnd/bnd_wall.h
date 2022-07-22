@@ -75,7 +75,7 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
 
         // vector is parallel to the normal vector -> velocity = 0
         if(!parallel) {
-          m_tangentialVelo[insideDir] = tangentialDotDir * 2 * LBMethod<LBTYPE>::m_weights[insideDir] * 1.0 / lbm_cssq * tangentialVelo;
+          m_tangentialVelo[insideDir] = 2.0 / lbm_cssq * LBMethod<LBTYPE>::m_weights[insideDir] * tangentialVelo * tangentialDotDir;
         }
       }
     }
@@ -95,10 +95,15 @@ class LBMBndCell_wallBB : public LBMBndCell<LBTYPE> {
   std::array<GDouble, noDists(LBTYPE) * static_cast<GInt>(TANGENTIALVELO)> m_tangentialVelo;
 };
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, GBool TANGENTIALVELO>
-class LBMBnd_wallBB : public LBMBndInterface {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ, GBool TANGENTIALVELO>
+class LBMBnd_wallBB : public LBMBnd_DirichletBB<DEBUG_LEVEL, LBTYPE, EQ> {
+ private:
+  static constexpr GInt NDIM = LBMethod<LBTYPE>::m_dim;
+  static constexpr GInt NVAR = noVars<LBTYPE>(EQ);
+
  public:
-  LBMBnd_wallBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) {
+  LBMBnd_wallBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
+    : LBMBnd_DirichletBB<DEBUG_LEVEL, LBTYPE, EQ>(surf, properties, 0), m_bnd(surf) {
     for(const GInt cellId : surf->getCellList()) {
       m_bndCells.emplace_back(cellId, surf->normal(cellId));
     }
@@ -106,7 +111,7 @@ class LBMBnd_wallBB : public LBMBndInterface {
       m_tangentialVelo = config::required_config_value<GDouble>(properties, "tangentialVelocity");
       logger << "Setting tangentialVelocity " << m_tangentialVelo << std::endl;
     }
-    LBMBnd_wallBB<DEBUG_LEVEL, LBTYPE, TANGENTIALVELO>::init();
+    LBMBnd_wallBB<DEBUG_LEVEL, LBTYPE, EQ, TANGENTIALVELO>::init();
   }
   ~LBMBnd_wallBB() override = default;
 
@@ -117,6 +122,47 @@ class LBMBnd_wallBB : public LBMBndInterface {
   auto operator=(LBMBnd_wallBB&&) -> LBMBnd_wallBB&      = delete;
 
   void init() {
+    for(const GInt cellId : m_bnd->getCellList()) {
+      m_dirichletValue.emplace_back();
+      if constexpr(TANGENTIALVELO) {
+        static constexpr GDouble parallelRequirement = 10 * GDoubleEps;
+
+
+        const auto& _normal = VectorD<NDIM>(m_bnd->normal_p(cellId));
+        for(GInt id = 0; id < noDists(LBTYPE); ++id) {
+          // determine if the dist points into the outside normal direction of bndry
+          if(inDirection<dim(LBTYPE)>(_normal, LBMethod<LBTYPE>::m_dirs[id])) {
+            const GInt           insideDir = LBMethod<LBTYPE>::oppositeDist(id);
+            VectorD<dim(LBTYPE)> dir;
+            for(GInt axis = 0; axis < dim(LBTYPE); ++axis) {
+              dir[axis] = LBMethod<LBTYPE>::m_dirs[insideDir][axis];
+            }
+
+            VectorD<dim(LBTYPE)> tangentialVec;
+            if(dim(LBTYPE) == 2) {
+              tangentialVec[0] = _normal[1];
+              tangentialVec[1] = _normal[0];
+            } else {
+              TERMM(-1, "Not implemented");
+            }
+
+
+            const GDouble normalDotDir     = _normal.dot(dir);
+            const GDouble tangentialDotDir = tangentialVec.dot(dir);
+            const GDouble angle            = gcem::acos(normalDotDir / dir.norm());
+            const GBool   parallel         = std::abs(angle - PI) < parallelRequirement;
+
+            // vector is parallel to the normal vector -> velocity = 0
+            if(!parallel) {
+              m_dirichletValue.back()[insideDir] = m_tangentialVelo * tangentialDotDir;
+            }
+          }
+        }
+      } else {
+        m_dirichletValue.back().fill(0);
+      }
+    }
+
     for(auto& bndCell : m_bndCells) {
       bndCell.init();
       bndCell.setTangentialVelocity(m_tangentialVelo);
@@ -129,15 +175,52 @@ class LBMBnd_wallBB : public LBMBndInterface {
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
   void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
-             const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {
-    for(auto& bndCell : m_bndCells) {
-      bndCell.apply(fpre, fold);
+             const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) override {
+    //        for(auto& bndCell : m_bndCells) {
+    //          bndCell.apply(fpre, fold);
+    //        }
+
+    GInt index = 0;
+    for(const GInt cellId : m_bnd->getCellList()) {
+      //      cerr0 << index << " " << std::boolalpha << TANGENTIALVELO << std::endl;
+      // TANGENTIALVELO is false when the value is zero
+      LBMBnd_DirichletBB<DEBUG_LEVEL, LBTYPE, EQ>::template apply<!TANGENTIALVELO, true>(cellId, &m_dirichletValue[index][0], fpre, fold,
+                                                                                         feq, vars);
+      //      const auto& _normal = VectorD<NDIM>(m_bnd->normal_p(cellId));
+      //
+      //      // iterate over the distributions that need to be set
+      //      for(GInt id = 0; id < noDists(LBTYPE); ++id) {
+      //        // dists that point into the outside direction
+      ////        const GInt dist = outsideDir(id);
+      ////        if(dist == INVALID_DIR) {
+      ////          continue;
+      ////        }
+      //
+      //        if(inDirection<dim(LBTYPE)>(_normal, LBMethod<LBTYPE>::m_dirs[id])) {
+      //          // dist in reflected/opposite direction i.e. to the inside of the wall
+      //          GInt oppositeDist = LBMethod<LBTYPE>::oppositeDist(id);
+      //
+      //          // standard bounceback i.e. distribution that hits the wall is reflected to the opposite distribution direction
+      //          fold(cellId, oppositeDist) = fpre(cellId, id);
+      //
+      //          if constexpr(TANGENTIALVELO) {
+      //            // todo: actually calculate this
+      //            GDouble avg_density = 1.0;
+      //            fold(cellId, oppositeDist) += avg_density * 2.0 / lbm_cssq * LBMethod<LBTYPE>::m_weights[oppositeDist]*
+      //                    m_dirichletValue[index][oppositeDist];
+      //          }
+      //        }
+      //      }
+      ++index;
     }
   }
 
  private:
-  GDouble                                                m_tangentialVelo = 0.1;
-  std::vector<LBMBndCell_wallBB<LBTYPE, TANGENTIALVELO>> m_bndCells;
+  GDouble                                                                               m_tangentialVelo = 0.1;
+  std::vector<LBMBndCell_wallBB<LBTYPE, TANGENTIALVELO>>                                m_bndCells;
+  std::vector<std::array<GDouble, noDists(LBTYPE) * static_cast<GInt>(TANGENTIALVELO)>> m_dirichletValue;
+
+  const SurfaceInterface* m_bnd = nullptr;
 };
 
 /// Base class for wet node boundary conditions.
@@ -483,6 +566,7 @@ class LBMBnd_wallNEBB : public LBMBndInterface, public LBMBnd_wallWetnode<DEBUG_
              const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) override {
     m_apply(this, fpre, fold, feq, vars);
   }
+
 
  private:
   void apply_0(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>&   fold,

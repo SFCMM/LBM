@@ -25,13 +25,16 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
  public:
   LBMBnd_DirichletBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
     : m_bnd(surf), m_value(config::required_config_value<NVAR>(properties, "value")) {}
+  LBMBnd_DirichletBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties, const GDouble value) : m_bnd(surf) {
+    m_value.fill(value);
+  }
   ~LBMBnd_DirichletBB() override = default;
 
   // deleted constructors not needed
-  LBMBnd_DirichletBB(const LBMBnd_DirichletBB&) = delete;
-  LBMBnd_DirichletBB(LBMBnd_DirichletBB&&)      = delete;
+  LBMBnd_DirichletBB(const LBMBnd_DirichletBB&)                    = delete;
+  LBMBnd_DirichletBB(LBMBnd_DirichletBB&&)                         = delete;
   auto operator=(const LBMBnd_DirichletBB&) -> LBMBnd_DirichletBB& = delete;
-  auto operator=(LBMBnd_DirichletBB&&) -> LBMBnd_DirichletBB& = delete;
+  auto operator=(LBMBnd_DirichletBB&&) -> LBMBnd_DirichletBB&      = delete;
 
   void initCnd(const std::function<GDouble&(GInt, GInt)>& vars) override {
     for(const auto bndCellId : m_bnd->getCellList()) {
@@ -45,33 +48,45 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
   void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
-             const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {
+             const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) override {
     for(const auto bndCellId : m_bnd->getCellList()) {
-      for(GInt dist = 0; dist < NDIST - 1; ++dist) {
-        // skip setting dists that are orthogonal to the boundary
-        if(m_bnd->neighbor(bndCellId, dist) == INVALID_CELLID
-           && inDirection<NDIM>(VectorD<NDIM>(m_bnd->normal_p(bndCellId)), LBMethod<LBTYPE>::m_dirs[dist])) {
-          // dist in reflected/opposite direction i.e. to the inside of the bnd
-          GInt oppositeDist = LBMethod<LBTYPE>::oppositeDist(dist);
+      apply(bndCellId, m_value.data(), fpre, fold, feq, vars);
+    }
+  }
 
-          // standard bounceback i.e. distribution that hits the wall is reflected to the opposite distribution direction
-          fold(bndCellId, oppositeDist) = fpre(bndCellId, dist);
+  template <GBool VALZERO = false, GBool SCALAR = false>
+  void apply(const GInt bndCellId, const GDouble* values, const std::function<GDouble&(GInt, GInt)>& fpre,
+             const std::function<GDouble&(GInt, GInt)>& fold, const std::function<GDouble&(GInt, GInt)>& /*feq*/,
+             const std::function<GDouble&(GInt, GInt)>& /*vars*/) {
+    for(GInt dist = 0; dist < NDIST - 1; ++dist) {
+      // skip setting dists that are orthogonal to the boundary
+      if(m_bnd->neighbor(bndCellId, dist) == INVALID_CELLID
+         && inDirection<NDIM>(VectorD<NDIM>(m_bnd->normal_p(bndCellId)), LBMethod<LBTYPE>::m_dirs[dist])) {
+        // dist in reflected/opposite direction i.e. to the inside of the bnd
+        GInt oppositeDist = LBMethod<LBTYPE>::oppositeDist(dist);
 
-          // set dirichlet value
-          if(NVAR == 1 && EQ == LBEquationType::Poisson) {
-            // todo: calculate diffusivity
-            const GDouble            dt          = 0.00392158 / 8.0; // lvl11
-            static constexpr GDouble k           = 27.79;
-            const GDouble            diffusivity = -k * 0.335 * dt; // lvl11:2.0002 with k = 2 * 27.79 1.99
-            fold(bndCellId, oppositeDist) -= LBMethod<LBTYPE>::m_poissonWeights[dist] * diffusivity * m_value[0];
-            TERMM(-1, "this is incorrect!");
-          }
-          if(EQ == LBEquationType::Navier_Stokes) {
-            // todo: calculate density
-            const GDouble density = 1.0;
+        // standard bounceback i.e. distribution that hits the wall is reflected to the opposite distribution direction
+        fold(bndCellId, oppositeDist) = fpre(bndCellId, dist);
+
+        // set dirichlet value
+        if(NVAR == 1 && EQ == LBEquationType::Poisson && !VALZERO) {
+          // todo: calculate diffusivity
+          const GDouble            dt          = 0.00392158 / 8.0; // lvl11
+          static constexpr GDouble k           = 27.79;
+          const GDouble            diffusivity = -k * 0.335 * dt; // lvl11:2.0002 with k = 2 * 27.79 1.99
+          fold(bndCellId, oppositeDist) -= LBMethod<LBTYPE>::m_poissonWeights[dist] * diffusivity * m_value[0];
+          TERMM(-1, "this is incorrect!");
+        }
+        if(EQ == LBEquationType::Navier_Stokes && !VALZERO) {
+          // todo: calculate density
+          // todo: cleanup
+          const GDouble density = 1.0;
+          if(SCALAR) {
+            fold(bndCellId, oppositeDist) += density * 2.0 / lbm_cssq * LBMethod<LBTYPE>::m_weights[oppositeDist] * values[oppositeDist];
+          } else {
             for(GInt dir = 0; dir < NDIM; ++dir) {
-              fold(bndCellId, oppositeDist) += 2.0 / lbm_cssq * LBMethod<LBTYPE>::m_weights[oppositeDist] * density
-                                               * LBMethod<LBTYPE>::m_dirs[oppositeDist][dir] * m_value[dir];
+              fold(bndCellId, oppositeDist) += density * 2.0 / lbm_cssq * LBMethod<LBTYPE>::m_weights[oppositeDist]
+                                               * LBMethod<LBTYPE>::m_dirs[oppositeDist][dir] * values[dir];
             }
           }
         }
@@ -173,10 +188,10 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
   ~LBMBnd_DirichletNEEM() override = default;
 
   // deleted constructors not needed
-  LBMBnd_DirichletNEEM(const LBMBnd_DirichletNEEM&) = delete;
-  LBMBnd_DirichletNEEM(LBMBnd_DirichletNEEM&&)      = delete;
+  LBMBnd_DirichletNEEM(const LBMBnd_DirichletNEEM&)                    = delete;
+  LBMBnd_DirichletNEEM(LBMBnd_DirichletNEEM&&)                         = delete;
   auto operator=(const LBMBnd_DirichletNEEM&) -> LBMBnd_DirichletNEEM& = delete;
-  auto operator=(LBMBnd_DirichletNEEM&&) -> LBMBnd_DirichletNEEM& = delete;
+  auto operator=(LBMBnd_DirichletNEEM&&) -> LBMBnd_DirichletNEEM&      = delete;
 
   void initCnd(const std::function<GDouble&(GInt, GInt)>& vars) override {
     GInt id = 0;
@@ -196,8 +211,8 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
     calcDensity<NDIM, NDIST, EQ>(m_extrapolationCellId, fold, vars);
 
     for(GUint id = 0; id < m_bndCells.size(); ++id) {
-      const GInt cellId              = m_bndCells[id];
-      const GInt extraPolationCellId = m_extrapolationCellId[id];
+      const GInt cellId                      = m_bndCells[id];
+      const GInt extraPolationCellId         = m_extrapolationCellId[id];
       vars(cellId, VAR::electricPotential()) = m_value[id][0];
 
       for(GInt dist = 0; dist < NDIST - 1; ++dist) {
