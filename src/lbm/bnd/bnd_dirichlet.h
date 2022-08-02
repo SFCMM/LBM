@@ -25,7 +25,7 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
  public:
   LBMBnd_DirichletBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
     : m_bnd(surf), m_value(config::required_config_value<NVAR>(properties, "value")) {}
-  LBMBnd_DirichletBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties, const GDouble value) : m_bnd(surf) {
+  LBMBnd_DirichletBB(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& /*properties*/, const GDouble value) : m_bnd(surf) {
     m_value.fill(value);
   }
   ~LBMBnd_DirichletBB() override = default;

@@ -11,8 +11,6 @@
 #include "common/surface.h"
 #include "sfcmm_common.h"
 
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ, GBool TANGENTIALVELO>
-class LBMBnd_wallBB;
 
 class LBMBnd_dummy;
 
