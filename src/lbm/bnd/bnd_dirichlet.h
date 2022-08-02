@@ -12,6 +12,10 @@
 
 using json = nlohmann::json;
 
+/// Dirichlet Boundary condition implemented using the Bounce-back method
+/// \tparam DEBUG_LEVEL
+/// \tparam LBTYPE
+/// \tparam EQ
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 class LBMBnd_DirichletBB : public LBMBndInterface {
  private:
@@ -44,9 +48,15 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
     }
   }
 
+  /// Nothing to do here
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
+  /// Apply the Dirichlet boundary condition (setting a constant value for the result)
+  /// \param fpre
+  /// \param fold
+  /// \param feq
+  /// \param vars
   void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) override {
     for(const auto bndCellId : m_bnd->getCellList()) {
@@ -54,6 +64,15 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
     }
   }
 
+
+ private:
+  /// Implementation of the Dirichlet boundary condition.
+  /// \tparam VALZERO Set 0 which means setting only bounce-back for this bnd
+  /// \tparam SCALAR We are setting a scalar value
+  /// \param bndCellId Id of the cell to be set
+  /// \param values Dirichlet value to be set
+  /// \param fpre Distribution
+  /// \param fold Distribution
   template <GBool VALZERO = false, GBool SCALAR = false>
   void apply(const GInt bndCellId, const GDouble* values, const std::function<GDouble&(GInt, GInt)>& fpre,
              const std::function<GDouble&(GInt, GInt)>& fold, const std::function<GDouble&(GInt, GInt)>& /*feq*/,
@@ -68,7 +87,9 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
         // standard bounceback i.e. distribution that hits the wall is reflected to the opposite distribution direction
         fold(bndCellId, oppositeDist) = fpre(bndCellId, dist);
 
-        // set dirichlet value
+        // todo: move specialization to a extra function
+
+        // set dirichlet value for the poisson equation
         if(NVAR == 1 && EQ == LBEquationType::Poisson && !VALZERO) {
           // todo: calculate diffusivity
           const GDouble            dt          = 0.00392158 / 8.0; // lvl11
@@ -77,6 +98,8 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
           fold(bndCellId, oppositeDist) -= LBMethod<LBTYPE>::m_poissonWeights[dist] * diffusivity * m_value[0];
           TERMM(-1, "this is incorrect!");
         }
+
+        // set dirichlet value for the Navier stokes equation
         if(EQ == LBEquationType::Navier_Stokes && !VALZERO) {
           // todo: calculate density
           // todo: cleanup
@@ -94,7 +117,6 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
     }
   }
 
- private:
   const SurfaceInterface* m_bnd = nullptr;
 
   VectorD<NVAR> m_value;
