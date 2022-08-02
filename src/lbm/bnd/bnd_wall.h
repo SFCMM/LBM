@@ -77,41 +77,12 @@ class LBMBnd_wallBB : public LBMBnd_DirichletBB<DEBUG_LEVEL, LBTYPE, EQ> {
 
   void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) override {
-    //        for(auto& bndCell : m_bndCells) {
-    //          bndCell.apply(fpre, fold);
-    //        }
 
     GInt index = 0;
     for(const GInt cellId : m_bnd->getCellList()) {
-      //      cerr0 << index << " " << std::boolalpha << TANGENTIALVELO << std::endl;
       // TANGENTIALVELO is false when the value is zero
       LBMBnd_DirichletBB<DEBUG_LEVEL, LBTYPE, EQ>::template apply<!TANGENTIALVELO, true>(cellId, &m_dirichletValue[index][0], fpre, fold,
                                                                                          feq, vars);
-      //      const auto& _normal = VectorD<NDIM>(m_bnd->normal_p(cellId));
-      //
-      //      // iterate over the distributions that need to be set
-      //      for(GInt id = 0; id < noDists(LBTYPE); ++id) {
-      //        // dists that point into the outside direction
-      ////        const GInt dist = outsideDir(id);
-      ////        if(dist == INVALID_DIR) {
-      ////          continue;
-      ////        }
-      //
-      //        if(inDirection<dim(LBTYPE)>(_normal, LBMethod<LBTYPE>::m_dirs[id])) {
-      //          // dist in reflected/opposite direction i.e. to the inside of the wall
-      //          GInt oppositeDist = LBMethod<LBTYPE>::oppositeDist(id);
-      //
-      //          // standard bounceback i.e. distribution that hits the wall is reflected to the opposite distribution direction
-      //          fold(cellId, oppositeDist) = fpre(cellId, id);
-      //
-      //          if constexpr(TANGENTIALVELO) {
-      //            // todo: actually calculate this
-      //            GDouble avg_density = 1.0;
-      //            fold(cellId, oppositeDist) += avg_density * 2.0 / lbm_cssq * LBMethod<LBTYPE>::m_weights[oppositeDist]*
-      //                    m_dirichletValue[index][oppositeDist];
-      //          }
-      //        }
-      //      }
       ++index;
     }
   }
