@@ -159,7 +159,7 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
     for(const auto cellId : m_bnd->getCellList()) {
       for(GInt dist = 0; dist < NDIST; ++dist) {
         // todo: make settable
-        fold(cellId, dist) = eq::defaultEq(method::m_weights[dist], vars(cellId, VAR::rho()), 0, 0);
+        fold(cellId, dist) = eq::defaultEq(method::m_weights[dist], vars(cellId, VAR::rho()));
       }
     }
   }
