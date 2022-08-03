@@ -12,9 +12,6 @@
 using json = nlohmann::json;
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
-class LBMBnd_DirichletNEEM;
-
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 class LBMBnd_NeumannNEEM : public LBMBnd_DirichletNEEM<DEBUG_LEVEL, LBTYPE, EQ> {
  private:
   using method                = LBMethod<LBTYPE>;
