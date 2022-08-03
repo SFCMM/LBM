@@ -180,7 +180,7 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
   }
 
   [[nodiscard]] auto bnd() const -> const SurfaceInterface* { return m_bnd; }
-  auto               v_wall() -> VectorD<NDIM>& { return m_wallV; }
+  auto               wallV() -> VectorD<NDIM>& { return m_wallV; }
 
  private:
   void set_wallV(const std::function<GDouble&(GInt, GInt)>& vars) {
@@ -217,10 +217,11 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
   LBMBnd_wallNEEM(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) : LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>(surf) {
     if(!config::has_config_value(properties, "velocity")) {
       m_apply = &LBMBnd_wallNEEM::apply_0NEEM;
+      this->wallV().fill(0);
       logger << " NEEM with no-slip condition" << std::endl;
     } else {
-      m_apply        = &LBMBnd_wallNEEM::apply_constVNEEM;
-      this->v_wall() = config::required_config_value<NDIM>(properties, "velocity");
+      m_apply       = &LBMBnd_wallNEEM::apply_constVNEEM;
+      this->wallV() = config::required_config_value<NDIM>(properties, "velocity");
       logger << " NEEM with constant velocity" << std::endl;
     }
     init();
