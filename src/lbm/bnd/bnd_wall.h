@@ -135,18 +135,14 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
 
   void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>&    fold,
              const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& vars) override {
-    // at wall set wall velocity
-    for(const auto cellId : m_bnd->getCellList()) {
-      for(GInt dir = 0; dir < NDIM; ++dir) {
-        vars(cellId, VAR::velocity(dir)) = m_wallV[dir];
-      }
-    }
     m_apply(this, fpre, fold, vars);
   }
 
  protected:
   virtual void apply_0(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
                        const std::function<GDouble&(GInt, GInt)>& vars) {
+    set_wallV(vars);
+
     // update the density value with velocity set to 0
     GInt index = 0;
     for(const auto cellId : m_bnd->getCellList()) {
@@ -166,7 +162,9 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
 
   virtual void apply_constV(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
                             const std::function<GDouble&(GInt, GInt)>& vars) {
-    // update the density value with velocity set to 0
+    set_wallV(vars);
+
+    // update the density value with velocity set to the wall velocity
     GInt index = 0;
     for(const auto cellId : m_bnd->getCellList()) {
       calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, false>(
@@ -185,6 +183,15 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
   auto               v_wall() -> VectorD<NDIM>& { return m_wallV; }
 
  private:
+  void set_wallV(const std::function<GDouble&(GInt, GInt)>& vars) {
+    // at wall set wall velocity
+    for(const auto cellId : m_bnd->getCellList()) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        vars(cellId, VAR::velocity(dir)) = m_wallV[dir];
+      }
+    }
+  }
+
   const SurfaceInterface* m_bnd = nullptr;
 
   std::function<void(LBMBnd_wallEq*, const std::function<GDouble&(GInt, GInt)>&, const std::function<GDouble&(GInt, GInt)>&,
