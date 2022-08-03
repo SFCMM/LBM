@@ -65,7 +65,7 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
   }
 
 
- private:
+ protected:
   /// Implementation of the Dirichlet boundary condition.
   /// \tparam VALZERO Set 0 which means setting only bounce-back for this bnd
   /// \tparam SCALAR We are setting a scalar value
@@ -117,6 +117,7 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
     }
   }
 
+ private:
   const SurfaceInterface* m_bnd = nullptr;
 
   VectorD<NVAR> m_value;
@@ -135,13 +136,8 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
 
  public:
   // todo: allow setting specified variables
-  LBMBnd_DirichletNEEM(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) : m_bnd(surf) {
-    for(const GInt cellId : surf->getCellList()) {
-      m_bndCells.emplace_back(cellId);
-    }
-    m_normal = surf->normal(m_bndCells[0]);
-
-    m_value.resize(m_bndCells.size());
+  LBMBnd_DirichletNEEM(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) : m_normal(surf->normal()), m_bnd(surf) {
+    m_value.resize(surf->no_cells());
 
     // todo: move this to a function and object
     if(properties["value"].is_string() || (properties["value"].is_array() && properties["value"][0].is_string())) {
@@ -150,18 +146,19 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
       } else {
         m_mathExpression[0] = config::required_math_expression<NDIM>(properties, "value");
       }
-      for(GUint bndId = 0; bndId < m_bndCells.size(); ++bndId) {
-        const GInt cellId = m_bndCells[bndId];
+      GInt bndId = 0;
+      for(const auto cellId : m_bnd->getCellList()) {
         for(GInt dir = 0; dir < NVAR; ++dir) {
           m_value[bndId][dir] = m_mathExpression[dir]->eval(surf->center(cellId));
         }
+        ++bndId;
       }
     } else {
       const VectorD<NVAR> value_to_set = (config::required_config_value<NVAR>(properties, "value"));
       std::fill(m_value.begin(), m_value.end(), value_to_set);
     }
 
-    for(const auto bndCellId : m_bndCells) {
+    for(const auto bndCellId : m_bnd->getCellList()) {
       GInt extrapolationDir = -1;
       for(GInt dist = 0; dist < cartesian::maxNoNghbrs<NDIM>(); ++dist) {
         if(surf->neighbor(bndCellId, dist) == INVALID_CELLID) {
@@ -199,7 +196,10 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
     // todo: move this some where else
     if(setAnalyticalValue) {
       if constexpr(NDIM == 1) {
-        std::fill(m_value.begin(), m_value.end(), analytical::poisson::poissonCHAI08_1(surf->center(m_bndCells[0])));
+        GInt bndId = 0;
+        for(const auto bndCellId : m_bnd->getCellList()) {
+          m_value[bndId++] = analytical::poisson::poissonCHAI08_1(surf->center(bndCellId));
+        }
       }
     }
 
@@ -216,10 +216,10 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
   auto operator=(LBMBnd_DirichletNEEM&&) -> LBMBnd_DirichletNEEM&      = delete;
 
   void initCnd(const std::function<GDouble&(GInt, GInt)>& vars) override {
-    GInt id = 0;
-    for(const auto cellId : m_bndCells) {
-      vars(cellId, VAR::electricPotential()) = m_value[id][0];
-      ++id;
+    GInt bndId = 0;
+    for(const auto cellId : m_bnd->getCellList()) {
+      vars(cellId, VAR::electricPotential()) = m_value[bndId][0];
+      ++bndId;
     }
   }
 
@@ -232,23 +232,24 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
     // recalculate density because fold is post streaming!
     calcDensity<NDIM, NDIST, EQ>(m_extrapolationCellId, fold, vars);
 
-    for(GUint id = 0; id < m_bndCells.size(); ++id) {
-      const GInt cellId                      = m_bndCells[id];
-      const GInt extraPolationCellId         = m_extrapolationCellId[id];
-      vars(cellId, VAR::electricPotential()) = m_value[id][0];
+    GInt bndId = 0;
+    for(const auto cellId : m_bnd->getCellList()) {
+      const GInt extraPolationCellId         = m_extrapolationCellId[bndId];
+      vars(cellId, VAR::electricPotential()) = m_value[bndId][0];
 
       for(GInt dist = 0; dist < NDIST - 1; ++dist) {
         const GDouble weight = LBMethod<LBTYPE>::m_weights[dist];
         fold(cellId, dist) =
-            weight * m_value[id][0] + fold(extraPolationCellId, dist) - weight * vars(extraPolationCellId, VAR::electricPotential());
+            weight * m_value[bndId][0] + fold(extraPolationCellId, dist) - weight * vars(extraPolationCellId, VAR::electricPotential());
       }
-      fold(cellId, NDIST - 1) = (LBMethod<LBTYPE>::m_weights[NDIST - 1] - 1.0) * m_value[id][0] + fold(extraPolationCellId, NDIST - 1)
+      fold(cellId, NDIST - 1) = (LBMethod<LBTYPE>::m_weights[NDIST - 1] - 1.0) * m_value[bndId][0] + fold(extraPolationCellId, NDIST - 1)
                                 - (LBMethod<LBTYPE>::m_weights[NDIST - 1] - 1.0) * vars(extraPolationCellId, VAR::electricPotential());
+      ++bndId;
     }
   }
 
  protected:
-  [[nodiscard]] auto no_cells() const -> GInt { return m_bndCells.size(); }
+  [[nodiscard]] auto no_cells() const -> GInt { return m_bnd->no_cells(); }
 
   [[nodiscard]] auto extrapolationCellId(const GInt id) const -> GInt { return m_extrapolationCellId[id]; }
 
@@ -263,7 +264,6 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
   std::vector<VectorD<NVAR>>                              m_value;
   std::array<std::unique_ptr<MathExpression<NDIM>>, NDIM> m_mathExpression;
   VectorD<NDIM>                                           m_normal;
-  std::vector<GInt>                                       m_bndCells;
   std::vector<GInt>                                       m_extrapolationCellId;
   std::vector<GInt>                                       m_extrapolationDir;
   const SurfaceInterface*                                 m_bnd = nullptr;
