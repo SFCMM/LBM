@@ -72,9 +72,9 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
 
       //      GDouble minDist = std::numeric_limits<GDouble>::max();
       static constexpr GDouble max_cell_match_dist = 10 * GDoubleEps;
-      auto                     cellMatch           = [&](const auto& centerA, const auto& centerB) {
+      auto                     cellMatch           = [&](const auto& centerA_, const auto& centerB_) {
         for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
-          const GDouble diff = std::abs(centerA[dir] - centerB[dir]);
+          const GDouble diff = std::abs(centerA_[dir] - centerB_[dir]);
           if(diff <= max_cell_match_dist) {
             return true;
           }
@@ -94,6 +94,7 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
         //        }
         if(cellMatch(centerA, centerB)) {
           m_linkedCell[id] = cellIdB;
+          break;
         }
       }
 
