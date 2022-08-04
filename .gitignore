@@ -17,4 +17,6 @@ test/couette/line.csv
 
 test/couette/out/plane.pvtp
 
-test/run_log_1646234098/
+test/run_log_*/
+
+test/poisson/.fuse_hidden000092b700000003
