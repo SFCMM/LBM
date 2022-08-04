@@ -144,9 +144,12 @@ class LBMBnd_DirichletEQ : public LBMBndInterface {
 
  public:
   LBMBnd_DirichletEQ(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
-    : m_bnd(surf), m_value(config::required_config_value<NVAR>(properties, "value")) {}
+    : m_bnd(surf), m_value(config::required_config_value<NVAR>(properties, "value")) {
+    init();
+  }
   LBMBnd_DirichletEQ(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& /*properties*/, const GDouble value) : m_bnd(surf) {
     m_value.fill(value);
+    init();
   }
   ~LBMBnd_DirichletEQ() override = default;
 
@@ -155,6 +158,14 @@ class LBMBnd_DirichletEQ : public LBMBndInterface {
   LBMBnd_DirichletEQ(LBMBnd_DirichletEQ&&)                         = delete;
   auto operator=(const LBMBnd_DirichletEQ&) -> LBMBnd_DirichletEQ& = delete;
   auto operator=(LBMBnd_DirichletEQ&&) -> LBMBnd_DirichletEQ&      = delete;
+
+  void init() {
+    GInt index = 0;
+    for(const auto bndCellId : m_bnd->getCellList()) {
+      cell2Bnd[bndCellId] = index;
+      ++index;
+    }
+  }
 
   void initCnd(const std::function<GDouble&(GInt, GInt)>& vars) override {
     // todo: this is not correct since it only allows setting the velocity
@@ -196,36 +207,24 @@ class LBMBnd_DirichletEQ : public LBMBndInterface {
              const std::function<GDouble&(GInt, GInt)>& fold, const std::function<GDouble&(GInt, GInt)>& /*feq*/,
              const std::function<GDouble&(GInt, GInt)>& vars) {
     set_wallV(vars);
+    const GInt index = cell2Bnd[bndCellId];
 
+    // update the density value with velocity set to 0
     if(VALZERO) {
-      // update the density value with velocity set to 0
-      GInt index = 0;
-      for(const auto cellId : m_bnd->getCellList()) {
-        calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, true>(cellId, this->limitedDist()[index],
-                                                                              this->limitedConst()[index], nullptr, fold, vars);
-        ++index;
-      }
-
-      // for wall with 0 velocity
-      for(const auto cellId : m_bnd->getCellList()) {
-        for(GInt dist = 0; dist < NDIST; ++dist) {
-          // todo: make settable
-          fold(cellId, dist) = eq::defaultEq(method::m_weights[dist], vars(cellId, VAR::rho()));
-        }
-      }
+      calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, true>(bndCellId, this->limitedDist()[index],
+                                                                            this->limitedConst()[index], nullptr, fold, vars);
     } else {
-      // update the density value with velocity set to the wall velocity
-      GInt index = 0;
-      for(const auto cellId : m_bnd->getCellList()) {
-        calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, false>(
-            cellId, this->limitedDist()[index], this->limitedConst()[index], &this->normal()[index][0], fold, vars);
-        ++index;
-      }
+      calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, false>(
+          bndCellId, this->limitedDist()[index], this->limitedConst()[index], &this->normal()[index][0], fold, vars);
+    }
 
-      // for wall with constant velocity
-      for(const auto cellId : m_bnd->getCellList()) {
-        // todo: make settable
-        eq::defaultEq<LBTYPE>(&fold(cellId, 0), vars(cellId, VAR::rho()), &vars(cellId, VAR::velocity(0)));
+
+    for(GInt dist = 0; dist < NDIST; ++dist) {
+      // todo: make settable
+      if(VALZERO) {
+        fold(bndCellId, dist) = eq::defaultEq(method::m_weights[dist], vars(bndCellId, VAR::rho()));
+      } else {
+        eq::defaultEq<LBTYPE>(&fold(bndCellId, 0), vars(bndCellId, VAR::rho()), &vars(bndCellId, VAR::velocity(0)));
       }
     }
   }
@@ -242,7 +241,8 @@ class LBMBnd_DirichletEQ : public LBMBndInterface {
 
   const SurfaceInterface* m_bnd = nullptr;
 
-  VectorD<NVAR> m_value;
+  VectorD<NVAR>                  m_value;
+  std::unordered_map<GInt, GInt> cell2Bnd;
 };
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
