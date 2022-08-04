@@ -42,7 +42,11 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
       if(inDirection<dim(LBTYPE)>(normal(), LBMethod<LBTYPE>::m_dirs[dist])) {
         std::array<GDouble, NDIM> coord;
         for(GInt dir = 0; dir < NDIM; ++dir) {
-          coord[dir] = center[dir] + LBMethod<LBTYPE>::m_dirs[dist][dir] * cellLength;
+          if(std::abs(normal()[dir]) > 0) {
+            coord[dir] = center[dir];
+          } else {
+            coord[dir] = center[dir] + LBMethod<LBTYPE>::m_dirs[dist][dir] * cellLength;
+          }
         }
         // determine if this direction is within the bounding box and hence needs to be set
         if(bb.isInside(coord.data())) {
