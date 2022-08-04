@@ -131,7 +131,7 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
 /// \tparam LBTYPE
 /// \tparam EQ
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
-class LBMBnd_DirichletEQ : public LBMBndInterface {
+class LBMBnd_DirichletEQ : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE> {
  private:
   using method = LBMethod<LBTYPE>;
 
@@ -144,10 +144,16 @@ class LBMBnd_DirichletEQ : public LBMBndInterface {
 
  public:
   LBMBnd_DirichletEQ(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
-    : m_bnd(surf), m_value(config::required_config_value<NVAR>(properties, "value")) {
+    : LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf), m_bnd(surf), m_value(config::required_config_value<NVAR>(properties, "value")) {
     init();
   }
-  LBMBnd_DirichletEQ(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& /*properties*/, const GDouble value) : m_bnd(surf) {
+  LBMBnd_DirichletEQ(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& /*properties*/, const GDouble value)
+    : LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf), m_bnd(surf) {
+    m_value.fill(value);
+    init();
+  }
+  LBMBnd_DirichletEQ(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const GDouble value)
+    : LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf), m_bnd(surf) {
     m_value.fill(value);
     init();
   }
@@ -159,7 +165,7 @@ class LBMBnd_DirichletEQ : public LBMBndInterface {
   auto operator=(const LBMBnd_DirichletEQ&) -> LBMBnd_DirichletEQ& = delete;
   auto operator=(LBMBnd_DirichletEQ&&) -> LBMBnd_DirichletEQ&      = delete;
 
-  void init() {
+  virtual void init() {
     GInt index = 0;
     for(const auto bndCellId : m_bnd->getCellList()) {
       cell2Bnd[bndCellId] = index;
@@ -203,11 +209,16 @@ class LBMBnd_DirichletEQ : public LBMBndInterface {
   /// \param fpre Distribution
   /// \param fold Distribution
   template <GBool VALZERO = false>
-  void apply(const GInt bndCellId, const GDouble* values, const std::function<GDouble&(GInt, GInt)>& fpre,
+  void apply(const GInt bndCellId, const GDouble* values, const std::function<GDouble&(GInt, GInt)>& /*fpre*/,
              const std::function<GDouble&(GInt, GInt)>& fold, const std::function<GDouble&(GInt, GInt)>& /*feq*/,
              const std::function<GDouble&(GInt, GInt)>& vars) {
-    set_wallV(vars);
     const GInt index = cell2Bnd[bndCellId];
+    // at wall set wall velocity
+    // todo: allow setting the variable to be set
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      vars(bndCellId, VAR::velocity(dir)) = values[dir];
+    }
+
 
     // update the density value with velocity set to 0
     if(VALZERO) {
@@ -230,15 +241,6 @@ class LBMBnd_DirichletEQ : public LBMBndInterface {
   }
 
  private:
-  void set_wallV(const std::function<GDouble&(GInt, GInt)>& vars) {
-    // at wall set wall velocity
-    for(const auto cellId : m_bnd->getCellList()) {
-      for(GInt dir = 0; dir < NDIM; ++dir) {
-        vars(cellId, VAR::velocity(dir)) = m_value[dir];
-      }
-    }
-  }
-
   const SurfaceInterface* m_bnd = nullptr;
 
   VectorD<NVAR>                  m_value;

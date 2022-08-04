@@ -97,8 +97,8 @@ class LBMBnd_wallBB : public LBMBnd_DirichletBB<DEBUG_LEVEL, LBTYPE, EQ> {
 /// Equilibrium wall boundary condition.
 /// \tparam DEBUG_LEVEL
 /// \tparam LBTYPE
-template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
-class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE> {
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
+class LBMBnd_wallEq : public LBMBnd_DirichletEQ<DEBUG_LEVEL, LBTYPE, EQ> {
  private:
   using method                = LBMethod<LBTYPE>;
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
@@ -108,7 +108,7 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
 
  public:
   LBMBnd_wallEq(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
-    : LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf), m_bnd(surf) {
+    : LBMBnd_DirichletEQ<DEBUG_LEVEL, LBTYPE, EQ>(surf, properties, 0), m_bnd(surf) {
     if(!config::has_config_value(properties, "velocity")) {
       m_apply = &LBMBnd_wallEq::apply_0;
       m_wallV.fill(0);
@@ -119,7 +119,8 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
       logger << " Wall with constant velocity" << std::endl;
     }
   }
-  LBMBnd_wallEq(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf) : LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf), m_bnd(surf) {}
+  // constructor for use in derived bndcnds
+  LBMBnd_wallEq(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf) : LBMBnd_DirichletEQ<DEBUG_LEVEL, LBTYPE, EQ>(surf, 0), m_bnd(surf) {}
   ~LBMBnd_wallEq() override = default;
 
   // deleted constructors not needed
@@ -133,49 +134,23 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
   void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
                 const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 
-  void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>&    fold,
-             const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& vars) override {
-    m_apply(this, fpre, fold, vars);
+  void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
+             const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) override {
+    m_apply(this, fpre, fold, feq, vars);
   }
 
  protected:
-  virtual void apply_0(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
-                       const std::function<GDouble&(GInt, GInt)>& vars) {
-    set_wallV(vars);
-
-    // update the density value with velocity set to 0
-    GInt index = 0;
-    for(const auto cellId : m_bnd->getCellList()) {
-      calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, true>(cellId, this->limitedDist()[index], this->limitedConst()[index],
-                                                                            nullptr, fold, vars);
-      ++index;
-    }
-
-    // for wall with 0 velocity
-    for(const auto cellId : m_bnd->getCellList()) {
-      for(GInt dist = 0; dist < NDIST; ++dist) {
-        // todo: make settable
-        fold(cellId, dist) = eq::defaultEq(method::m_weights[dist], vars(cellId, VAR::rho()));
-      }
+  virtual void apply_0(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
+                       const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
+    for(const GInt cellId : m_bnd->getCellList()) {
+      LBMBnd_DirichletEQ<DEBUG_LEVEL, LBTYPE, EQ>::template apply<true>(cellId, m_wallV.data(), fpre, fold, feq, vars);
     }
   }
 
-  virtual void apply_constV(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& fold,
-                            const std::function<GDouble&(GInt, GInt)>& vars) {
-    set_wallV(vars);
-
-    // update the density value with velocity set to the wall velocity
-    GInt index = 0;
-    for(const auto cellId : m_bnd->getCellList()) {
-      calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, false>(
-          cellId, this->limitedDist()[index], this->limitedConst()[index], &this->normal()[index][0], fold, vars);
-      ++index;
-    }
-
-    // for wall with constant velocity
-    for(const auto cellId : m_bnd->getCellList()) {
-      // todo: make settable
-      eq::defaultEq<LBTYPE>(&fold(cellId, 0), vars(cellId, VAR::rho()), &vars(cellId, VAR::velocity(0)));
+  virtual void apply_constV(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
+                            const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
+    for(const GInt cellId : m_bnd->getCellList()) {
+      LBMBnd_DirichletEQ<DEBUG_LEVEL, LBTYPE, EQ>::template apply<false>(cellId, m_wallV.data(), fpre, fold, feq, vars);
     }
   }
 
@@ -195,7 +170,7 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
   const SurfaceInterface* m_bnd = nullptr;
 
   std::function<void(LBMBnd_wallEq*, const std::function<GDouble&(GInt, GInt)>&, const std::function<GDouble&(GInt, GInt)>&,
-                     const std::function<GDouble&(GInt, GInt)>&)>
+                     const std::function<GDouble&(GInt, GInt)>&, const std::function<GDouble&(GInt, GInt)>&)>
       m_apply;
 
   VectorD<NDIM> m_wallV;
@@ -205,7 +180,7 @@ class LBMBnd_wallEq : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG
 /// \tparam DEBUG_LEVEL
 /// \tparam LBTYPE
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
-class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE> {
+class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE, EQ> {
  private:
   using METH                  = LBMethod<LBTYPE>;
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
@@ -214,7 +189,7 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
   using VAR = LBMVariables<EQ, NDIM>;
 
  public:
-  LBMBnd_wallNEEM(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) : LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>(surf) {
+  LBMBnd_wallNEEM(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties) : LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE, EQ>(surf) {
     if(!config::has_config_value(properties, "velocity")) {
       m_apply = &LBMBnd_wallNEEM::apply_0NEEM;
       this->wallV().fill(0);
@@ -285,14 +260,14 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
  private:
   void apply_0NEEM(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
                    const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
-    LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>::apply_0(fpre, fold, vars);
+    LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE, EQ>::apply_0(fpre, fold, feq, vars);
 
     apply_general(fpre, fold, feq, vars);
   }
 
   void apply_constVNEEM(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
                         const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) {
-    LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>::apply_constV(fpre, fold, vars);
+    LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE, EQ>::apply_constV(fpre, fold, feq, vars);
 
     apply_general(fpre, fold, feq, vars);
   }

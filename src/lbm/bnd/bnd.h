@@ -246,7 +246,7 @@ class LBMBndManager : private Configuration {
       }
     } else if(model == "equilibrium") {
       logger << " wall equilibrium wet node model" << std::endl;
-      m_bndrys.emplace_back(std::make_unique<LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE>>(&surf, properties));
+      m_bndrys.emplace_back(std::make_unique<LBMBnd_wallEq<DEBUG_LEVEL, LBTYPE, EQ>>(&surf, properties));
     } else if(model == "neem") {
       logger << " wall nonequilibrium extrapolation wet node model" << std::endl;
       m_bndrys.emplace_back(std::make_unique<LBMBnd_wallNEEM<DEBUG_LEVEL, LBTYPE, EQ>>(&surf, properties));
