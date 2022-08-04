@@ -20,3 +20,25 @@ test/couette/out/plane.pvtp
 test/run_log_*/
 
 test/poisson/.fuse_hidden000092b700000003
+
+test/sphere/.debug.txt.swp
+
+test/sphere/.debug3_trying_zeros_at_end.txt.swp
+
+test/sphere/debug_crash.txt
+
+test/sphere/debug_crash2.txt
+
+test/sphere/debug_shift_1left.txt
+
+test/sphere/debug_shift_1wleft.txt
+
+test/sphere/debug_working_but_with_length_increase.txt
+
+test/sphere/debug.txt
+
+test/sphere/debug2.txt
+
+test/sphere/debug3_trying_zeros_at_end.txt
+
+test/sphere/debug4_trying_zeros_at_end_and_shift.txt
