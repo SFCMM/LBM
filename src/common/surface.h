@@ -24,7 +24,7 @@ template <Debug_Level DEBUG_LEVEL, GInt NDIM>
 class Surface : public SurfaceInterface {
  public:
   explicit Surface(CartesianGridData<NDIM> data, grid::cell::BitsetType* properties) : m_grid(data), m_properties(properties){};
-  ~Surface() = default;
+  ~Surface() override = default;
 
   Surface(const Surface<DEBUG_LEVEL, NDIM>& copy) = default;
 

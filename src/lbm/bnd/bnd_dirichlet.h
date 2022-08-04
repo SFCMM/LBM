@@ -2,6 +2,7 @@
 #define LBM_BND_DIRICHLET_H
 #include <json.h>
 #include "bnd_interface.h"
+#include "bnd_wetnode.h"
 #include "common/surface.h"
 #include "lbm/analytical_solutions.h"
 #include "lbm/constants.h"
@@ -130,8 +131,10 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
 /// \tparam LBTYPE
 /// \tparam EQ
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
-class LBMBnd_DirichletEQ : public LBMBndInterface {
+class LBMBnd_DirichletEQ : public LBMBndInterface, protected LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE> {
  private:
+  using method = LBMethod<LBTYPE>;
+
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
   static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
 
@@ -141,9 +144,18 @@ class LBMBnd_DirichletEQ : public LBMBndInterface {
 
  public:
   LBMBnd_DirichletEQ(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
-    : m_bnd(surf), m_value(config::required_config_value<NVAR>(properties, "value")) {}
-  LBMBnd_DirichletEQ(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& /*properties*/, const GDouble value) : m_bnd(surf) {
+    : LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf), m_bnd(surf), m_value(config::required_config_value<NVAR>(properties, "value")) {
+    init();
+  }
+  LBMBnd_DirichletEQ(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& /*properties*/, const GDouble value)
+    : LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf), m_bnd(surf) {
     m_value.fill(value);
+    init();
+  }
+  LBMBnd_DirichletEQ(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const GDouble value)
+    : LBMBnd_wallWetnode<DEBUG_LEVEL, LBTYPE>(surf), m_bnd(surf) {
+    m_value.fill(value);
+    init();
   }
   ~LBMBnd_DirichletEQ() override = default;
 
@@ -153,8 +165,16 @@ class LBMBnd_DirichletEQ : public LBMBndInterface {
   auto operator=(const LBMBnd_DirichletEQ&) -> LBMBnd_DirichletEQ& = delete;
   auto operator=(LBMBnd_DirichletEQ&&) -> LBMBnd_DirichletEQ&      = delete;
 
+  virtual void init() {
+    GInt index = 0;
+    for(const auto bndCellId : m_bnd->getCellList()) {
+      cell2Bnd[bndCellId] = index;
+      ++index;
+    }
+  }
+
   void initCnd(const std::function<GDouble&(GInt, GInt)>& vars) override {
-    // todo: this is not correct
+    // todo: this is not correct since it only allows setting the velocity
     for(const auto bndCellId : m_bnd->getCellList()) {
       for(GInt dir = 0; dir < NDIM; ++dir) {
         vars(bndCellId, VAR::velocity(dir)) = m_value[dir];
@@ -188,15 +208,43 @@ class LBMBnd_DirichletEQ : public LBMBndInterface {
   /// \param values Dirichlet value to be set
   /// \param fpre Distribution
   /// \param fold Distribution
-  template <GBool VALZERO = false, GBool SCALAR = false>
-  void apply(const GInt bndCellId, const GDouble* values, const std::function<GDouble&(GInt, GInt)>& fpre,
+  template <GBool VALZERO = false>
+  void apply(const GInt bndCellId, const GDouble* values, const std::function<GDouble&(GInt, GInt)>& /*fpre*/,
              const std::function<GDouble&(GInt, GInt)>& fold, const std::function<GDouble&(GInt, GInt)>& /*feq*/,
-             const std::function<GDouble&(GInt, GInt)>& /*vars*/) {}
+             const std::function<GDouble&(GInt, GInt)>& vars) {
+    const GInt index = cell2Bnd[bndCellId];
+    // at wall set wall velocity
+    // todo: allow setting the variable to be set
+    for(GInt dir = 0; dir < NDIM; ++dir) {
+      vars(bndCellId, VAR::velocity(dir)) = values[dir];
+    }
+
+
+    // update the density value with velocity set to 0
+    if(VALZERO) {
+      calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, true>(bndCellId, this->limitedDist()[index],
+                                                                            this->limitedConst()[index], nullptr, fold, vars);
+    } else {
+      calcDensity_limited<NDIM, NDIST, LBEquationType::Navier_Stokes, false>(
+          bndCellId, this->limitedDist()[index], this->limitedConst()[index], &this->normal()[index][0], fold, vars);
+    }
+
+
+    for(GInt dist = 0; dist < NDIST; ++dist) {
+      // todo: make settable
+      if(VALZERO) {
+        fold(bndCellId, dist) = eq::defaultEq(method::m_weights[dist], vars(bndCellId, VAR::rho()));
+      } else {
+        eq::defaultEq<LBTYPE>(&fold(bndCellId, 0), vars(bndCellId, VAR::rho()), &vars(bndCellId, VAR::velocity(0)));
+      }
+    }
+  }
 
  private:
   const SurfaceInterface* m_bnd = nullptr;
 
-  VectorD<NVAR> m_value;
+  VectorD<NVAR>                  m_value;
+  std::unordered_map<GInt, GInt> cell2Bnd;
 };
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>

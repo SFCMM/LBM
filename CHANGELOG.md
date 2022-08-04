@@ -88,10 +88,14 @@
 - [IO] check in output functions if fileformat ending is already included
 - add more openmp
 - allow comments in configuration files
+- add ns compatible neumann bndcnd
+- test all bnds for both poisson and NS
+    - working:
 
 # V0.0.2
 
 ## Planned
+
 - output analytical solution if wanted
 - check in periodic boundaries if all cells have been linked
 - get boundary const access to grid information
@@ -106,11 +110,6 @@
 
 ### Working on:
 
-
-- [IMPROVEMENT][LBM] generalize NEEM boundary condition
-- make neem boundary condition available for NS
-- test all bnds for both poisson and NS
-    - working:
 
 ## Done:
 
