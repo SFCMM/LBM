@@ -40,21 +40,16 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
     for(GInt dist = 0; dist < NDIST; ++dist) {
       // determine if the dist points into the outside normal direction of bndry
       if(inDirection<dim(LBTYPE)>(normal(), LBMethod<LBTYPE>::m_dirs[dist])) {
-        GBool inside = true;
-        for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
+        std::array<GDouble, NDIM> coord;
+        for(GInt dir = 0; dir < NDIM; ++dir) {
           if(std::abs(normal()[dir]) > 0) {
-            continue;
-          }
-
-          const GDouble coord = center[dir] + LBMethod<LBTYPE>::m_dirs[dist][dir] * cellLength;
-          // todo: move to function isInside...
-          if(coord < bb.min(dir) || coord > bb.max(dir)) {
-            inside = false;
-            break;
+            coord[dir] = bb.min(dir);
+          } else {
+            coord[dir] = center[dir] + LBMethod<LBTYPE>::m_dirs[dist][dir] * cellLength;
           }
         }
-
-        if(inside) {
+        // determine if this direction is within the bounding box and hence needs to be set
+        if(bb.isInside(coord.data())) {
           m_bndIndex[m_noSetDists] = dist;
           ++m_noSetDists;
         }
