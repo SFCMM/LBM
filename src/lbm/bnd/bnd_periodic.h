@@ -43,6 +43,7 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
         std::array<GDouble, NDIM> coord;
         for(GInt dir = 0; dir < NDIM; ++dir) {
           if(std::abs(normal()[dir]) > 0) {
+            // outside normal direction is always outside
             coord[dir] = center[dir];
           } else {
             coord[dir] = center[dir] + LBMethod<LBTYPE>::m_dirs[dist][dir] * cellLength;
@@ -58,9 +59,11 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
 
     // todo: this needs to be moved since we cannot guarantee double matching cells are handled correctly
     for(GInt id = 0; id < m_noSetDists; ++id) {
-      m_linkedCell[id]   = INVALID_CELLID;
-      const GInt dist    = m_bndIndex[id];
-      auto       centerA = center;
+      m_linkedCell[id] = INVALID_CELLID;
+      const GInt dist  = m_bndIndex[id];
+
+      // determine center of cell at one side of the periodic boundary condition
+      auto centerA = center;
       for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
         if(std::abs(normal()[dir]) > 0) {
           continue;
@@ -69,18 +72,29 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
       }
 
       //      GDouble minDist = std::numeric_limits<GDouble>::max();
+      static constexpr GDouble max_cell_match_dist = 10 * GDoubleEps;
+      auto                     cellMatch           = [&](const auto& centerA, const auto& centerB) {
+        for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
+          const GDouble diff = std::abs(centerA[dir] - centerB[dir]);
+          if(diff <= max_cell_match_dist) {
+            return true;
+          }
+        }
+        return false;
+      };
       // connect cell of the boundary surface and connected surface
       for(const GInt cellIdB : surfConnected->getCellList()) {
         const auto& centerB = surfConnected->center(cellIdB);
-        for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
-          const GDouble diff = std::abs(centerA[dir] - centerB[dir]);
-          if(diff <= 10 * GDoubleEps) {
-            m_linkedCell[id] = cellIdB;
-            break;
-          }
-        }
-        if(m_linkedCell[id] != INVALID_CELLID) {
-          break;
+        //        for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
+        //          const GDouble diff = std::abs(centerA[dir] - centerB[dir]);
+        //          if(diff <= max_cell_match_dist) {
+        //            //found a matching cell
+        //            m_linkedCell[id] = cellIdB;
+        //            break;
+        //          }
+        //        }
+        if(cellMatch(centerA, centerB)) {
+          m_linkedCell[id] = cellIdB;
         }
       }
 
