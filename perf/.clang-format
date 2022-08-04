@@ -1,0 +1,238 @@
+# Base this file on the default LLVM coding style. This means that any option
+# not set here will be according to the LLVM style guide. However, since we set
+# values for virtually all options here, this should not really matter.
+# Source: http://llvm.org/docs/CodingStandards.html
+BasedOnStyle: LLVM
+
+# 'public', 'private' and 'protected' are wedged (with one space indentation)
+# between the class declaration and the members
+AccessModifierOffset: -1
+
+# Align horizontally after opening brackets ([{
+AlignAfterOpenBracket: Align
+
+# Do not auto-align assignments or declarations
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveDeclarations: Consecutive
+
+# Align to the left-most possible position
+#AlignEscapedNewlinesLeft: Right
+
+# Horizontally align binary and ternary operands
+AlignOperands: true
+
+# Trailing comments in subsequent lines should be aligned
+AlignTrailingComments: true
+
+# All function parameters may be on the line following the function declaration
+AllowAllParametersOfDeclarationOnNextLine: true
+
+# Do not allow short braced blocks on a single line
+AllowShortBlocksOnASingleLine: Never
+
+# Do not contract case labels
+AllowShortCaseLabelsOnASingleLine: false
+
+# Short function definitions (e.g. just a return statement) may be on a single
+# line
+AllowShortFunctionsOnASingleLine: All
+
+# Short if statements may NOT be on a single line
+AllowShortIfStatementsOnASingleLine: WithoutElse
+
+# Short loop statements may NOT be on a single line
+AllowShortLoopsOnASingleLine: false
+
+# Do not always break after return type of function declarations
+AlwaysBreakAfterReturnType: None
+
+# Do not always break before multiline strings
+AlwaysBreakBeforeMultilineStrings: false
+
+# Do allow template declarations on the same line as the clas/function
+# declaration
+AlwaysBreakTemplateDeclarations: Yes
+
+# Allow arguments to be neatly packed (i.e. mulitple parameters per line in a
+# multiple line fashion)
+BinPackArguments: true
+
+# Allow parameters to be neatly packed (i.e. mulitple parameters per line in a
+# multiple line fashion)
+BinPackParameters: true
+
+# For multiline statements, put the binary operator on the new line, unless it
+# is a variable assignment
+BreakBeforeBinaryOperators: NonAssignment
+
+# Never break before braces (always attach to the surrounding context)
+BreakBeforeBraces: Attach
+
+# Do not break before the : and , in case of multiple inheritance
+BreakBeforeInheritanceComma: false
+
+# If a statement with the ternary operator has to be broken up, put the
+# operator on a new lime
+BreakBeforeTernaryOperators: true
+
+# Do NOT have initializer lists in the ', member\n' style
+BreakConstructorInitializersBeforeComma: false
+BreakConstructorInitializers: BeforeColon
+
+# Allow breaking string literals
+BreakStringLiterals: true
+
+# Maximum line length MUST NOT be exceeded. The value '140' allows to have two
+# editor buffers open side-by-side without wrapping on most screens without
+# artificially adding too many lines.
+ColumnLimit: 140
+
+# Do not put consecutive namespace declarations on one line
+CompactNamespaces: false
+
+# If the constructor initializer list spans multiple lines, put every item on a
+# new line instead of bin packing. This usually greatly enhances readability and
+# should not take up to much space (after all, it's only affecting
+# constructors).
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+
+# Initializers should be indented by two spaces
+ConstructorInitializerIndentWidth: 2
+
+# Line continuations should be indented by 4 spaces to visually differentiate
+# them from regular (scope) indentations
+ContinuationIndentWidth: 4
+
+# Format braced lists just like function calls
+Cpp11BracedListStyle: true
+
+# Do not automatically derive pointer bindings (later we will force * and & to
+# be bound to the type, not the variable name)
+DerivePointerAlignment: false
+
+# Do not disable formatting
+DisableFormat: false
+
+# Auto-detect if a user wants to do bin packing or one-parameter-per-line and
+# format the function accordingly
+ExperimentalAutoDetectBinPacking: true
+
+# Add/fix missing namespace comments
+FixNamespaceComments: true
+
+# Indent 'case' labels in switch statements
+IndentCaseLabels: true
+
+# Do not indent preprocessor directives
+IndentPPDirectives: None
+
+# If there are multiple blocks with include files, sort each block individually
+IncludeBlocks: Preserve
+
+# Automatic ordering of include files:
+# - first is main header (gets assigned category 0 automatically)
+# - then all system headers (starting with '<'; category 1)
+# - then all other non-SFCMM headers (category 2)
+# - finally all SFCMM headers (category 3)
+IncludeCategories:
+  - Regex: '^<sfcmm'
+    Priority: 2
+  - Regex: '^<'
+    Priority: 1
+  - Regex: '.*'
+    Priority: 3
+
+# Do not consider suffixes when determining the main include file
+IncludeIsMainRegex: '$'
+
+# Default indent with is 2!
+IndentWidth: 2
+
+# Do not indent function name after breaking after return type
+IndentWrappedFunctionNames: false
+
+# Do not keep empty lines at the start of a block
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+# Language is C++
+Language: Cpp
+
+# Keep a maximum of 2 empty lines in the code. Two lines make for nice visual
+# page breaks, but 3 empty lines or more is just wasting space.
+MaxEmptyLinesToKeep: 2
+
+# Namespaces should never be indented
+NamespaceIndentation: None
+
+# Set penalty values for different formatting rules that might conflict each
+# other. The higher the penalty, the less likely it is to violate the
+# corresponding rule. Here we want to
+# - strictly enforce the 80-character line length limit
+# - avoid breaking string literals
+# - avoid breaking comments
+PenaltyBreakAssignment: 2
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 60
+
+# The * and & operators should bind to the type, not the variable name
+PointerAlignment: Left
+
+# Try to reflow overly long comments
+ReflowComments: true
+
+# Do not automatically sort includes
+SortIncludes: CaseInsensitive
+
+# Sort using declarations alphabetically
+SortUsingDeclarations: true
+
+# Do not allow spaces before old C-style casts
+SpaceAfterCStyleCast: false
+
+# Add space after 'template' keyword
+SpaceAfterTemplateKeyword: true
+
+# There should be a space before the assignment operator '='
+SpaceBeforeAssignmentOperators: true
+
+# No spaces between controlstatements or functions
+SpaceBeforeParens: Never
+
+# Empty parentheses (like so '()') are allowed
+SpaceInEmptyParentheses: false
+
+# Trailing comments only need to be separated by 1 space in order to save screen
+# width
+SpacesBeforeTrailingComments: 1
+
+# Template parameters should not be surrounded by additional spaces
+SpacesInAngles: false
+
+# Do not add spaces to C-style casts
+SpacesInCStyleCastParentheses: false
+
+# Do not have spaces after the '(' and before the ')'
+SpacesInParentheses: false
+
+# Do not have spaces after the '[' and before the ']'
+SpacesInSquareBrackets: false
+
+# Use the C++17 standard
+Standard: c++17
+
+# Tabwidth is set to 2, but this is not relevant (see next option)
+TabWidth: 2
+
+# Do not use tabs. EVER!
+UseTab: Never
+
+IndentCaseBlocks: false
+AlignConsecutiveBitFields: AcrossComments
+AlignConsecutiveMacros: AcrossComments
+
+#Clang11
+#BraceWrapping.BeforeLambdaBody: false
