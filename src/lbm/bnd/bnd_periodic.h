@@ -43,7 +43,7 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
         std::array<GDouble, NDIM> coord;
         for(GInt dir = 0; dir < NDIM; ++dir) {
           if(std::abs(normal()[dir]) > 0) {
-            coord[dir] = center[dir];
+            coord[dir] = bb.min(dir);
           } else {
             coord[dir] = center[dir] + LBMethod<LBTYPE>::m_dirs[dist][dir] * cellLength;
           }
