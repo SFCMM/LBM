@@ -14,3 +14,7 @@ test/couette/gridgen_log
 test/couette/lbm_log
 
 test/couette/line.csv
+
+test/couette/out/plane.pvtp
+
+test/run_log_1646234098/
