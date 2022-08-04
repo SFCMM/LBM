@@ -8,3 +8,9 @@ docs/docs_doxygen/
 *.stdout
 
 *.vtp
+
+test/couette/gridgen_log
+
+test/couette/lbm_log
+
+test/couette/line.csv
