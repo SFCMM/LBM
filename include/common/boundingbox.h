@@ -34,6 +34,8 @@ class BoundingBoxInterface {
   /// Stringify the bounding box.
   /// \return String version of all the values.
   [[nodiscard]] virtual inline auto str() const -> GString = 0;
+
+  [[nodiscard]] virtual inline auto isInside(const GDouble* coord) const -> GBool = 0;
 };
 
 
@@ -54,6 +56,7 @@ class BoundingBox : public BoundingBoxInterface {
 
   inline auto max(const GInt dir) -> GDouble& override { return (*static_cast<BoundingBoxType*>(this)).m_max[dir]; }
 
+  // todo: rename to dim
   [[nodiscard]] inline auto size() const -> GInt override { return static_cast<const BoundingBoxType*>(this)->size(); }
 
   [[nodiscard]] inline auto str() const -> GString override {
@@ -63,6 +66,15 @@ class BoundingBox : public BoundingBoxInterface {
     }
     text += "}";
     return text;
+  }
+
+  [[nodiscard]] inline auto isInside(const GDouble* coord) const -> GBool override {
+    for(GInt dir = 0; dir < size(); ++dir) {
+      if(coord[dir] < min(dir) || coord[dir] > max(dir)) {
+        return false;
+      }
+    }
+    return true;
   }
 };
 

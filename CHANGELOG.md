@@ -97,7 +97,6 @@
 ## Planned
 
 - output analytical solution if wanted
-- check in periodic boundaries if all cells have been linked
 - get boundary const access to grid information
 - pass all surfaces to the boundary manager
 - store reference to the surfaces in each boundary
@@ -109,6 +108,7 @@
 - reduce todos below 100
 
 ### Working on:
+- check in periodic boundaries if all cells have been linked
 
 
 ## Done:
