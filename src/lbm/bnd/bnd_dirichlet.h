@@ -59,7 +59,9 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
   /// \param vars
   void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
              const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) override {
+    // todo: this is not correct
     for(const auto bndCellId : m_bnd->getCellList()) {
+      // using the general formulation for bb dirichlet bndcnd
       apply(bndCellId, m_value.data(), fpre, fold, feq, vars);
     }
   }
@@ -116,6 +118,80 @@ class LBMBnd_DirichletBB : public LBMBndInterface {
       }
     }
   }
+
+ private:
+  const SurfaceInterface* m_bnd = nullptr;
+
+  VectorD<NVAR> m_value;
+};
+
+/// Dirichlet Boundary condition implemented using the Equilibrium method
+/// \tparam DEBUG_LEVEL
+/// \tparam LBTYPE
+/// \tparam EQ
+template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
+class LBMBnd_DirichletEQ : public LBMBndInterface {
+ private:
+  static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;
+  static constexpr GInt NDIM  = LBMethod<LBTYPE>::m_dim;
+
+  static constexpr GInt NVAR = noVars<LBTYPE>(EQ);
+
+  using VAR = LBMVariables<EQ, NDIM>;
+
+ public:
+  LBMBnd_DirichletEQ(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& properties)
+    : m_bnd(surf), m_value(config::required_config_value<NVAR>(properties, "value")) {}
+  LBMBnd_DirichletEQ(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const json& /*properties*/, const GDouble value) : m_bnd(surf) {
+    m_value.fill(value);
+  }
+  ~LBMBnd_DirichletEQ() override = default;
+
+  // deleted constructors not needed
+  LBMBnd_DirichletEQ(const LBMBnd_DirichletEQ&)                    = delete;
+  LBMBnd_DirichletEQ(LBMBnd_DirichletEQ&&)                         = delete;
+  auto operator=(const LBMBnd_DirichletEQ&) -> LBMBnd_DirichletEQ& = delete;
+  auto operator=(LBMBnd_DirichletEQ&&) -> LBMBnd_DirichletEQ&      = delete;
+
+  void initCnd(const std::function<GDouble&(GInt, GInt)>& vars) override {
+    // todo: this is not correct
+    for(const auto bndCellId : m_bnd->getCellList()) {
+      for(GInt dir = 0; dir < NDIM; ++dir) {
+        vars(bndCellId, VAR::velocity(dir)) = m_value[dir];
+      }
+    }
+  }
+
+  /// Nothing to do here
+  void preApply(const std::function<GDouble&(GInt, GInt)>& /*f*/, const std::function<GDouble&(GInt, GInt)>& /*fold*/,
+                const std::function<GDouble&(GInt, GInt)>& /*feq*/, const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
+
+  /// Apply the Dirichlet boundary condition (setting a constant value for the result)
+  /// \param fpre
+  /// \param fold
+  /// \param feq
+  /// \param vars
+  void apply(const std::function<GDouble&(GInt, GInt)>& fpre, const std::function<GDouble&(GInt, GInt)>& fold,
+             const std::function<GDouble&(GInt, GInt)>& feq, const std::function<GDouble&(GInt, GInt)>& vars) override {
+    for(const auto bndCellId : m_bnd->getCellList()) {
+      // using the general formulation for bb dirichlet bndcnd
+      apply(bndCellId, m_value.data(), fpre, fold, feq, vars);
+    }
+  }
+
+
+ protected:
+  /// Implementation of the Dirichlet boundary condition.
+  /// \tparam VALZERO Set 0 which means setting only the qauilibrium value for this bnd
+  /// \tparam SCALAR We are setting a scalar value
+  /// \param bndCellId Id of the cell to be set
+  /// \param values Dirichlet value to be set
+  /// \param fpre Distribution
+  /// \param fold Distribution
+  template <GBool VALZERO = false, GBool SCALAR = false>
+  void apply(const GInt bndCellId, const GDouble* values, const std::function<GDouble&(GInt, GInt)>& fpre,
+             const std::function<GDouble&(GInt, GInt)>& fold, const std::function<GDouble&(GInt, GInt)>& /*feq*/,
+             const std::function<GDouble&(GInt, GInt)>& /*vars*/) {}
 
  private:
   const SurfaceInterface* m_bnd = nullptr;
@@ -193,7 +269,7 @@ class LBMBnd_DirichletNEEM : public LBMBndInterface {
 
     const GBool setAnalyticalValue = config::opt_config_value(properties, "setAnalyticalValue", false);
 
-    // todo: move this some where else
+    // todo: move this somewhere else
     if(setAnalyticalValue) {
       if constexpr(NDIM == 1) {
         GInt bndId = 0;

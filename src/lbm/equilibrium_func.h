@@ -53,6 +53,17 @@ static inline auto defaultEq(const GDouble weight, const GDouble density, const 
   return weight * density * (1.0 + cu / lbm_cssq + cu * cu / (2.0 * lbm_cssq * lbm_cssq) - vsq / (2.0 * lbm_cssq));
 }
 
+/// Normal LBM equilibrium distribution for Navier-Stokes with 0 velocity
+/// \param weight LBM lattice weight
+/// \param density density
+/// \param cu c_[i][dir] * u[dir]
+/// \param vsq velocity squared (u^2)
+/// \return value of the equilibrium distribution function for Navier-Stokes
+static inline auto defaultEq(const GDouble weight, const GDouble density) -> GDouble {
+  static constexpr GDouble zero = 0;
+  return defaultEq(weight, density, zero, zero);
+}
+
 template <LBMethodType LBTYPE>
 static inline void defaultEq(GDouble* feq, const GDouble density, const GDouble* const velocity) {
   static constexpr GInt NDIST = LBMethod<LBTYPE>::m_noDists;

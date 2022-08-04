@@ -109,6 +109,8 @@
 
 - [IMPROVEMENT][LBM] generalize NEEM boundary condition
 - make neem boundary condition available for NS
+- test all bnds for both poisson and NS
+    - working:
 
 ## Done:
 

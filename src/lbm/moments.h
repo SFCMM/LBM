@@ -136,6 +136,7 @@ inline void calcDensity_limited(const GInt cellId, const std::set<GInt>& limited
 
     // for no slip walls the velocity in the cell is 0!
     if(!NOSLIP) {
+      ASSERT(normal != nullptr, "Invalid normal direction!");
       for(GInt dir = 0; dir < NDIM; ++dir) {
         if(normal[dir] > GDoubleEps) {
           vars(cellId, LBMVariables<LBEquationType::Navier_Stokes, NDIM>::rho()) *=
