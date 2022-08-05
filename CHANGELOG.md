@@ -16,13 +16,29 @@
 ## Planned
 
 - [LPT] calculate timestep by characteristic time
-- [LPT] add simple collision model
+- [LPT] add simple intra-collision model
+- [LPT] add breakup models
+- [LPT] add collision code for LPT
+- add multilevel method
+- ray tracing of particles
+- initial material point method
+- mpi communication methods
+- port testing tool over to python
+- compare timings between runs of the testing tool
+
+- [LIB] move more stuff to common lib project
+- [LIB] refactor kdtree and add more complete test
+- add intel compiler option
+- add github website
 
 # V0.0.3
 
 ## Planned
 
 - run basic 3D NS Case
+- run basic sph case
+- add nernst-planck equation case
+
 - restart
 - store meta data in output files (version, node etc.)
 - output performance data
@@ -30,10 +46,6 @@
 - add support for multiple species
 - add support for multiple phases
 - add injection models
-- add breakup models
-- add collision code for LPT
-- add multilevel method
-- add github website
 - add images to readme
 - allow more than one solver to run at the same time
 - write out lines as svg
@@ -41,15 +53,9 @@
 - write out memory statistics
 - reduce todo below 50
 
-- ray tracing of particles
 - refactor comparison with analytical solution to postprocessing
-- initial material point method
-- mpi communication methods
 - [LBM] calculate total energy/internal energy for output purposes (also output pressure and temperature)
-- compare timings between runs of the testing tool
-- port testing tool over to python
-- [LIB] move more stuff to common lib project
-- [LIB] refactor kdtree and add more complete test
+
 - [LBM][POISSON][BUG] the precision of D2Q5 is not correct for Poisson
 - [LBM] change convergence criterium to some average not maximum
 - [LBM] fix NEBB bnd cnd
@@ -62,7 +68,6 @@
 - [test script] run test on remote host
 - update to gnu 11
 - update to clang 11
-- add intel compiler option
 
 ## moved
 
