@@ -21,10 +21,10 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
   virtual ~LBMBndCell_periodic() = default;
 
   // deleted constructors not needed
-  //  LBMBndCell_periodic(const LBMBndCell_periodic&) = delete;
-  //  LBMBndCell_periodic(LBMBndCell_periodic&&)      = delete;
-  //  auto operator=(const LBMBndCell_periodic&) -> LBMBndCell_periodic& = delete;
-  //  auto operator=(LBMBndCell_periodic&&) -> LBMBndCell_periodic& = delete;
+  LBMBndCell_periodic(const LBMBndCell_periodic&)                    = default;
+  LBMBndCell_periodic(LBMBndCell_periodic&&)                         = delete;
+  auto operator=(const LBMBndCell_periodic&) -> LBMBndCell_periodic& = delete;
+  auto operator=(LBMBndCell_periodic&&) -> LBMBndCell_periodic&      = delete;
 
 
   // todo: move to some common place
@@ -58,9 +58,11 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
 
     // todo: this needs to be moved since we cannot guarantee double matching cells are handled correctly
     for(GInt id = 0; id < m_noSetDists; ++id) {
-      m_linkedCell[id]   = INVALID_CELLID;
-      const GInt dist    = m_bndIndex[id];
-      auto       centerA = center;
+      m_linkedCell[id] = INVALID_CELLID;
+      const GInt dist  = m_bndIndex[id];
+
+      // determine center of cell at one side of the periodic boundary condition
+      auto centerA = center;
       for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
         if(std::abs(normal()[dir]) > 0) {
           continue;
@@ -69,55 +71,32 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
       }
 
       //      GDouble minDist = std::numeric_limits<GDouble>::max();
+      static constexpr GDouble max_cell_match_dist = 10 * GDoubleEps;
+      auto                     cellMatch           = [&](const auto& centerA_, const auto& centerB_) {
+        for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
+          const GDouble diff = std::abs(centerA_[dir] - centerB_[dir]);
+          if(diff <= max_cell_match_dist) {
+            return true;
+          }
+        }
+        return false;
+      };
+
       // connect cell of the boundary surface and connected surface
       for(const GInt cellIdB : surfConnected->getCellList()) {
         const auto& centerB = surfConnected->center(cellIdB);
-        for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
-          const GDouble diff = std::abs(centerA[dir] - centerB[dir]);
-          if(diff <= 10 * GDoubleEps) {
-            m_linkedCell[id] = cellIdB;
-            break;
-          }
-        }
-        if(m_linkedCell[id] != INVALID_CELLID) {
+        if(cellMatch(centerA, centerB)) {
+          m_linkedCell[id] = cellIdB;
           break;
         }
       }
 
-      if(m_linkedCell[id] == INVALID_CELLID && DEBUG_LEVEL == Debug_Level::max_debug) {
-        GDouble min       = std::numeric_limits<GDouble>::max();
-        GInt    minCellId = INVALID_CELLID;
-        ASSERT(!surfConnected->getCellList().empty(), "Surface is empty!");
-        for(const GInt cellIdB : surfConnected->getCellList()) {
-          const auto& centerB = surfConnected->center(cellIdB);
-          for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
-            const GDouble diff = std::abs(centerA[dir] - centerB[dir]);
-            if(diff < min) {
-              min       = diff;
-              minCellId = cellIdB;
-            } else if(minCellId == INVALID_CELLID) {
-              cerr0 << cellIdB << std::endl;
-            }
-          }
-        }
-        cerr0 << "Only found a matching cell to: " << min << " with cellId: " << minCellId << std::endl;
-        cerr0 << "For the location: " << strStreamify<NDIM>(centerA).str() << " with the matching cell center "
-              << strStreamify<NDIM>(surfConnected->center(minCellId)).str() << std::endl;
-        cerr0 << "The orientation was " << dist << std::endl;
-        cerr0 << "CellLength " << cellLength << std::endl;
-      }
+      debugMsg(surfConnected, centerA, id);
 
       ASSERT(m_linkedCell[id] != INVALID_CELLID,
              "No cell to link has been found for: " + std::to_string(mapped()) + " at: " + strStreamify<NDIM>(centerA).str());
     }
-
-    for(GInt idA = 0; idA < m_noSetDists; ++idA) {
-      for(GInt idB = idA + 1; idB < m_noSetDists; ++idB) {
-        if(m_linkedCell[idA] == m_linkedCell[idB]) {
-          TERMM(-1, "Invalid periodic bnd");
-        }
-      }
-    }
+    errorCheck();
   }
 
   void preApply(const std::function<GDouble&(GInt, GInt)>& f, const std::function<GDouble&(GInt, GInt)>& fold,
@@ -149,6 +128,42 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
   using LBMBndCell<LBTYPE>::mapped;
   using LBMBndCell<LBTYPE>::normal;
   using LBMBndCell<LBTYPE>::init;
+
+  void debugMsg(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected, const VectorD<NDIM>& centerA, const GInt id) {
+    if(m_linkedCell[id] == INVALID_CELLID && DEBUG_LEVEL == Debug_Level::max_debug) {
+      GDouble min       = std::numeric_limits<GDouble>::max();
+      GInt    minCellId = INVALID_CELLID;
+      ASSERT(!surfConnected->getCellList().empty(), "Surface is empty!");
+      for(const GInt cellIdB : surfConnected->getCellList()) {
+        const auto& centerB = surfConnected->center(cellIdB);
+        for(GInt dir = 0; dir < dim(LBTYPE); ++dir) {
+          const GDouble diff = std::abs(centerA[dir] - centerB[dir]);
+          if(diff < min) {
+            min       = diff;
+            minCellId = cellIdB;
+          } else if(minCellId == INVALID_CELLID) {
+            cerr0 << cellIdB << std::endl;
+          }
+        }
+      }
+      cerr0 << "Only found a matching cell to: " << min << " with cellId: " << minCellId << std::endl;
+      cerr0 << "For the location: " << strStreamify<NDIM>(centerA).str() << " with the matching cell center "
+            << strStreamify<NDIM>(surfConnected->center(minCellId)).str() << std::endl;
+      //      cerr0 << "The orientation was " << dist << std::endl;
+      cerr0 << "CellLength " << surfConnected->cellLength(mapped()) << std::endl;
+    }
+  }
+
+  void errorCheck() {
+    // check if any cell has been linked twice
+    for(GInt idA = 0; idA < m_noSetDists; ++idA) {
+      for(GInt idB = idA + 1; idB < m_noSetDists; ++idB) {
+        if(m_linkedCell[idA] == m_linkedCell[idB]) {
+          TERMM(-1, "Invalid periodic bnd (cell has been linked twice)");
+        }
+      }
+    }
+  }
 
   std::array<GInt, noDists(LBTYPE)> m_bndIndex{};
   std::array<GInt, noDists(LBTYPE)> m_linkedCell{};

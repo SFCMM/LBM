@@ -209,7 +209,7 @@ class LBMBnd_wallNEEM : /*public LBMBndInterface,*/ public LBMBnd_wallEq<DEBUG_L
   auto operator=(const LBMBnd_wallNEEM&) -> LBMBnd_wallNEEM& = delete;
   auto operator=(LBMBnd_wallNEEM&&) -> LBMBnd_wallNEEM&      = delete;
 
-  void init() {
+  void init() override {
     auto extrapolationDir = [&](const GDouble* normal) {
       for(GInt dir = 0; dir < NDIM; ++dir) {
         if(normal[dir] < 0) {
