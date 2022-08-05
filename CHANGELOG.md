@@ -101,14 +101,13 @@
 - pass all surfaces to the boundary manager
 - store reference to the surfaces in each boundary
 - refactor forcing setup
-- make types definitions in include/common/constant
 - fix keys in unused config value detection
 - add way to just iterate over leaf cells
 - in cartesiangrid don't use configuration.json but the accessor to mark the unused values correctly
 - reduce todos below 100
 
 ### Working on:
-- check in periodic boundaries if all cells have been linked
+- make types definitions in include/common/constant
 
 
 ## Done:
