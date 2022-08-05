@@ -175,7 +175,8 @@ template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE>
 class LBMBnd_Periodic : public LBMBndInterface {
  public:
   LBMBnd_Periodic(const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surf, const Surface<DEBUG_LEVEL, dim(LBTYPE)>* surfConnected,
-                  const json& properties) {
+                  const json& properties)
+    : m_bnd(surf), m_bndConnected(surfConnected) {
     ASSERT(surfConnected->size() > 0, "Invalid connected surface");
 
     for(const GInt cellId : surf->getCellList()) {
@@ -209,5 +210,7 @@ class LBMBnd_Periodic : public LBMBndInterface {
 
  private:
   std::vector<LBMBndCell_periodic<DEBUG_LEVEL, LBTYPE>> m_bndCells;
+  const SurfaceInterface*                               m_bnd          = nullptr;
+  const SurfaceInterface*                               m_bndConnected = nullptr;
 };
 #endif // LBM_BND_PERIODIC_H

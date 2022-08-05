@@ -91,9 +91,11 @@
 - [IO] set output format for the solvers
 - [IO] set output variables for the solvers
 - [IO] check in output functions if fileformat ending is already included
+- add way to just iterate over leaf cells
 - add more openmp
 - allow comments in configuration files
 - add ns compatible neumann bndcnd
+- refactor forcing setup
 - test all bnds for both poisson and NS
     - working:
 
@@ -104,15 +106,10 @@
 - output analytical solution if wanted
 - get boundary const access to grid information
 - pass all surfaces to the boundary manager
-- store reference to the surfaces in each boundary
-- refactor forcing setup
 - fix keys in unused config value detection
-- add way to just iterate over leaf cells
 - in cartesiangrid don't use configuration.json but the accessor to mark the unused values correctly
-- reduce todos below 100
 
 ### Working on:
-- make types definitions in include/common/constant
 
 
 ## Done:
