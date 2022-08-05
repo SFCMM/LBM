@@ -21,10 +21,10 @@ class LBMBndCell_periodic : public LBMBndCell<LBTYPE> {
   virtual ~LBMBndCell_periodic() = default;
 
   // deleted constructors not needed
-  //  LBMBndCell_periodic(const LBMBndCell_periodic&) = delete;
-  //  LBMBndCell_periodic(LBMBndCell_periodic&&)      = delete;
-  //  auto operator=(const LBMBndCell_periodic&) -> LBMBndCell_periodic& = delete;
-  //  auto operator=(LBMBndCell_periodic&&) -> LBMBndCell_periodic& = delete;
+  LBMBndCell_periodic(const LBMBndCell_periodic&)                    = default;
+  LBMBndCell_periodic(LBMBndCell_periodic&&)                         = delete;
+  auto operator=(const LBMBndCell_periodic&) -> LBMBndCell_periodic& = delete;
+  auto operator=(LBMBndCell_periodic&&) -> LBMBndCell_periodic&      = delete;
 
 
   // todo: move to some common place
