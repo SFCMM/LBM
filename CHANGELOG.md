@@ -104,8 +104,6 @@
 ## Planned
 
 - output analytical solution if wanted
-- get boundary const access to grid information
-- pass all surfaces to the boundary manager
 - fix keys in unused config value detection
 - in cartesiangrid don't use configuration.json but the accessor to mark the unused values correctly
 

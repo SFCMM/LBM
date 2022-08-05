@@ -103,7 +103,7 @@ class Surface : public SurfaceInterface {
       }
       const GInt neighborId = m_grid.neighbor(cellId, dir);
       if(neighborId == INVALID_CELLID) {
-        cerr0 << "ERROR: Invalid neighborId " << neighborId << " in dir " << dir << std::endl;
+        cerr0 << "ERROR: Invalid neighborId " << neighborId << " in dir " << dir << " for cell " << cellId << std::endl;
         std::exit(-1);
       }
       return neighborId;
