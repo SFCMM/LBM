@@ -52,7 +52,7 @@ run_test() {
 
   echo "Running testcase $NAME..."
 
-  if OMP_NUM_THREADS=$DEFAULT_OMP_THREADS $BINPATH "$1" &>"$NAME".stdout; then
+  if OMP_NUM_THREADS=$DEFAULT_OMP_THREADS $BINPATH "$1" &>"$NAME".stdout -d3; then
     echo "passed"
     touch ../"$LOG_PATH"/SUCCESS
   else

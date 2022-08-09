@@ -101,12 +101,10 @@ class Surface : public SurfaceInterface {
         cerr0 << "ERROR: Invalid direction for " << cellId << " and " << dir << std::endl;
         std::exit(-1);
       }
-      const GInt neighborId = m_grid.neighbor(cellId, dir);
-      if(neighborId == INVALID_CELLID) {
-        cerr0 << "ERROR: Invalid neighborId " << neighborId << " in dir " << dir << " for cell " << cellId << std::endl;
+      if(cellId == INVALID_CELLID) {
+        cerr0 << "ERROR: Invalid cellId " << std::endl;
         std::exit(-1);
       }
-      return neighborId;
     }
     return m_grid.neighbor(cellId, dir);
   }
