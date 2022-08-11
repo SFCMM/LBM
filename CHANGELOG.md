@@ -99,13 +99,27 @@
 - test all bnds for both poisson and NS
     - working:
 
-# V0.0.2
-
-### Working on:
-- output analytical solution if wanted
-
-
 ## Done:
+
+### Features
+
+### Buildsystem
+
+### Testing
+
+### Usability
+
+### IO
+
+### Performance
+
+### Bugs
+
+### Documentation
+
+### Refactoring
+
+# V0.0.2
 
 ### Features
 
@@ -154,8 +168,6 @@
 
 - Math expression support for boundary conditions
 
-### Buildsystem
-
 ### Testing
 - check for divergence when debug is active
 - write test report in CSV
@@ -172,8 +184,6 @@
 - set output dir and solution file name
 - allow multiple cell output filters
 - correctly handle switch between int and double in writePoints()
-
-### Performance
 
 ### Bugs
 - segmentation fault after divergence
