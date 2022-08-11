@@ -38,7 +38,7 @@ void LPTSolver<DEBUG_LEVEL, NDIM, P>::init(int argc, GChar** argv) {
 /// \param config_file config file name
 template <Debug_Level DEBUG_LEVEL, GInt NDIM, LPTType P>
 void LPTSolver<DEBUG_LEVEL, NDIM, P>::init(int argc, GChar** argv, GString config_file) {
-  setConfiguration(config_file);
+  setConfigFile(config_file);
   init(argc, argv);
   logger << NDIM << "D LPT Solver started ||>" << endl;
   cout << NDIM << "D LPT Solver started ||>" << endl;

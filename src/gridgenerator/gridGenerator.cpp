@@ -35,12 +35,13 @@ void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv) {
 
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::init(int argc, GChar** argv, GString config_file) {
-  setConfiguration(config_file);
+  setConfigFile(config_file);
   init(argc, argv);
 }
 
 template <Debug_Level DEBUG_LEVEL>
 void GridGenerator<DEBUG_LEVEL>::initBenchmark(int argc, GChar** argv) {
+  // todo: make configable
   m_benchmark = true;
 
   m_dim              = 3;

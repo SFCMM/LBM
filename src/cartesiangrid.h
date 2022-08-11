@@ -261,7 +261,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 
   /// Load the generated grid in-memory and set additional properties
   /// \param grid Generated grid.
-  void loadGridInplace(const CartesianGridGen<DEBUG_LEVEL, NDIM>& grid, const json& properties) {
+  void loadGridInplace(const CartesianGridGen<DEBUG_LEVEL, NDIM>& grid, std::shared_ptr<ConfigurationAccess> properties) {
     setConfiguration(properties);
     // grid.balance(); //todo: implement
     setCapacity(grid.capacity()); // todo: change for adaptation

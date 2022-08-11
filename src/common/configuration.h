@@ -73,7 +73,7 @@ class Configuration {
  public:
   /// Set the configuration file name
   /// \param configFileName Configuration file name
-  void setConfiguration(const GString& configFileName) { m_configFileName = configFileName; }
+  void setConfigFile(const GString& configFileName) { m_configFileName = configFileName; }
 
   /// Set the configuration from json-object
   /// \param config json-object to be used for configuration
@@ -109,6 +109,8 @@ class Configuration {
   /// \return Configuration value if it exist or exit
   template <typename T>
   [[nodiscard]] auto required_config_value(const GString& key) -> T {
+    checkConfig();
+
     // todo: check for types
     if(m_config.template contains(key)) {
       m_unusedKeys[key] = true;
@@ -123,6 +125,8 @@ class Configuration {
   /// \return Configuration value if it exist or exit
   template <typename T>
   [[nodiscard]] auto required_config_value(const GString& key) const -> T {
+    checkConfig();
+
     // todo: check for types
     if(m_config.template contains(key)) {
       return static_cast<T>(m_config[key]);
@@ -136,6 +140,8 @@ class Configuration {
   /// \return Configuration value if it exist or exit
   template <GInt NDIM>
   [[nodiscard]] auto required_config_value(const GString& key) -> Point<NDIM> {
+    checkConfig();
+
     // todo: check for types
     if(m_config.template contains(key)) {
       m_unusedKeys[key] = true;
@@ -154,6 +160,8 @@ class Configuration {
   /// \return Configuration value if it exist or exit
   template <typename T>
   [[nodiscard]] auto required_config_value(const std::vector<GString>& parentObjPath, const GString& key) -> T {
+    checkConfig();
+
     // todo: check for types
     json conf = m_config;
     for(const auto& parentKey : parentObjPath) {
@@ -174,6 +182,8 @@ class Configuration {
   /// \return Configuration value if it exists or the given default
   template <typename T>
   [[nodiscard]] auto opt_config_value(const GString& key, const T& defaultValue) -> T {
+    checkConfig();
+
     // todo: check for types
     if(m_config.template contains(key)) {
       m_unusedKeys[key] = true;
@@ -190,6 +200,8 @@ class Configuration {
   /// \return Configuration value if it exist or exit
   template <typename T>
   [[nodiscard]] auto opt_config_value(const std::vector<GString>& parentObjPath, const GString& key, const T& defaultValue) -> T {
+    checkConfig();
+
     // todo: check for types
     json conf = m_config;
     for(const auto& parentKey : parentObjPath) {
@@ -205,13 +217,19 @@ class Configuration {
   /// Check if a configuration value exists
   /// \param key Key of the value to check
   /// \return true if it exists
-  auto has_config_value(const GString& key) -> GBool { return m_config.template contains(key); }
+  auto has_config_value(const GString& key) -> GBool {
+    checkConfig();
+
+    return m_config.template contains(key);
+  }
 
   /// Exists the provided key-value pair in the configuration?
   /// \param key The key of the value
   /// \param value The value
   /// \return The key-value pair exits -> true
   auto has_any_key_value(const GString& key, const GString& value) const -> GBool {
+    checkConfig();
+
     auto has_config_value_key = [=](const json& configurationObj, const GString& _key, const GString& val) {
       // entry exists
       if(configurationObj.contains(_key)) {
@@ -248,6 +266,8 @@ class Configuration {
   /// \param pObject Parent object
   /// \return Object with the name [object]
   auto getObject(const GString& object, const GString& pObject = "") -> json {
+    checkConfig();
+
     const json& conf = (pObject.empty()) ? m_config : m_config[pObject];
     if(!pObject.empty()) {
       m_unusedKeys[pObject] = true;
@@ -259,6 +279,8 @@ class Configuration {
   /// \param pObject Parent object name.
   /// \return List of all the object identifiers.
   auto getAllObjects(const GString& pObject = "") const -> std::vector<GString> {
+    checkConfig();
+
     std::vector<GString> tmp_objL;
     const json&          conf = (pObject.empty()) ? m_config : m_config[pObject];
     for(const auto& [key, item] : conf.items()) {
@@ -273,6 +295,8 @@ class Configuration {
   /// \param value Value to search for
   /// \return List of keys with the value
   auto get_all_items_with_value(const GString& value) const -> std::vector<json> {
+    checkConfig();
+
     auto has_config_value = [=](const json& configObj, const GString& val) {
       // entry exists
       return std::any_of(configObj.begin(), configObj.end(), [&](const auto& item) { return item == val; });
@@ -333,6 +357,13 @@ class Configuration {
   /// \return JSON-object
   auto config() const -> const json& { return m_config; }
 
+  /// Get an accessor to the configuration.
+  /// \return ConfigurationAccess object
+  auto getAccessor() -> std::shared_ptr<ConfigurationAccess> {
+    m_bondedConfAccess.emplace_back(std::make_shared<ConfigurationAccess>("", this));
+    return m_bondedConfAccess.back();
+  }
+
   /// Get an accessor to the configuration limited to the subobject.
   /// \param subobject The subobject to be given access to
   /// \return ConfigurationAccess object
@@ -350,6 +381,13 @@ class Configuration {
     // put all available keys in map to keep track of usage
     for(const auto& element : m_config.items()) {
       m_unusedKeys.emplace(element.key(), false);
+    }
+  }
+
+  void checkConfig() const {
+    if(m_config.empty()) {
+      logger << "No configuration loaded" << std::endl;
+      TERMM(-1, "Invalid operation!");
     }
   }
 

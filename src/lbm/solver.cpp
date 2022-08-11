@@ -26,7 +26,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::init(int argc, GChar** argv) {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::init(int argc, GChar** argv, GString config_file) {
-  setConfiguration(config_file);
+  setConfigFile(config_file);
   init(argc, argv);
   logger << NDIM << "D LBM Solver started ||>" << endl;
   cout << NDIM << "D LBM Solver started ||>" << endl;
@@ -785,15 +785,15 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::transferGrid(const GridInterface& grid)
   switch(NDIM) {
     case 1:
       static_cast<CartesianGrid<DEBUG_LEVEL, 1>*>(m_grid.get())
-          ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 1>*>(static_cast<const void*>(&grid)), config());
+          ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 1>*>(static_cast<const void*>(&grid)), getAccessor());
       break;
     case 2:
       static_cast<CartesianGrid<DEBUG_LEVEL, 2>*>(m_grid.get())
-          ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 2>*>(static_cast<const void*>(&grid)), config());
+          ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 2>*>(static_cast<const void*>(&grid)), getAccessor());
       break;
     case 3:
       static_cast<CartesianGrid<DEBUG_LEVEL, 3>*>(m_grid.get())
-          ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 3>*>(static_cast<const void*>(&grid)), config());
+          ->loadGridInplace(*static_cast<const CartesianGridGen<DEBUG_LEVEL, 3>*>(static_cast<const void*>(&grid)), getAccessor());
       break;
     default:
       TERMM(-1, "Only dimensions 1,2 and 3 are supported.");
