@@ -20,7 +20,7 @@
 #include "interface/grid_interface.h"
 
 template <Debug_Level DEBUG_LEVEL, GInt NDIM>
-class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Configuration {
+class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
  public:
   /// Underlying enum type for property access
   using Cell = CellProperties;
@@ -262,7 +262,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
   /// Load the generated grid in-memory and set additional properties
   /// \param grid Generated grid.
   void loadGridInplace(const CartesianGridGen<DEBUG_LEVEL, NDIM>& grid, std::shared_ptr<ConfigurationAccess> properties) {
-    setConfiguration(properties);
+    m_config = properties;
     // grid.balance(); //todo: implement
     setCapacity(grid.capacity()); // todo: change for adaptation
     m_geometry              = grid.geometry();
@@ -298,8 +298,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
     }
 #endif
 
-    m_axisAlignedBnd = opt_config_value<GBool>("assumeAxisAligned", m_axisAlignedBnd);
-    m_periodic       = has_any_key_value("type", "periodic");
+    m_axisAlignedBnd = m_config->opt_config_value<GBool>("assumeAxisAligned", m_axisAlignedBnd);
+    m_periodic       = m_config->has_any_key_value("type", "periodic");
 
     setProperties();
 
@@ -557,7 +557,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 #pragma ide diagnostic   ignored "cppcoreguidelines-pro-bounds-constant-array-index"
 #endif
   void identifyBndrySurfaces() {
-    json bndryConfig = getObject("boundary");
+    json bndryConfig = m_config->getObject("boundary");
 
     cerr0 << "Create boundary surfaces for " << m_geometry->noObjects() << " geometries" << std::endl;
 
@@ -613,11 +613,11 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 
   void setupPeriodicConnections() {
     if(m_periodic) {
-      json                                 bndryConfig = getObject("boundary");
+      json                                 bndryConfig = m_config->getObject("boundary");
       std::unordered_map<GString, GString> periodicConnections;
 
       for(const auto& [geometryName, geomConf] : bndryConfig.items()) {
-        std::vector<json> periodicBnds = get_all_items_with_value("periodic");
+        std::vector<json> periodicBnds = m_config->get_all_items_with_value("periodic");
 
         for(const auto& [surfName, surfConf] : geomConf.items()) {
           if(config::opt_config_value(surfConf, "type", static_cast<GString>("notset")) == "periodic") {
@@ -842,6 +842,8 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM>, private Confi
 
   std::vector<GFloat> m_weight{};
   std::vector<GFloat> m_workload{};
+
+  std::shared_ptr<ConfigurationAccess> m_config;
 };
 
 #endif // GRIDGENERATOR_CARTESIANGRID_H

@@ -101,13 +101,8 @@
 
 # V0.0.2
 
-## Planned
-
-- output analytical solution if wanted
-- fix keys in unused config value detection
-- in cartesiangrid don't use configuration.json but the accessor to mark the unused values correctly
-
 ### Working on:
+- output analytical solution if wanted
 
 
 ## Done:

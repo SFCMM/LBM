@@ -434,6 +434,33 @@ class ConfigurationAccess {
     return m_parentConf->template required_config_value<T>(access, key);
   }
 
+  /// Get an optional configuration value (return default value if value not found)
+  /// \tparam T Type of the value
+  /// \param key Key of the value
+  /// \param defaultValue Default value
+  /// \return Configuration value if it exists or the given default
+  template <typename T>
+  [[nodiscard]] auto opt_config_value(const GString& key, const T& defaultValue) -> T {
+    // todo: check for types
+    std::vector<GString> access{m_prefix};
+    return m_parentConf->template opt_config_value<T>(access, key, defaultValue);
+  }
+
+  /// Exists the provided key-value pair in the configuration?
+  /// \param key The key of the value
+  /// \param value The value
+  /// \return The key-value pair exits -> true
+  [[nodiscard]] auto has_any_key_value(const GString& key, const GString& value) const -> GBool {
+    return m_parentConf->has_any_key_value(key, value);
+  }
+
+  /// Get all the keys with a certain value
+  /// \param value Value to search for
+  /// \return List of keys with the value
+  [[nodiscard]] auto get_all_items_with_value(const GString& value) const -> std::vector<json> {
+    return m_parentConf->get_all_items_with_value(value);
+  }
+
   auto getObject(const GString& object) -> json { return m_parentConf->getObject(object, m_prefix); }
 
  private:
