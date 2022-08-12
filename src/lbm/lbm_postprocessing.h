@@ -1,6 +1,6 @@
 #ifndef LBM_LBM_POSTPROCESSING_H
 #define LBM_LBM_POSTPROCESSING_H
-#include "postprocessing_cartesian.h"
+#include "postprocess/postprocessing_cartesian.h"
 
 template <GInt NDIM>
 class LBMPostprocessFunctionLine : public PostprocessCartesianFunctionLine<NDIM> {

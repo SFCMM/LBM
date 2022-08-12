@@ -7,7 +7,7 @@
 #include "constants.h"
 #include "interface/solver_interface.h"
 #include "lbm/bnd/bnd.h"
-#include "postprocessing.h"
+#include "postprocess/postprocessing.h"
 #include "variables.h"
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>

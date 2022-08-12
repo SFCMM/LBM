@@ -1,9 +1,9 @@
 #ifndef LBM_LBM_POSTPROCESSING_H
 #define LBM_POSTPROCESSING_H
 
-#include <lbm/lbm_postprocessing.h>
 #include <utility>
 #include "common/configuration.h"
+#include "lbm/lbm_postprocessing.h"
 #include "postprocessing_func.h"
 
 namespace pp {

@@ -1,8 +1,8 @@
 #ifndef LBM_POSTPROCESSING_CARTESIAN_H
 #define LBM_POSTPROCESSING_CARTESIAN_H
-#include <common/mesh.h>
 #include <utility>
 #include "common/line.h"
+#include "common/mesh.h"
 #include "postprocessing_func.h"
 
 template <GInt NDIM>
