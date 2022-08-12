@@ -30,11 +30,11 @@ class LPTSolver : public Runnable, private Configuration, private RandomGenerato
     m_gravity.fill(NAN);
     m_velo_a_infty.fill(0);
   };
-  ~LPTSolver() override       = default;
-  LPTSolver(const LPTSolver&) = delete;
-  LPTSolver(LPTSolver&&)      = delete;
+  ~LPTSolver() override                          = default;
+  LPTSolver(const LPTSolver&)                    = delete;
+  LPTSolver(LPTSolver&&)                         = delete;
   auto operator=(const LPTSolver&) -> LPTSolver& = delete;
-  auto operator=(LPTSolver&&) -> LPTSolver& = delete;
+  auto operator=(LPTSolver&&) -> LPTSolver&      = delete;
 
   void               init(int argc, GChar** argv, GString config_file) override;
   void               initBenchmark(int argc, GChar** argv) override;

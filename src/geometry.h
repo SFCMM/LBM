@@ -22,11 +22,11 @@ enum class BoundaryConditionType { Wall };
 class GeometryInterface {
  public:
   GeometryInterface(const MPI_Comm comm) : m_comm(comm){};
-  virtual ~GeometryInterface()                = default;
-  GeometryInterface(const GeometryInterface&) = delete;
-  GeometryInterface(GeometryInterface&&)      = delete;
+  virtual ~GeometryInterface()                                   = default;
+  GeometryInterface(const GeometryInterface&)                    = delete;
+  GeometryInterface(GeometryInterface&&)                         = delete;
   auto operator=(const GeometryInterface&) -> GeometryInterface& = delete;
-  auto operator=(GeometryInterface&&) -> GeometryInterface& = delete;
+  auto operator=(GeometryInterface&&) -> GeometryInterface&      = delete;
 
   virtual void                      setup(const json& geometry)                                                     = 0;
   virtual inline auto               pointIsInside(const GDouble* x) const -> GBool                                  = 0;
@@ -45,12 +45,12 @@ class GeometryRepresentation {
  public:
   GeometryRepresentation(const json& geom)
     : m_body(config::opt_config_value(geom, "body", GString("unique"))), m_subtract(config::opt_config_value(geom, "subtract", false)){};
-  GeometryRepresentation()                              = default;
-  virtual ~GeometryRepresentation()                     = default;
-  GeometryRepresentation(const GeometryRepresentation&) = delete;
-  GeometryRepresentation(GeometryRepresentation&&)      = delete;
+  GeometryRepresentation()                                                 = default;
+  virtual ~GeometryRepresentation()                                        = default;
+  GeometryRepresentation(const GeometryRepresentation&)                    = delete;
+  GeometryRepresentation(GeometryRepresentation&&)                         = delete;
   auto operator=(const GeometryRepresentation&) -> GeometryRepresentation& = delete;
-  auto operator=(GeometryRepresentation&&) -> GeometryRepresentation& = delete;
+  auto operator=(GeometryRepresentation&&) -> GeometryRepresentation&      = delete;
 
   [[nodiscard]] virtual inline auto pointIsInside(const Point<NDIM>& x) const -> GBool                        = 0;
   [[nodiscard]] virtual inline auto cutWithCell(const Point<NDIM>& center, GDouble cellLength) const -> GBool = 0;
@@ -518,7 +518,9 @@ class GeometrySTL : public GeometryRepresentation<DEBUG_LEVEL, NDIM> {
     using namespace std;
 
     // data in an binary STL file normal, vertex1, vertex2, vertex3
-    using facet_t = struct { std::array<float, NDIM> n, v1, v2, v3; };
+    using facet_t = struct {
+      std::array<float, NDIM> n, v1, v2, v3;
+    };
     facet_t facet;
 
     // open file in binary format

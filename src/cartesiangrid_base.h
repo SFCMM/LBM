@@ -4,8 +4,8 @@
 #include <gcem.hpp>
 
 #include <sfcmm_common.h>
-//#include "celltree.h"
-//#include "common/IO.h"
+// #include "celltree.h"
+// #include "common/IO.h"
 #include "geometry.h"
 #include "globaltimers.h"
 #include "gridcell_properties.h"
@@ -115,12 +115,12 @@ class BaseCartesianGrid : public GridInterface {
   /// Underlying enum type for property access
   using Cell = CellProperties;
 
-  BaseCartesianGrid()                         = default;
-  ~BaseCartesianGrid() override               = default;
-  BaseCartesianGrid(const BaseCartesianGrid&) = delete;
-  BaseCartesianGrid(BaseCartesianGrid&&)      = delete;
+  BaseCartesianGrid()                                            = default;
+  ~BaseCartesianGrid() override                                  = default;
+  BaseCartesianGrid(const BaseCartesianGrid&)                    = delete;
+  BaseCartesianGrid(BaseCartesianGrid&&)                         = delete;
   auto operator=(const BaseCartesianGrid&) -> BaseCartesianGrid& = delete;
-  auto operator=(BaseCartesianGrid&&) -> BaseCartesianGrid& = delete;
+  auto operator=(BaseCartesianGrid&&) -> BaseCartesianGrid&      = delete;
 
   void setBoundingBox(const BoundingBoxInterface& bbox) override {
     if(bbox.size() != NDIM) {
@@ -185,7 +185,7 @@ class BaseCartesianGrid : public GridInterface {
   [[nodiscard]] inline auto currentHighestLvl() const -> GInt override { return m_currentHighestLvl; }
   [[nodiscard]] inline auto dim() const -> GInt override { return NDIM; }
 
-  inline auto property(const GInt id, CellProperties p) -> auto {
+  inline auto property(const GInt id, CellProperties p) -> auto{
     if(DEBUG_LEVEL >= Debug_Level::debug) {
       //      checkBounds(id);
       checkProperty(p);

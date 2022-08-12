@@ -34,10 +34,10 @@ class LBMSolver : public Runnable,
   LBMSolver(GInt32 domainId, GInt32 noDomains) : POST(), m_domainId(domainId), m_noDomains(noDomains){};
   ~LBMSolver() override = default;
 
-  LBMSolver(const LBMSolver&) = delete;
-  LBMSolver(LBMSolver&&)      = delete;
+  LBMSolver(const LBMSolver&)                    = delete;
+  LBMSolver(LBMSolver&&)                         = delete;
   auto operator=(const LBMSolver&) -> LBMSolver& = delete;
-  auto operator=(LBMSolver&&) -> LBMSolver& = delete;
+  auto operator=(LBMSolver&&) -> LBMSolver&      = delete;
 
   void init(int argc, GChar** argv, GString config_file) override;
   void initBenchmark(int argc, GChar** argv) override;

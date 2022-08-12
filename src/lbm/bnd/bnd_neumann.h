@@ -28,10 +28,10 @@ class LBMBnd_NeumannNEEM : public LBMBnd_DirichletNEEM<DEBUG_LEVEL, LBTYPE, EQ> 
   ~LBMBnd_NeumannNEEM() override = default;
 
   // deleted constructors not needed
-  LBMBnd_NeumannNEEM(const LBMBnd_NeumannNEEM&) = delete;
-  LBMBnd_NeumannNEEM(LBMBnd_NeumannNEEM&&)      = delete;
+  LBMBnd_NeumannNEEM(const LBMBnd_NeumannNEEM&)                    = delete;
+  LBMBnd_NeumannNEEM(LBMBnd_NeumannNEEM&&)                         = delete;
   auto operator=(const LBMBnd_NeumannNEEM&) -> LBMBnd_NeumannNEEM& = delete;
-  auto operator=(LBMBnd_NeumannNEEM&&) -> LBMBnd_NeumannNEEM& = delete;
+  auto operator=(LBMBnd_NeumannNEEM&&) -> LBMBnd_NeumannNEEM&      = delete;
 
   void initCnd(const std::function<GDouble&(GInt, GInt)>& /*vars*/) override {}
 

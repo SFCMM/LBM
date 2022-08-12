@@ -8,7 +8,7 @@ inline std::ostream cerr0(nullptr); // NOLINT(cppcoreguidelines-avoid-non-const-
 
 
 /// The default max number of offsprings allowed for a partitioning cell.
-static constexpr GInt    DEFAULT_MAXNOOFFSPRINGS = 100000;
+static constexpr GInt DEFAULT_MAXNOOFFSPRINGS = 100000;
 
 /// arbitrary maximum cell level
 static constexpr GInt MAX_LVL = 100;
@@ -30,13 +30,13 @@ static constexpr GInt MAX_DIM = 4;
 #define LOG_MIN_FLUSH_SIZE 0
 
 // activate asserts (will reduce performance)
-//#define USE_ASSERTS
+// #define USE_ASSERTS
 
 // average timer results over all ranks
 #define TIMER_RANK_AVG
 
 // synchronize timers
-//#define TIMER_SYNC
+// #define TIMER_SYNC
 
 // enable backtracing using LLVMSupport library
 #define ENABLE_BACKTRACE

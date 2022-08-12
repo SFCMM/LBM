@@ -51,12 +51,12 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::maxLvl;
   using BaseCartesianGrid<DEBUG_LEVEL, NDIM>::transformMaxLvl;
 
-  CartesianGrid()                     = default;
-  ~CartesianGrid() override           = default;
-  CartesianGrid(const CartesianGrid&) = delete;
-  CartesianGrid(CartesianGrid&&)      = delete;
+  CartesianGrid()                                        = default;
+  ~CartesianGrid() override                              = default;
+  CartesianGrid(const CartesianGrid&)                    = delete;
+  CartesianGrid(CartesianGrid&&)                         = delete;
   auto operator=(const CartesianGrid&) -> CartesianGrid& = delete;
-  auto operator=(CartesianGrid&&) -> CartesianGrid& = delete;
+  auto operator=(CartesianGrid&&) -> CartesianGrid&      = delete;
 
   inline auto child(const GInt id, const GInt pos) -> GInt& {
     if(DEBUG_LEVEL >= Debug_Level::debug) {
@@ -387,7 +387,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
     for(auto& [linkedCell, value] : allPossibleBndryGhosts) {
       ASSERT(value.dir.size() <= 2, "Unsupported!" + std::to_string(value.dir.size()));
 
-      const GString surfId  = value.linkedSurfaces[0];
+      const GString surfId = value.linkedSurfaces[0];
       //      GInt          ghostId = INVALID_CELLID;
 
       if(value.dir.size() == 1) {
@@ -496,9 +496,7 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
   auto totalSize() const -> GInt { return size() + m_noGhostsCells; }
 
-  auto isBndryCell(const GInt cellId) const -> GBool {
-    return property(cellId, CellProperties::bndry);
-  }
+  auto isBndryCell(const GInt cellId) const -> GBool { return property(cellId, CellProperties::bndry); }
 
  private:
   void setProperties() {

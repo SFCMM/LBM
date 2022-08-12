@@ -5,7 +5,7 @@
 #include <iostream>
 #include <sfcmm_common.h>
 #include "../cell_filter.h"
-//#include <csv/csv.hpp>
+// #include <csv/csv.hpp>
 
 namespace hidden::_detail {
 const std::function<GBool(GInt)> defaultTrue  = [](GInt /*ignored*/) { return true; };
@@ -423,9 +423,9 @@ inline void writePoints(const GString& fileName, const GInt maxNoValues, const s
   cerr0 << SP1 << "Writing " << fileName << ".vtp with #" << noOutCells << " cells" << std::endl;
   logger << SP1 << "Writing " << fileName << ".vtp with #" << noOutCells << " cells" << std::endl;
 
-  ofstream                                         pointFile;
-  static constexpr unsigned int                    no_kbs_buffer = 64;
-  static constexpr unsigned int                    buffer_size   = 1024 * no_kbs_buffer;
+  ofstream                      pointFile;
+  static constexpr unsigned int no_kbs_buffer = 64;
+  static constexpr unsigned int buffer_size   = 1024 * no_kbs_buffer;
   //  static constexpr std::array<std::string_view, 4> padders       = {"", "=", "==", "==="};
 
   std::array<char, buffer_size> buffer{};
