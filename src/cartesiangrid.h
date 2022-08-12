@@ -346,7 +346,6 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
 
             if(srf.hasBndryGhostCells()) {
               // bndry ghost cell might need to be added
-              cerr0 << "adding cell to " << cellId << " in dir " << nghbrDir << std::endl; // todo: remove
               allPossibleBndryGhosts[cellId].dir.emplace_back(nghbrDir);
               allPossibleBndryGhosts[cellId].linkedSurfaces.emplace_back(srfName);
               allPossibleBndryGhosts[cellId].connected = true;
@@ -378,8 +377,6 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
       property(ghostCellId, CellProperties::ghost) = true; // no valid solution
       property(ghostCellId, CellProperties::bndry) = true; // on boundary
       property(ghostCellId, CellProperties::solid) = true; // on solid side
-      cerr0 << "adding cell " << ghostCellId << " as neighbor to " << linkedCell << " center " << center(ghostCellId)
-            << std::endl; // todo: remove
       ++m_noGhostsCells;
 
       m_bndrySurfaces.at(surfId).addCell(ghostCellId, dir);
@@ -414,7 +411,6 @@ class CartesianGrid : public BaseCartesianGrid<DEBUG_LEVEL, NDIM> {
           if(neighbor(linkedCell, dir) == INVALID_CELLID) {
             const auto invalidDirId = std::find(value.dir.begin(), value.dir.end(), dir);
             if(invalidDirId != std::end(value.dir)) {
-              cerr0 << "erasing " << *invalidDirId << std::endl; // todo:remove
               value.dir.erase(invalidDirId);
             }
           }
