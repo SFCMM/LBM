@@ -69,7 +69,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initTimers() {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
-  m_solverType = getLBSolverType(required_config_value<GString>("method"));
+  m_solverType = getLBSolverType(opt_config_value<GString>("method", "bgk"));
 
   m_infoInterval = opt_config_value<GInt>("info_interval", m_infoInterval);
 
@@ -95,9 +95,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
   }
 
 
-  // todo: make settable
-  m_ma        = 0.0001;
-  m_refLength = 1.0;
+  m_refLength = opt_config_value("refLength", 1.0);
 
   const GDouble m_finestGridSpacing = 1.0 / (std::pow(size(), 1.0 / NDIM) - 1); // todo: replace with cellLength
 
