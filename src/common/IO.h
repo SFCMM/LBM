@@ -12,9 +12,11 @@ const std::function<GBool(GInt)> defaultTrue  = [](GInt /*ignored*/) { return tr
 const std::function<GBool(GInt)> defaultFalse = [](GInt /*ignored*/) { return false; };
 } // namespace hidden::_detail
 
-// todo: improve
 struct IOIndex {
+  /// Name of the variable to be written
   GString name;
+
+  /// Type of the variable to be written
   GString type;
 };
 

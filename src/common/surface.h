@@ -29,15 +29,9 @@ class Surface : public SurfaceInterface {
   Surface(const Surface<DEBUG_LEVEL, NDIM>& copy) = default;
 
 
-  // todo:fix
-  //  Surface(Surface&&)      = delete;
-  //    auto operator=(const Surface& copy) -> Surface& {
-  //      m_center = copy.m_center;
-  //      m_normal = copy.m_normal;
-  //      m_cellId = copy.m_cellId;
-  //      m_grid = copy.m_grid;
-  //    }
-  //  auto operator=(Surface&&) -> Surface& = delete;
+  Surface(Surface&&)                              = delete;
+  auto operator=(const Surface& copy) -> Surface& = default;
+  auto operator=(Surface&&) -> Surface&           = delete;
 
 
   [[nodiscard]] auto getCellList() const -> const std::vector<GInt>& override { return m_cellId; }
