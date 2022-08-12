@@ -55,22 +55,30 @@ class CartesianGridData {
       m_partitionLvl(initGrid.ref_partitionLvl()),
       m_currentHighestLvl(initGrid.ref_currentHighestLvl()) {}
 
-  // todo: add asserts
-  [[nodiscard]] inline auto noCells() const -> GInt { return m_noCells; }
+  [[nodiscard]] inline auto noCells() const -> GInt {
+    ASSERT(m_noCells >= 0, "Invalid object!");
+    return m_noCells;
+  }
 
-  // todo: add asserts
-  inline auto center(const GInt cellId) const -> const Point<NDIM>& { return m_center[cellId]; }
+  inline auto center(const GInt cellId) const -> const Point<NDIM>& {
+    ASSERT(cellId >= 0 and cellId < m_noCells, "Invalid cellId");
+    return m_center[cellId];
+  }
 
-  // todo: add asserts
   [[nodiscard]] inline auto isLeaf(const GInt cellId) const -> GBool {
+    ASSERT(cellId >= 0 and cellId < m_noCells, "Invalid cellId");
     return m_properties[cellId][static_cast<GInt>(CellProperties::leaf)];
   }
 
-  // todo: add asserts
-  [[nodiscard]] inline auto level(const GInt cellId) const -> std::byte { return m_level[cellId]; }
+  [[nodiscard]] inline auto level(const GInt cellId) const -> std::byte {
+    ASSERT(cellId >= 0 and cellId < m_noCells, "Invalid cellId");
+    return m_level[cellId];
+  }
 
-  // todo: add asserts
-  [[nodiscard]] inline auto cellLength(const GInt cellId) const -> GDouble { return m_lengthOnLevel[static_cast<GInt>(level(cellId))]; }
+  [[nodiscard]] inline auto cellLength(const GInt cellId) const -> GDouble {
+    ASSERT(cellId >= 0 and cellId < m_noCells, "Invalid cellId");
+    return m_lengthOnLevel[static_cast<GInt>(level(cellId))];
+  }
 
   [[nodiscard]] inline auto boundingBox() const -> const BoundingBoxInterface& { return m_boundingBox; }
 
@@ -86,7 +94,7 @@ class CartesianGridData {
 
 
  private:
-  const GInt m_noCells;
+  const GInt m_noCells = -1;
 
   const BoundingBoxInterface&            m_boundingBox;
   const std::vector<Point<NDIM>>&        m_center;
