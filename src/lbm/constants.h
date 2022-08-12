@@ -67,6 +67,14 @@ enum class LBSolverType {
   PE
 };
 
+static constexpr auto getLBSolverType(const std::string_view methodName) -> LBSolverType {
+  if(methodName == "bgk") {
+    return LBSolverType::BGK;
+  }
+
+  TERMM(-1, "Invalid equation configuration!");
+}
+
 template <GInt NDIM>
 inline auto inDirection(const std::array<GDouble, NDIM>& normal, const std::array<GDouble, NDIM>& direction) -> GBool {
   return inDirection(VectorD<NDIM>(normal.data()), direction);

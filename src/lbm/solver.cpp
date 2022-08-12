@@ -69,7 +69,7 @@ void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::initTimers() {
 
 template <Debug_Level DEBUG_LEVEL, LBMethodType LBTYPE, LBEquationType EQ>
 void LBMSolver<DEBUG_LEVEL, LBTYPE, EQ>::loadConfiguration() {
-  m_solverType = LBSolverType::BGK; // todo: load from file
+  m_solverType = getLBSolverType(required_config_value<GString>("method"));
 
   m_infoInterval = opt_config_value<GInt>("info_interval", m_infoInterval);
 
