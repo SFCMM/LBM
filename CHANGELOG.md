@@ -30,6 +30,7 @@
 - [LIB] refactor kdtree and add more complete test
 - add intel compiler option
 - add github website
+- reduce todo below 50
 
 # V0.0.3
 
@@ -37,7 +38,6 @@
 
 - run basic 3D NS Case
 - run basic sph case
-- add nernst-planck equation case
 
 - restart
 - store meta data in output files (version, node etc.)
@@ -51,7 +51,6 @@
 - write out lines as svg
 - set write out precision
 - write out memory statistics
-- reduce todo below 50
 
 - refactor comparison with analytical solution to postprocessing
 - [LBM] calculate total energy/internal energy for output purposes (also output pressure and temperature)
@@ -66,8 +65,6 @@
 - [test script] run multiple bins 
 - [test script] backup binary for each run
 - [test script] run test on remote host
-- update to gnu 11
-- update to clang 11
 
 ## moved
 
@@ -98,6 +95,10 @@
 - refactor forcing setup
 - test all bnds for both poisson and NS
     - working:
+
+## Working on:
+
+- add nernst-planck equation case
 
 ## Done:
 
